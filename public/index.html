@@ -236,6 +236,7 @@
 </head>
 <body class="dark">
 <div class="container" id="app">
+    <!-- АВТОРИЗАЦИЯ -->
     <div id="authPanel">
         <div class="card auth-card">
             <h1>🔷 SWILTS</h1>
@@ -260,6 +261,7 @@
         </div>
     </div>
 
+    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="mainPanel" class="hidden">
         <div class="header">
             <div class="user-info">
@@ -551,6 +553,7 @@ async function uploadBanner(file) {
     else alert('Ошибка загрузки');
 }
 
+// ============ ПРОВЕРКА СЕССИИ ПРИ ЗАГРУЗКЕ ============
 async function checkSession() {
     const res = await fetch('/session');
     const data = await res.json();
@@ -634,9 +637,11 @@ function showMain() {
     initSocket();
 }
 
+// ============ ЗАПУСК ============
 setTheme(localStorage.getItem('theme') || 'dark');
 checkSession().then(session => { if (session) showMain(); });
 
+// ============ ОБРАБОТЧИКИ ============
 document.getElementById('loginBtn').onclick = login;
 document.getElementById('showRegisterBtn').onclick = () => { document.getElementById('authPanel').classList.add('hidden'); document.getElementById('regPanel').classList.remove('hidden'); };
 document.getElementById('backToLoginBtn').onclick = () => { document.getElementById('regPanel').classList.add('hidden'); document.getElementById('authPanel').classList.remove('hidden'); };
