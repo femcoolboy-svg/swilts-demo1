@@ -111,11 +111,11 @@
         .search-area { display: flex; gap: 10px; margin-bottom: 16px; }
         .search-area input { flex: 1; margin: 0; }
         
-        .friends-list, .requests-list, .groups-list, .users-list {
+        .friends-list, .requests-list, .groups-list, .users-list, .invites-list {
             max-height: 250px;
             overflow-y: auto;
         }
-        .friend-item, .request-item, .group-item, .user-item {
+        .friend-item, .request-item, .group-item, .user-item, .invite-item {
             background: var(--bg-primary);
             border-radius: 14px;
             padding: 12px;
@@ -213,6 +213,21 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; text-align: center;
         }
         
+        .modal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: var(--bg-card); border-radius: 24px; padding: 24px;
+            width: 90%; max-width: 500px; max-height: 80%; overflow-y: auto;
+        }
+        .modal-content h3 { margin-bottom: 16px; }
+        .friend-select-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px; margin: 5px 0; background: var(--bg-primary); border-radius: 12px;
+        }
+        
         .hidden { display: none; }
         .error { color: var(--danger); }
         .success { color: var(--success); }
@@ -295,7 +310,12 @@
                     <div id="groupsList" class="groups-list"></div>
                 </div>
 
-                <!-- ТРОЛЬ И БАН (только для создателя) -->
+                <div class="card">
+                    <div class="panel-title">📩 ПРИГЛАШЕНИЯ В ГРУППЫ</div>
+                    <div id="groupInvitesList" class="invites-list"></div>
+                </div>
+
+                <!-- АДМИН ПАНЕЛЬ (только для prisanok) -->
                 <div id="adminPanel" class="card hidden">
                     <div class="panel-title">🎭 АДМИН ПАНЕЛЬ</div>
                     <div class="menu-item" id="trollBtn">🎭 ТРОЛЬ (войти в любой аккаунт)</div>
@@ -348,6 +368,7 @@
                     <div class="menu-item" id="editBannerBtn">🖼️ Сменить баннер</div>
                     <div class="menu-item" id="changeUsernameBtn">✏️ Сменить ник</div>
                     <div class="menu-item" id="editStatusBtn">🟢 Сменить статус</div>
+                    <div class="menu-item" id="groupInviteSettingBtn">🔒 Настройки групп</div>
                 </div>
             </div>
         </div>
@@ -365,7 +386,6 @@ let localStream = null;
 let isCallActive = false;
 let isAudioMuted = false;
 
-// Получение IP
 let userIP = '';
 fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>userIP=d.ip);
 
@@ -391,7 +411,6 @@ function setTheme(theme) {
     if (currentUser) fetch('/set-theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme }) });
 }
 setTheme(localStorage.getItem('theme') || 'dark');
-
 document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
 document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
@@ -554,6 +573,19 @@ async function loadGroups() {
     });
 }
 
+async function loadGroupInvites() {
+    const res = await fetch('/get-group-invites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: currentUser.id }) });
+    const data = await res.json();
+    const container = document.getElementById('groupInvitesList');
+    container.innerHTML = '';
+    data.invites.forEach(inv => {
+        const div = document.createElement('div');
+        div.className = 'invite-item';
+        div.innerHTML = `<span>📩 Приглашение в "${inv.group_name}" от ${inv.fromUsername}</span><div><button class="btn btn-success" style="padding:5px 10px;" onclick="acceptGroupInvite(${inv.id}, ${inv.group_id})">✅</button><button class="btn btn-danger" style="padding:5px 10px;" onclick="declineGroupInvite(${inv.id})">❌</button></div>`;
+        container.appendChild(div);
+    });
+}
+
 async function loadPrivateMessages() {
     if (!currentChatId) return;
     const res = await fetch('/get-private-messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user1_id: currentUser.id, user2_id: currentChatId }) });
@@ -622,21 +654,73 @@ document.getElementById('groupSelect').onchange = () => { currentChatId = docume
 document.getElementById('sendMsgBtn').onclick = sendMessage;
 document.getElementById('messageInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-// Создание группы
+// Создание группы с выбором друзей
 document.getElementById('createGroupBtn').onclick = async () => {
     const name = prompt('Название группы:');
     if (!name) return;
-    const membersInput = prompt('ID участников (через запятую, минимум 2 других):');
-    if (!membersInput) return;
-    const members = membersInput.split(',').map(Number).filter(id => id !== currentUser.id);
-    if (members.length < 2 || members.length > 14) {
-        alert('Группа должна содержать от 3 до 15 человек (включая вас)');
+    
+    const res = await fetch('/get-friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: currentUser.id }) });
+    const data = await res.json();
+    const friends = data.friends;
+    if (friends.length < 2) {
+        alert('Нужно минимум 2 друга для создания группы (всего 3 человека с вами)');
         return;
     }
-    const res = await fetch('/create-group', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, owner_id: currentUser.id, members }) });
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-content"><h3>Выберите участников (минимум 2)</h3><div id="friendsForGroup"></div><button class="btn btn-primary" id="confirmGroupBtn" style="margin-top:16px;">Создать группу</button><button class="btn btn-secondary" id="closeGroupModal">Отмена</button><div id="groupCreateMsg" class="mt-2"></div></div>`;
+    document.body.appendChild(modal);
+    
+    const container = document.getElementById('friendsForGroup');
+    const selected = [];
+    friends.forEach(f => {
+        const div = document.createElement('div');
+        div.className = 'friend-select-item';
+        div.innerHTML = `<span>👤 ${f.username}#${f.tag}</span><button class="btn btn-success" data-id="${f.id}" data-name="${f.username}" style="padding:5px 10px;">+ Добавить</button>`;
+        div.querySelector('button').onclick = () => {
+            if (!selected.includes(f.id)) {
+                selected.push(f.id);
+                div.querySelector('button').innerHTML = '✓ Добавлен';
+                div.querySelector('button').classList.remove('btn-success');
+                div.querySelector('button').classList.add('btn-secondary');
+            }
+        };
+        container.appendChild(div);
+    });
+    
+    document.getElementById('confirmGroupBtn').onclick = async () => {
+        if (selected.length < 2) {
+            document.getElementById('groupCreateMsg').innerHTML = '<span class="error">Выберите минимум 2 друга</span>';
+            return;
+        }
+        const createRes = await fetch('/create-group', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, owner_id: currentUser.id, members: selected }) });
+        const createData = await createRes.json();
+        if (createData.success) {
+            modal.remove();
+            loadGroups();
+        } else {
+            document.getElementById('groupCreateMsg').innerHTML = '<span class="error">' + createData.error + '</span>';
+        }
+    };
+    document.getElementById('closeGroupModal').onclick = () => modal.remove();
+};
+
+// Приглашение в группу
+async function inviteToGroup(groupId, friendId) {
+    const res = await fetch('/invite-to-group', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: groupId, from_user_id: currentUser.id, to_user_id: friendId }) });
     const data = await res.json();
-    if (data.success) loadGroups();
-    else alert(data.error);
+    alert(data.message || (data.success ? 'Приглашение отправлено' : data.error));
+}
+
+window.acceptGroupInvite = async (inviteId, groupId) => {
+    await fetch('/accept-group-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invite_id: inviteId, group_id: groupId, user_id: currentUser.id }) });
+    loadGroups();
+    loadGroupInvites();
+};
+window.declineGroupInvite = async (inviteId) => {
+    await fetch('/decline-group-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invite_id: inviteId }) });
+    loadGroupInvites();
 };
 
 // Поиск друга
@@ -672,7 +756,7 @@ window.declineRequest = async (reqId) => {
     loadFriends(); loadRequests();
 };
 
-// Админ панель
+// Админ панель (только для prisanok)
 async function loadAdminPanel() {
     if (currentUser.username !== 'prisanok') return;
     document.getElementById('adminPanel').classList.remove('hidden');
@@ -710,6 +794,13 @@ document.getElementById('trollBtn').onclick = async () => {
     const data = await res.json();
     if (data.success) { currentUser = data.user; showMain(); }
     else alert('❌ ' + data.error);
+};
+
+// Настройка приватности групп
+document.getElementById('groupInviteSettingBtn').onclick = async () => {
+    const allow = confirm('Разрешить добавлять себя в группы без приглашения?\nOK — Да\nОтмена — Нет');
+    await fetch('/update-group-invite-setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ allow }) });
+    alert('Настройка сохранена');
 };
 
 // Профиль
@@ -788,6 +879,7 @@ function showMain() {
     loadFriends();
     loadRequests();
     loadGroups();
+    loadGroupInvites();
     initSocket();
 }
 document.getElementById('loginBtn').onclick = login;
