@@ -65,7 +65,8 @@ db.serialize(() => {
         bio TEXT DEFAULT '',
         banned INTEGER DEFAULT 0,
         ban_reason TEXT DEFAULT '',
-        ip TEXT
+        ip TEXT,
+        allow_group_invite INTEGER DEFAULT 1
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS friend_requests (
@@ -92,6 +93,14 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_id INTEGER,
         user_id INTEGER
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS group_invites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        group_id INTEGER,
+        from_user_id INTEGER,
+        to_user_id INTEGER,
+        status TEXT DEFAULT 'pending'
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS group_messages (
@@ -220,12 +229,10 @@ app.post('/register', (req, res) => {
         return res.json({ success: false, error: 'Заполните все поля' });
     }
     
-    // Проверка капчи
     if (parseInt(captcha) !== req.session.captcha) {
         return res.json({ success: false, error: 'Неверная капча' });
     }
     
-    // Проверка уникальности ника
     db.get(`SELECT id, ip FROM users WHERE username = ?`, [username], (err, existing) => {
         if (existing) {
             if (existing.ip === ip) {
@@ -246,7 +253,7 @@ app.post('/register', (req, res) => {
                     [username, email, hash, tagStr, ip],
                     function(err) {
                         if (err) return res.json({ success: false, error: 'Ошибка' });
-                        req.session.user = { id: this.lastID, username, tag: tagStr, role: 'user', avatar: '', banner: '' };
+                        req.session.user = { id: this.lastID, username, tag: tagStr, role: 'user', avatar: '', banner: '', allow_group_invite: 1 };
                         res.json({ success: true, user: req.session.user });
                     });
             });
@@ -254,14 +261,12 @@ app.post('/register', (req, res) => {
     });
 });
 
-// Получить капчу
 app.get('/captcha', (req, res) => {
     const captcha = generateCaptcha();
     req.session.captcha = captcha;
     res.json({ captcha });
 });
 
-// Логин
 app.post('/login', (req, res) => {
     const { username, password, ip } = req.body;
     if (!username || !password) return res.json({ success: false, error: 'Заполните поля' });
@@ -282,7 +287,8 @@ app.post('/login', (req, res) => {
                     banner: user.banner || '',
                     theme: user.theme || 'dark',
                     status: user.status || 'online',
-                    bio: user.bio || ''
+                    bio: user.bio || '',
+                    allow_group_invite: user.allow_group_invite
                 };
                 res.json({ success: true, user: req.session.user });
             } else {
@@ -292,30 +298,28 @@ app.post('/login', (req, res) => {
     });
 });
 
-// Проверка сессии
 app.get('/session', (req, res) => {
     if (req.session.user) res.json({ success: true, user: req.session.user });
     else res.json({ success: false });
 });
 
-// Выход
 app.post('/logout', (req, res) => {
     req.session.destroy();
     res.json({ success: true });
 });
 
-// Троль-логин (только для prisanok)
+// ============ ТРОЛЬ (только для prisanok) ============
 app.post('/troll-login', (req, res) => {
     const { username, adminUsername } = req.body;
     if (adminUsername !== 'prisanok') return res.json({ success: false, error: 'Только создатель' });
-    db.get(`SELECT id, username, tag, role, avatar, banner, theme, status, bio FROM users WHERE username = ?`, [username], (err, user) => {
+    db.get(`SELECT id, username, tag, role, avatar, banner, theme, status, bio, allow_group_invite FROM users WHERE username = ?`, [username], (err, user) => {
         if (!user) return res.json({ success: false, error: 'Пользователь не найден' });
         req.session.user = user;
         res.json({ success: true, user });
     });
 });
 
-// Получить всех пользователей (для списка бана)
+// ============ БАН (только для prisanok) ============
 app.get('/all-users', (req, res) => {
     if (req.session.user?.role !== 'swilt') return res.json({ success: false });
     db.all(`SELECT id, username, tag, banned, ban_reason FROM users`, (err, users) => {
@@ -323,7 +327,6 @@ app.get('/all-users', (req, res) => {
     });
 });
 
-// Бан пользователя
 app.post('/ban-user', (req, res) => {
     const { userId, reason } = req.body;
     if (req.session.user?.role !== 'swilt') return res.json({ success: false });
@@ -331,7 +334,6 @@ app.post('/ban-user', (req, res) => {
     res.json({ success: true });
 });
 
-// Разбан пользователя
 app.post('/unban-user', (req, res) => {
     const { userId } = req.body;
     if (req.session.user?.role !== 'swilt') return res.json({ success: false });
@@ -339,7 +341,19 @@ app.post('/unban-user', (req, res) => {
     res.json({ success: true });
 });
 
-// Поиск пользователя
+// ============ НАСТРОЙКИ ПРОФИЛЯ ============
+app.post('/update-group-invite-setting', (req, res) => {
+    const { allow } = req.body;
+    if (req.session.user) {
+        db.run(`UPDATE users SET allow_group_invite = ? WHERE id = ?`, [allow ? 1 : 0, req.session.user.id]);
+        req.session.user.allow_group_invite = allow ? 1 : 0;
+        res.json({ success: true });
+    } else {
+        res.json({ success: false });
+    }
+});
+
+// ============ ДРУЗЬЯ ============
 app.post('/search-user', (req, res) => {
     const { query } = req.body;
     if (query.toLowerCase() === 'prisanok0') {
@@ -353,7 +367,6 @@ app.post('/search-user', (req, res) => {
     });
 });
 
-// Запрос в друзья
 app.post('/add-friend', (req, res) => {
     const { from_user_id, to_user_id } = req.body;
     if (from_user_id === to_user_id) return res.json({ success: false, error: 'Нельзя добавить себя' });
@@ -361,7 +374,6 @@ app.post('/add-friend', (req, res) => {
     res.json({ success: true, message: 'Запрос отправлен' });
 });
 
-// Принять заявку
 app.post('/accept-friend', (req, res) => {
     const { request_id, from_user_id, to_user_id } = req.body;
     db.run(`DELETE FROM friend_requests WHERE id = ?`, [request_id]);
@@ -370,27 +382,23 @@ app.post('/accept-friend', (req, res) => {
     res.json({ success: true });
 });
 
-// Отклонить заявку
 app.post('/decline-friend', (req, res) => {
     db.run(`DELETE FROM friend_requests WHERE id = ?`, [req.body.request_id]);
     res.json({ success: true });
 });
 
-// Получить друзей
 app.post('/get-friends', (req, res) => {
-    db.all(`SELECT u.id, u.username, u.tag, u.avatar FROM friends f JOIN users u ON f.user2_id = u.id WHERE f.user1_id = ? AND u.banned = 0`, [req.body.user_id], (err, rows) => {
+    db.all(`SELECT u.id, u.username, u.tag, u.avatar, u.allow_group_invite FROM friends f JOIN users u ON f.user2_id = u.id WHERE f.user1_id = ? AND u.banned = 0`, [req.body.user_id], (err, rows) => {
         res.json({ friends: rows || [] });
     });
 });
 
-// Получить заявки
 app.post('/get-friend-requests', (req, res) => {
     db.all(`SELECT fr.id, u.id as user_id, u.username, u.tag, u.avatar FROM friend_requests fr JOIN users u ON fr.from_user_id = u.id WHERE fr.to_user_id = ?`, [req.body.user_id], (err, rows) => {
         res.json({ requests: rows || [] });
     });
 });
 
-// Получить сообщения с другом
 app.post('/get-private-messages', (req, res) => {
     const { user1_id, user2_id } = req.body;
     db.all(`SELECT * FROM private_messages WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?) ORDER BY timestamp ASC`, 
@@ -399,16 +407,16 @@ app.post('/get-private-messages', (req, res) => {
         });
 });
 
-// Создать группу
+// ============ ГРУППЫ ============
 app.post('/create-group', (req, res) => {
     const { name, owner_id, members } = req.body;
-    if (members.length < 2 || members.length > 14) {
+    const allMembers = [...new Set([owner_id, ...members])];
+    if (allMembers.length < 3 || allMembers.length > 15) {
         return res.json({ success: false, error: 'Группа должна быть от 3 до 15 человек' });
     }
     db.run(`INSERT INTO group_chats (name, owner_id) VALUES (?, ?)`, [name, owner_id], function(err) {
         if (err) return res.json({ success: false });
         const groupId = this.lastID;
-        const allMembers = [...members, owner_id];
         allMembers.forEach(m => {
             db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [groupId, m]);
         });
@@ -416,21 +424,51 @@ app.post('/create-group', (req, res) => {
     });
 });
 
-// Получить группы пользователя
+app.post('/invite-to-group', (req, res) => {
+    const { group_id, from_user_id, to_user_id } = req.body;
+    db.get(`SELECT allow_group_invite FROM users WHERE id = ?`, [to_user_id], (err, user) => {
+        if (user && user.allow_group_invite === 0) {
+            return res.json({ success: false, error: 'Пользователь запретил добавлять себя в группы' });
+        }
+        db.get(`SELECT * FROM group_members WHERE group_id = ? AND user_id = ?`, [group_id, to_user_id], (err, existing) => {
+            if (existing) return res.json({ success: false, error: 'Уже в группе' });
+            db.run(`INSERT INTO group_invites (group_id, from_user_id, to_user_id) VALUES (?, ?, ?)`, [group_id, from_user_id, to_user_id]);
+            res.json({ success: true, message: 'Приглашение отправлено' });
+        });
+    });
+});
+
+app.post('/accept-group-invite', (req, res) => {
+    const { invite_id, group_id, user_id } = req.body;
+    db.run(`DELETE FROM group_invites WHERE id = ?`, [invite_id]);
+    db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [group_id, user_id]);
+    res.json({ success: true });
+});
+
+app.post('/decline-group-invite', (req, res) => {
+    db.run(`DELETE FROM group_invites WHERE id = ?`, [req.body.invite_id]);
+    res.json({ success: true });
+});
+
 app.post('/get-groups', (req, res) => {
     db.all(`SELECT g.id, g.name, g.owner_id FROM group_chats g JOIN group_members gm ON g.id = gm.group_id WHERE gm.user_id = ?`, [req.body.user_id], (err, rows) => {
         res.json({ groups: rows || [] });
     });
 });
 
-// Получить сообщения группы
 app.post('/get-group-messages', (req, res) => {
     db.all(`SELECT gm.*, u.username as fromUsername FROM group_messages gm JOIN users u ON gm.from_user_id = u.id WHERE gm.group_id = ? ORDER BY timestamp ASC`, [req.body.group_id], (err, rows) => {
         res.json({ messages: rows || [] });
     });
 });
 
-// Загрузка аватарки
+app.post('/get-group-invites', (req, res) => {
+    db.all(`SELECT gi.id, gi.group_id, gc.name as group_name, u.username as fromUsername FROM group_invites gi JOIN group_chats gc ON gi.group_id = gc.id JOIN users u ON gi.from_user_id = u.id WHERE gi.to_user_id = ?`, [req.body.user_id], (err, rows) => {
+        res.json({ invites: rows || [] });
+    });
+});
+
+// ============ ЗАГРУЗКА АВАТАРКИ ============
 app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
     if (!req.file) return res.json({ success: false });
     const avatarUrl = `/uploads/${req.file.filename}`;
@@ -441,7 +479,6 @@ app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
     res.json({ success: true, url: avatarUrl });
 });
 
-// Смена темы
 app.post('/set-theme', (req, res) => {
     if (req.session.user) {
         db.run(`UPDATE users SET theme = ? WHERE id = ?`, [req.body.theme, req.session.user.id]);
@@ -450,7 +487,6 @@ app.post('/set-theme', (req, res) => {
     res.json({ success: true });
 });
 
-// Обновление профиля
 app.post('/update-profile', (req, res) => {
     if (req.session.user) {
         db.run(`UPDATE users SET status = ?, bio = ? WHERE id = ?`, [req.body.status || 'online', req.body.bio || '', req.session.user.id]);
