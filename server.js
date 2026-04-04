@@ -39,12 +39,18 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// НАСТРОЙКА СЕССИЙ С COOKIE
 app.use(session({
     store: new SQLiteStore({ db: 'sessions.db', table: 'sessions' }),
-    secret: 'swilts_key_2025',
+    secret: 'swilts_super_secret_key_2025',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
+    cookie: { 
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax'
+    }
 }));
 
 const db = new sqlite3.Database('swilts.db');
@@ -87,6 +93,7 @@ db.serialize(() => {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ prisanok
     bcrypt.hash('qazzaq32qaz', 10, (err, hash) => {
         if (!err) {
             db.run(`INSERT OR IGNORE INTO users (username, email, password_hash, tag, role) VALUES (?, ?, ?, ?, 'swilt')`,
@@ -96,7 +103,7 @@ db.serialize(() => {
     });
 });
 
-// WebSocket
+// ============ WEBSOCKET ДЛЯ ЗВОНКОВ ============
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -215,6 +222,7 @@ app.post('/register', (req, res) => {
     });
 });
 
+// ЛОГИН — СОЗДАЁТ СЕССИЮ (COOKIE)
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.json({ success: false, error: 'Заполните поля' });
@@ -225,6 +233,7 @@ app.post('/login', (req, res) => {
 
         bcrypt.compare(password, user.password_hash, (err, result) => {
             if (result) {
+                // СОХРАНЯЕМ ПОЛЬЗОВАТЕЛЯ В СЕССИЮ (COOKIE)
                 req.session.user = {
                     id: user.id,
                     username: user.username,
@@ -244,6 +253,22 @@ app.post('/login', (req, res) => {
     });
 });
 
+// ПРОВЕРКА СЕССИИ (ПРИ ЗАГРУЗКЕ СТРАНИЦЫ)
+app.get('/session', (req, res) => {
+    if (req.session.user) {
+        res.json({ success: true, user: req.session.user });
+    } else {
+        res.json({ success: false });
+    }
+});
+
+// ВЫХОД — УДАЛЯЕМ СЕССИЮ
+app.post('/logout', (req, res) => {
+    req.session.destroy();
+    res.json({ success: true });
+});
+
+// ТРОЛЬ — ТОЛЬКО ДЛЯ prisanok
 app.post('/troll-login', (req, res) => {
     const { username, adminUsername } = req.body;
     if (adminUsername !== 'prisanok') {
@@ -314,16 +339,6 @@ app.post('/ban-user', (req, res) => {
         }
         res.json({ success: true });
     });
-});
-
-app.get('/session', (req, res) => {
-    if (req.session.user) res.json({ success: true, user: req.session.user });
-    else res.json({ success: false });
-});
-
-app.post('/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ success: true });
 });
 
 app.post('/search-user', (req, res) => {
