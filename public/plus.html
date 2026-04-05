@@ -40,24 +40,12 @@
             position: relative;
             overflow: hidden;
         }
-        .plan::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
-        }
-        .plan:hover::before { left: 100%; }
         .plan:hover { transform: translateY(-10px); border-color: rgba(255,215,0,0.5); }
         .plan h3 { font-size: 28px; margin-bottom: 10px; }
         .plan .price { font-size: 48px; font-weight: bold; margin: 20px 0; color: #FFD700; }
         .plan .price small { font-size: 16px; color: #ccc; }
         .plan ul { list-style: none; margin: 20px 0; }
         .plan li { padding: 10px 0; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .plan li:last-child { border-bottom: none; }
         .plan button {
             width: 100%;
             padding: 14px;
@@ -73,10 +61,7 @@
         .plan button:hover { transform: scale(1.02); animation: glow 0.5s; }
         .plan button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
-        .popular {
-            border: 2px solid #FFD700;
-            box-shadow: 0 0 20px rgba(255,215,0,0.3);
-        }
+        .popular { border: 2px solid #FFD700; box-shadow: 0 0 20px rgba(255,215,0,0.3); }
         .popular::after {
             content: '🔥 ПОПУЛЯРНЫЙ';
             position: absolute;
@@ -103,35 +88,6 @@
         .feature h4 { color: #FFD700; margin-bottom: 10px; font-size: 18px; }
         .feature p { color: #ccc; font-size: 14px; }
         
-        .admin-panel {
-            background: rgba(255,255,255,0.05);
-            border-radius: 28px;
-            padding: 30px;
-            margin-top: 30px;
-        }
-        .admin-panel h3 { color: #FFD700; margin-bottom: 20px; text-align: center; }
-        .admin-panel select, .admin-panel button {
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-            margin: 5px;
-        }
-        .admin-panel select { background: rgba(0,0,0,0.5); color: white; width: 200px; }
-        .admin-panel button { background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a2e; font-weight: bold; cursor: pointer; }
-        
-        .back-btn {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 12px 24px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            color: white;
-            text-decoration: none;
-            text-align: center;
-            transition: 0.3s;
-        }
-        .back-btn:hover { background: rgba(255,255,255,0.2); transform: translateX(-5px); }
-        
         .status-card {
             background: rgba(255,255,255,0.1);
             border-radius: 24px;
@@ -142,6 +98,18 @@
         }
         .status-card h3 { color: #FFD700; margin-bottom: 10px; }
         .status-card p { color: #ccc; }
+        
+        .back-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.2); transform: translateX(-5px); }
         
         @media (max-width: 768px) {
             .plans { grid-template-columns: 1fr; }
@@ -225,16 +193,6 @@
         </div>
     </div>
     
-    <div id="adminPanel" class="admin-panel" style="display: none;">
-        <h3>👑 АДМИН ПАНЕЛЬ SWILTS+</h3>
-        <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
-            <select id="userSelect"></select>
-            <button onclick="givePlus()">🎁 Выдать SWILTS+ на 1 час</button>
-            <button onclick="giveAdmin()">👔 Выдать админку</button>
-        </div>
-        <div id="adminMsg" style="text-align: center; margin-top: 15px;"></div>
-    </div>
-    
     <div style="text-align: center;">
         <a href="/" class="back-btn">← Вернуться в SWILTS</a>
     </div>
@@ -252,72 +210,28 @@ async function checkStatus() {
                     <h3>✅ У вас активна подписка SWILTS+!</h3>
                     <p>Тариф: ${data.plan === 'month' ? '1 месяц' : data.plan === 'year' ? '1 год' : data.plan === 'demo' ? 'Демо (1 час)' : 'Навсегда'}</p>
                     <p>Действует до: ${new Date(data.expiresAt).toLocaleString()}</p>
-                    ${data.autoRenew ? '<p>🔄 Автопродление включено</p>' : '<p>⛔ Автопродление отключено</p>'}
                 </div>
             `;
-        }
-        
-        // Проверяем, является ли пользователь создателем
-        const sessionRes = await fetch('/session');
-        const sessionData = await sessionRes.json();
-        if (sessionData.success && sessionData.user.username === 'prisanok') {
-            document.getElementById('adminPanel').style.display = 'block';
-            loadUsers();
         }
     } catch(e) {}
 }
 
-async function loadUsers() {
-    const res = await fetch('/all-users');
-    const data = await res.json();
-    const select = document.getElementById('userSelect');
-    select.innerHTML = '';
-    data.users.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user.id;
-        option.textContent = `${user.username}#${user.tag}`;
-        select.appendChild(option);
-    });
-}
-
-async function givePlus() {
-    const userId = document.getElementById('userSelect').value;
-    if (!userId) return;
-    const res = await fetch('/admin/give-plus', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, adminUsername: 'prisanok' })
-    });
-    const data = await res.json();
-    document.getElementById('adminMsg').innerHTML = data.success ? '<span style="color: #4caf50;">✅ ' + data.message + '</span>' : '<span style="color: #ff6b6b;">❌ ' + data.error + '</span>';
-    setTimeout(() => document.getElementById('adminMsg').innerHTML = '', 3000);
-}
-
-async function giveAdmin() {
-    const userId = document.getElementById('userSelect').value;
-    if (!userId) return;
-    const res = await fetch('/admin/give-admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, adminUsername: 'prisanok' })
-    });
-    const data = await res.json();
-    document.getElementById('adminMsg').innerHTML = data.success ? '<span style="color: #4caf50;">✅ ' + data.message + '</span>' : '<span style="color: #ff6b6b;">❌ ' + data.error + '</span>';
-    setTimeout(() => document.getElementById('adminMsg').innerHTML = '', 3000);
-}
-
 async function subscribe(plan) {
-    const res = await fetch('/plus/create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan })
-    });
-    const data = await res.json();
-    if (data.success) {
-        window.open(data.paymentUrl, '_blank');
-        alert('Вы будете перенаправлены на оплату. После оплаты подписка активируется автоматически.');
-    } else {
-        alert('Ошибка: ' + data.error);
+    try {
+        const res = await fetch('/plus/create-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.open(data.paymentUrl, '_blank');
+            alert('Вы будете перенаправлены на оплату через ЮMoney.\nПосле оплаты подписка активируется автоматически в течение 1 минуты.');
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    } catch(e) {
+        alert('Ошибка соединения. Попробуйте позже.');
     }
 }
 
