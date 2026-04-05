@@ -207,8 +207,9 @@ app.get('/captcha', (req, res) => {
     res.json({ captcha: num });
 });
 
-// ============ ПРОВЕРКА EMAIL ============
+// ============ ПРОВЕРКА EMAIL (НАСТОЯЩИЙ) ============
 function isValidEmail(email) {
+    // Регулярное выражение для проверки email
     const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
     return emailRegex.test(email);
 }
@@ -225,7 +226,7 @@ app.post('/register', (req, res) => {
         return res.json({ success: false, error: 'Неверная капча' });
     }
     
-    // ПРОВЕРКА EMAIL (настоящий email)
+    // ============ ПРОВЕРКА EMAIL (ОБЯЗАТЕЛЬНО) ============
     if (!isValidEmail(email)) {
         return res.json({ success: false, error: 'Введите настоящий email (пример: name@domain.com)' });
     }
