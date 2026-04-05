@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SWILTS — Мессенджер с друзьями и серверами</title>
+    <title>SWILTS — Мессенджер</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -286,7 +286,7 @@
         .input-area { display: flex; gap: 14px; padding: 20px 24px; background: var(--bg-card); border-top: 1px solid var(--border); }
         .input-area input { flex: 1; margin: 0; }
 
-        /* ПРАВАЯ ПАНЕЛЬ */
+        /* ПРАВАЯ ПАНЕЛЬ — КАК НА СКРИНШОТЕ */
         .right-panel {
             width: 320px;
             background: var(--bg-card);
@@ -295,76 +295,52 @@
             border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
         }
-        .profile-banner { width: 100%; height: 100px; border-radius: 20px; background: var(--gradient); margin-bottom: -40px; background-size: cover; background-position: center; }
+
+        .profile-section {
+            text-align: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
         .profile-avatar {
-            width: 88px; height: 88px; border-radius: 50%;
-            border: 4px solid var(--bg-card);
-            margin: 0 auto;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
             background: var(--accent);
+            margin: 0 auto 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 44px;
+            font-size: 36px;
             overflow: hidden;
-            position: relative;
             cursor: pointer;
         }
-        .profile-name { text-align: center; margin-top: 14px; font-weight: 700; font-size: 20px; }
-        .profile-bio { text-align: center; font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
-        .stats { display: flex; justify-content: space-around; padding: 16px; background: var(--bg-input); border-radius: 20px; }
-        .stat { text-align: center; }
-        .stat-value { font-weight: 700; font-size: 26px; }
-        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .profile-name { font-weight: 700; font-size: 18px; }
+        .profile-bio { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
         .section-title {
-            font-size: 14px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-secondary);
             margin-bottom: 12px;
         }
-        .list-item {
-            background: var(--bg-input);
-            border-radius: 14px;
-            padding: 14px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .list-item:hover { background: var(--bg-hover); transform: translateX(4px); }
-        .friend-avatar-small {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 14px;
-            font-size: 20px;
-            overflow: hidden;
-        }
-        .friend-name { font-weight: 600; font-size: 15px; }
-        .friend-tag { font-size: 12px; color: var(--text-secondary); }
-        .friend-created { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-        .request-buttons { display: flex; gap: 8px; }
-        .menu-item {
-            padding: 14px;
-            background: var(--bg-input);
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            font-weight: 500;
-            font-size: 15px;
-        }
-        .menu-item:hover { background: var(--bg-hover); transform: translateX(5px); }
 
-        /* ГРУППЫ */
-        .group-create-modal .friend-select-item {
+        .search-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .search-area input { flex: 1; margin: 0; }
+
+        .list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .list-item {
             background: var(--bg-input);
             border-radius: 14px;
             padding: 12px;
@@ -372,7 +348,44 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
         }
+        .list-item:hover { background: var(--bg-hover); transform: translateX(4px); }
+
+        .friend-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 18px;
+            overflow: hidden;
+        }
+        .friend-name { font-weight: 600; font-size: 14px; }
+        .friend-tag { font-size: 11px; color: var(--text-secondary); }
+
+        .request-buttons { display: flex; gap: 8px; }
+
+        .create-group-btn {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .menu-item {
+            padding: 12px;
+            background: var(--bg-input);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .menu-item:hover { background: var(--bg-hover); transform: translateX(4px); }
 
         .auth-card {
             max-width: 500px;
@@ -411,6 +424,16 @@
             animation: slideInLeft 0.3s;
         }
         .modal-content h3 { margin-bottom: 24px; font-size: 28px; }
+
+        .friend-select-item {
+            background: var(--bg-input);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
         .hidden { display: none; }
         .error { color: var(--danger); }
@@ -511,48 +534,57 @@
                 </div>
             </div>
 
-            <!-- ПРАВАЯ ПАНЕЛЬ (ДРУЗЬЯ, ГРУППЫ, ПРОФИЛЬ) -->
+            <!-- ПРАВАЯ ПАНЕЛЬ — КАК НА СКРИНШОТЕ -->
             <div class="right-panel">
-                <div class="profile-banner" id="profileBanner"></div>
-                <div class="text-center">
+                <!-- ПРОФИЛЬ (КОРОТКИЙ) -->
+                <div class="profile-section">
                     <div class="profile-avatar" id="profileAvatar">👤</div>
                     <div class="profile-name" id="profileName"></div>
                     <div class="profile-bio" id="profileBio"></div>
                 </div>
-                <div class="stats">
-                    <div class="stat"><div class="stat-value" id="friendsCount">0</div><div class="stat-label">друзей</div></div>
-                    <div class="stat"><div class="stat-value" id="requestsCount">0</div><div class="stat-label">запросов</div></div>
-                    <div class="stat"><div class="stat-value" id="groupsCount">0</div><div class="stat-label">групп</div></div>
-                </div>
 
                 <!-- ПОИСК ДРУЗЕЙ -->
-                <div class="section-title">🔍 ПОИСК</div>
-                <div class="flex" style="margin-bottom:16px;">
-                    <input type="text" id="searchInput" placeholder="Никнейм или тег..." style="flex:1;">
-                    <button class="btn btn-primary" id="searchBtn">Найти</button>
+                <div>
+                    <div class="section-title">🔍 ПОИСК ДРУЗЕЙ</div>
+                    <div class="search-area">
+                        <input type="text" id="searchInput" placeholder="Никнейм или тег...">
+                        <button class="btn btn-primary" id="searchBtn">Найти</button>
+                    </div>
+                    <div id="searchResults"></div>
                 </div>
-                <div id="searchResults"></div>
 
-                <!-- ЗАПРОСЫ В ДРУЗЬЯ -->
-                <div class="section-title">📨 ЗАПРОСЫ</div>
-                <div id="requestsList"></div>
+                <!-- ВХОДЯЩИЕ ЗАПРОСЫ -->
+                <div>
+                    <div class="section-title">📨 ВХОДЯЩИЕ ЗАПРОСЫ</div>
+                    <div id="requestsList" class="list"></div>
+                </div>
 
                 <!-- ДРУЗЬЯ -->
-                <div class="section-title">👥 ДРУЗЬЯ</div>
-                <div id="friendsList"></div>
+                <div>
+                    <div class="section-title">👥 ДРУЗЬЯ</div>
+                    <div id="friendsList" class="list"></div>
+                </div>
 
                 <!-- ГРУППЫ -->
-                <div class="section-title">💬 ГРУППЫ</div>
-                <button class="btn btn-primary" id="createGroupBtn" style="width:100%; margin-bottom:12px;">➕ Создать группу</button>
-                <div id="groupsList"></div>
+                <div>
+                    <div class="section-title">💬 ГРУППЫ</div>
+                    <button class="btn btn-primary create-group-btn" id="createGroupBtn">➕ Создать группу</button>
+                    <div id="groupsList" class="list"></div>
+                </div>
 
-                <!-- НАСТРОЙКИ ПРОФИЛЯ -->
+                <!-- ПРИГЛАШЕНИЯ В ГРУППЫ -->
+                <div>
+                    <div class="section-title">📩 ПРИГЛАШЕНИЯ В ГРУППЫ</div>
+                    <div id="groupInvitesList" class="list"></div>
+                </div>
+
+                <!-- НАСТРОЙКИ ПРОФИЛЯ (МАЛЕНЬКИЕ КНОПКИ) -->
                 <div class="menu-item" id="editAvatarBtn">📷 Сменить аватар</div>
                 <div class="menu-item" id="changeUsernameBtn">✏️ Сменить ник</div>
                 <div class="menu-item" id="editStatusBtn">🟢 Сменить статус</div>
 
                 <!-- АДМИН ПАНЕЛЬ -->
-                <div id="adminPanel" class="hidden" style="margin-top:20px;">
+                <div id="adminPanel" class="hidden">
                     <div class="section-title">👑 АДМИН</div>
                     <div class="menu-item" id="trollBtn" style="background:var(--danger);">🎭 ТРОЛЬ</div>
                     <input type="text" id="trollName" placeholder="Никнейм" class="mt-2">
@@ -569,7 +601,6 @@
 let currentUser = null;
 let currentServerId = null;
 let currentChannelId = null;
-let currentChatType = 'server';
 let socket = null;
 
 let userIP = '';
@@ -611,10 +642,15 @@ function initSocket() {
     socket.on('private-message', (data) => {
         showNotification(data.fromName, data.msg);
         loadFriends();
+        loadRequests();
     });
     socket.on('group-message', (data) => {
         showNotification(data.groupName, data.msg);
         loadGroups();
+        loadGroupInvites();
+    });
+    socket.on('group-invite', () => {
+        loadGroupInvites();
     });
 }
 
@@ -695,7 +731,6 @@ async function selectServer(serverId) {
                 div.style.gap = '12px';
                 div.style.padding = '10px';
                 div.style.borderRadius = '12px';
-                div.style.cursor = 'pointer';
                 div.innerHTML = `<div class="avatar" style="width:36px;height:36px;font-size:16px;">${m.avatar ? `<img src="${m.avatar}">` : m.username[0]}</div>
                                 <div><div class="friend-name">${m.username}</div><div class="friend-tag">${m.role === 'owner' ? 'Владелец' : (m.role === 'admin' ? 'Админ' : 'Участник')}</div></div>`;
                 membersContainer.appendChild(div);
@@ -762,7 +797,6 @@ async function loadFriends() {
         body: JSON.stringify({ userId: currentUser.id })
     });
     const data = await res.json();
-    document.getElementById('friendsCount').innerText = data.friends ? data.friends.length : 0;
     const container = document.getElementById('friendsList');
     container.innerHTML = '';
     if (data.friends) {
@@ -791,7 +825,6 @@ async function loadRequests() {
         body: JSON.stringify({ userId: currentUser.id })
     });
     const data = await res.json();
-    document.getElementById('requestsCount').innerText = data.requests ? data.requests.length : 0;
     const container = document.getElementById('requestsList');
     container.innerHTML = '';
     if (data.requests) {
@@ -885,7 +918,6 @@ async function loadGroups() {
         body: JSON.stringify({ userId: currentUser.id })
     });
     const data = await res.json();
-    document.getElementById('groupsCount').innerText = data.groups ? data.groups.length : 0;
     const container = document.getElementById('groupsList');
     container.innerHTML = '';
     if (data.groups) {
@@ -897,6 +929,49 @@ async function loadGroups() {
             container.appendChild(div);
         });
     }
+}
+
+async function loadGroupInvites() {
+    const res = await fetch('/group/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id })
+    });
+    const data = await res.json();
+    const container = document.getElementById('groupInvitesList');
+    container.innerHTML = '';
+    if (data.invites) {
+        data.invites.forEach(inv => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `<span>📩 Приглашение в "${inv.group_name}" от ${inv.fromName}</span>
+                            <div class="request-buttons">
+                                <button class="btn btn-success" style="padding:5px 10px;" onclick="acceptGroupInvite(${inv.id}, ${inv.group_id})">✅</button>
+                                <button class="btn btn-danger" style="padding:5px 10px;" onclick="declineGroupInvite(${inv.id})">❌</button>
+                            </div>`;
+            container.appendChild(div);
+        });
+    }
+}
+
+async function acceptGroupInvite(inviteId, groupId) {
+    await fetch('/group/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: inviteId, group: groupId, user: currentUser.id })
+    });
+    loadGroups();
+    loadGroupInvites();
+}
+
+async function declineGroupInvite(inviteId) {
+    await fetch('/group/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: inviteId })
+    });
+    loadGroups();
+    loadGroupInvites();
 }
 
 document.getElementById('createGroupBtn').onclick = async () => {
@@ -1107,6 +1182,7 @@ function showMain() {
     loadFriends();
     loadRequests();
     loadGroups();
+    loadGroupInvites();
     loadServers();
     loadAdmin();
     initSocket();
