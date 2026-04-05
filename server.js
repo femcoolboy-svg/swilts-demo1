@@ -13,7 +13,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Настройка загрузки файлов
+// НАСТРОЙКА ЗАГРУЗКИ ФАЙЛОВ (1MB для аватарок)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = './uploads';
@@ -25,7 +25,35 @@ const storage = multer.diskStorage({
         cb(null, unique + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage: storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 1 * 1024 * 1024 }, // 1MB
+    fileFilter: (req, file, cb) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        cb(null, allowed.includes(file.mimetype));
+    }
+});
+
+// БАННЕРЫ (10MB, только для премиума — проверка в middleware)
+const bannerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = './uploads/banners';
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, unique + path.extname(file.originalname));
+    }
+});
+const uploadBanner = multer({ 
+    storage: bannerStorage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        cb(null, allowed.includes(file.mimetype));
+    }
+});
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -41,7 +69,6 @@ app.use(session({
 
 const db = new sqlite3.Database('swilts.db');
 
-// СОЗДАНИЕ ТАБЛИЦ
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,6 +78,7 @@ db.serialize(() => {
         tag TEXT UNIQUE,
         role TEXT DEFAULT 'user',
         avatar TEXT DEFAULT '',
+        banner TEXT DEFAULT '',
         bio TEXT DEFAULT '',
         theme TEXT DEFAULT 'dark',
         status TEXT DEFAULT 'online',
@@ -58,6 +86,14 @@ db.serialize(() => {
         ban_reason TEXT DEFAULT '',
         ip TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER UNIQUE,
+        plan TEXT DEFAULT 'free',
+        expires_at DATETIME,
+        auto_renew INTEGER DEFAULT 0
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS friend_requests (
@@ -115,6 +151,7 @@ db.serialize(() => {
         if (!err) {
             db.run(`INSERT OR IGNORE INTO users (username, email, password_hash, tag, role) VALUES (?, ?, ?, ?, 'swilt')`,
                 ['prisanok', 'acik03846@gmail.com', hash, '00001']);
+            db.run(`INSERT OR IGNORE INTO subscriptions (user_id, plan, expires_at) VALUES (1, 'lifetime', datetime('now', '+100 years'))`);
             console.log('✅ Создатель prisanok готов');
         }
     });
@@ -130,13 +167,14 @@ io.on('connection', (socket) => {
     });
 
     socket.on('private-message', async (data) => {
-        const { from, to, msg, fromName } = data;
+        const { from, to, msg, fromName, fromAvatar } = data;
         db.run(`INSERT INTO private_messages (from_user_id, to_user_id, message) VALUES (?, ?, ?)`, [from, to, msg]);
         const targetSocket = onlineUsers.get(to);
         if (targetSocket) {
             io.to(targetSocket).emit('private-message', {
                 from: from,
                 fromName: fromName,
+                fromAvatar: fromAvatar,
                 msg: msg,
                 time: new Date()
             });
@@ -198,6 +236,7 @@ app.post('/register', (req, res) => {
                                 tag: nextTag,
                                 role: 'user',
                                 avatar: '',
+                                banner: '',
                                 bio: '',
                                 created_at: new Date().toISOString()
                             };
@@ -216,23 +255,38 @@ app.post('/login', (req, res) => {
         if (!user || user.banned) return res.json({ success: false, error: 'Неверный ник или пароль' });
         bcrypt.compare(password, user.password_hash, (err, result) => {
             if (!result) return res.json({ success: false, error: 'Неверный ник или пароль' });
-            req.session.user = {
-                id: user.id,
-                username: user.username,
-                tag: user.tag,
-                role: user.role,
-                avatar: user.avatar || '',
-                bio: user.bio || '',
-                created_at: user.created_at
-            };
-            res.json({ success: true, user: req.session.user });
+            db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [user.id], (err, sub) => {
+                const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
+                req.session.user = {
+                    id: user.id,
+                    username: user.username,
+                    tag: user.tag,
+                    role: user.role,
+                    avatar: user.avatar || '',
+                    banner: user.banner || '',
+                    bio: user.bio || '',
+                    created_at: user.created_at,
+                    hasPlus: hasPlus,
+                    plus_expires_at: sub?.expires_at
+                };
+                res.json({ success: true, user: req.session.user });
+            });
         });
     });
 });
 
 app.get('/session', (req, res) => {
-    if (req.session.user) res.json({ success: true, user: req.session.user });
-    else res.json({ success: false });
+    if (req.session.user) {
+        // Обновляем статус подписки при каждом запросе
+        db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
+            const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
+            req.session.user.hasPlus = hasPlus;
+            req.session.user.plus_expires_at = sub?.expires_at;
+            res.json({ success: true, user: req.session.user });
+        });
+    } else {
+        res.json({ success: false });
+    }
 });
 
 app.post('/logout', (req, res) => {
@@ -250,6 +304,35 @@ app.post('/update-profile', (req, res) => {
     res.json({ success: true });
 });
 
+app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
+    if (!req.file) return res.json({ success: false, error: 'Файл не загружен' });
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    if (req.session.user) {
+        db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [avatarUrl, req.session.user.id]);
+        req.session.user.avatar = avatarUrl;
+        res.json({ success: true, url: avatarUrl });
+    } else {
+        res.json({ success: false, error: 'Не авторизован' });
+    }
+});
+
+app.post('/upload-banner', uploadBanner.single('banner'), (req, res) => {
+    if (!req.file) return res.json({ success: false, error: 'Файл не загружен' });
+    
+    // Проверяем подписку
+    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
+        const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
+        if (!hasPlus) {
+            fs.unlink(req.file.path, () => {});
+            return res.json({ success: false, error: '❌ Баннер только для SWILTS+' });
+        }
+        const bannerUrl = `/uploads/banners/${req.file.filename}`;
+        db.run(`UPDATE users SET banner = ? WHERE id = ?`, [bannerUrl, req.session.user.id]);
+        req.session.user.banner = bannerUrl;
+        res.json({ success: true, url: bannerUrl });
+    });
+});
+
 app.post('/change-password', (req, res) => {
     const { oldPassword, newPassword } = req.body;
     if (!req.session.user) return res.json({ success: false });
@@ -262,6 +345,19 @@ app.post('/change-password', (req, res) => {
                 db.run(`UPDATE users SET password_hash = ? WHERE id = ?`, [hash, req.session.user.id]);
                 res.json({ success: true });
             });
+        });
+    });
+});
+
+// ============ ПОЛУЧИТЬ ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ============
+app.get('/user/:userId', (req, res) => {
+    const userId = req.params.userId;
+    db.get(`SELECT id, username, tag, avatar, banner, bio, created_at FROM users WHERE id = ? AND banned = 0`, [userId], (err, user) => {
+        if (!user) return res.json({ success: false });
+        db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [userId], (err, sub) => {
+            user.hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
+            user.plus_expires_at = sub?.expires_at;
+            res.json({ success: true, user });
         });
     });
 });
@@ -360,15 +456,21 @@ app.post('/group/decline', (req, res) => {
 
 app.post('/group/messages', (req, res) => {
     const { groupId } = req.body;
-    db.all(`SELECT gm.*, u.username as fromName FROM group_messages gm JOIN users u ON gm.from_user_id = u.id WHERE gm.group_id = ? ORDER BY timestamp ASC`, [groupId], (err, rows) => {
+    db.all(`SELECT gm.*, u.username as fromName, u.avatar as fromAvatar FROM group_messages gm JOIN users u ON gm.from_user_id = u.id WHERE gm.group_id = ? ORDER BY timestamp ASC`, [groupId], (err, rows) => {
         res.json({ messages: rows || [] });
     });
+});
+
+app.post('/group/send-message', (req, res) => {
+    const { group_id, from_user_id, message } = req.body;
+    db.run(`INSERT INTO group_messages (group_id, from_user_id, message) VALUES (?, ?, ?)`, [group_id, from_user_id, message]);
+    res.json({ success: true });
 });
 
 // ============ СООБЩЕНИЯ ============
 app.post('/messages', (req, res) => {
     const { u1, u2 } = req.body;
-    db.all(`SELECT pm.*, u.username as fromName FROM private_messages pm JOIN users u ON pm.from_user_id = u.id WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?) ORDER BY timestamp ASC`, [u1, u2, u2, u1], (err, rows) => {
+    db.all(`SELECT pm.*, u.username as fromName, u.avatar as fromAvatar FROM private_messages pm JOIN users u ON pm.from_user_id = u.id WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?) ORDER BY timestamp ASC`, [u1, u2, u2, u1], (err, rows) => {
         res.json({ messages: rows || [] });
     });
 });
@@ -387,6 +489,15 @@ app.post('/search', (req, res) => {
     }
     db.all(`SELECT id, username, tag, avatar FROM users WHERE username LIKE ? AND banned = 0 LIMIT 10`, [`${q}%`], (err, rows) => {
         res.json({ users: rows || [] });
+    });
+});
+
+// ============ ПОДПИСКА ============
+app.get('/plus/status', (req, res) => {
+    if (!req.session.user) return res.json({ success: false });
+    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
+        const active = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
+        res.json({ success: true, hasPlus: active, plan: sub?.plan || 'free', expiresAt: sub?.expires_at });
     });
 });
 
@@ -415,7 +526,7 @@ app.post('/unban', (req, res) => {
 app.post('/troll', (req, res) => {
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
     const { username } = req.body;
-    db.get(`SELECT id, username, tag, role, avatar, bio, created_at FROM users WHERE username = ?`, [username], (err, user) => {
+    db.get(`SELECT id, username, tag, role, avatar, banner, bio, created_at FROM users WHERE username = ?`, [username], (err, user) => {
         if (!user) return res.json({ success: false });
         req.session.user = user;
         res.json({ success: true, user });
@@ -425,5 +536,4 @@ app.post('/troll', (req, res) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`\n🚀 SWILTS запущен на http://localhost:${PORT}`);
-    console.log(`👥 Друзья и группы работают`);
 });
