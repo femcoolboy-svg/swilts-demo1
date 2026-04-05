@@ -6,9 +6,12 @@
     <title>SWILTS — Мессенджер</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* ТЕМЫ */
         body.dark {
             --bg: #0e0e10;
-            --card: #1a1a2e;
+            --sidebar: #1a1a2e;
+            --card: #1f1f2f;
             --hover: #2a2a3a;
             --input: #1e1f22;
             --text: #efeff1;
@@ -17,11 +20,11 @@
             --accent: #5865f2;
             --danger: #ed4245;
             --success: #23a55a;
-            --plus: linear-gradient(135deg, #FFD700, #FFA500);
             --gradient: linear-gradient(135deg, #5865f2, #764ba2);
         }
         body.light {
             --bg: #f2f3f5;
+            --sidebar: #ffffff;
             --card: #ffffff;
             --hover: #eef2f5;
             --input: #eef2f5;
@@ -31,65 +34,133 @@
             --accent: #5865f2;
             --danger: #ed4245;
             --success: #23a55a;
-            --plus: linear-gradient(135deg, #FFD700, #FFA500);
             --gradient: linear-gradient(135deg, #5865f2, #764ba2);
         }
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            height: 100vh;
-            overflow: hidden;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; transition: all 0.3s; }
         
-        .app { display: flex; height: 100vh; width: 100%; }
-        
-        .servers-sidebar {
-            width: 72px;
-            background: var(--card);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 12px 0;
-            gap: 8px;
-            overflow-y: auto;
-        }
-        .server-icon {
-            width: 48px; height: 48px;
-            border-radius: 50%;
-            background: var(--accent);
+        /* АВТОРИЗАЦИЯ (КАК НА ВТОРОЙ ФОТКЕ) */
+        .auth-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #1a1a3e);
+            padding: 20px;
         }
-        .server-icon:hover { border-radius: 16px; transform: scale(1.05); }
-        .server-icon.active { border-radius: 16px; background: var(--gradient); box-shadow: 0 0 0 3px var(--accent); }
-        .server-divider { width: 32px; height: 2px; background: var(--border); margin: 4px 0; }
+        .auth-wrapper {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(30, 30, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 48px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .auth-brand {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(88,101,242,0.2), rgba(118,75,162,0.2));
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+        .auth-brand .logo { font-size: 64px; margin-bottom: 20px; }
+        .auth-brand h1 { font-size: 36px; font-weight: 800; background: linear-gradient(135deg, #fff, #a0a0ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 16px; }
+        .auth-brand p { color: rgba(255,255,255,0.7); margin-bottom: 30px; }
+        .auth-features { text-align: left; margin-top: 20px; }
+        .auth-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: rgba(255,255,255,0.8); }
+        .auth-forms {
+            width: 420px;
+            padding: 48px;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 60px;
+            padding: 4px;
+            margin-bottom: 32px;
+        }
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border-radius: 60px;
+            cursor: pointer;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            transition: all 0.3s;
+        }
+        .auth-tab.active { background: var(--gradient); color: white; box-shadow: 0 4px 12px rgba(88,101,242,0.3); }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; animation: fadeIn 0.3s; }
+        .auth-form h2 { font-size: 28px; margin-bottom: 8px; background: linear-gradient(135deg, #fff, #a0a0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .auth-form p { color: rgba(255,255,255,0.5); margin-bottom: 24px; }
+        .auth-form input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 16px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px;
+            color: white;
+            font-size: 15px;
+        }
+        .auth-form input:focus { outline: none; border-color: #5865f2; }
+        .auth-form button {
+            width: 100%;
+            padding: 14px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .auth-form button:hover { transform: scale(1.02); }
+        .captcha-block {
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .captcha-number { font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 8px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .chats-sidebar {
-            width: 280px;
-            background: var(--card);
+        /* ОСНОВНОЙ ИНТЕРФЕЙС (КАК НА ПЕРВОЙ ФОТКЕ) */
+        .app-container {
+            max-width: 1400px;
+            width: 100%;
+            height: 95vh;
+            margin: 20px auto;
+            background: var(--sidebar);
+            border-radius: 24px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
         }
-        .user-header {
-            padding: 16px;
+        .user-info {
+            padding: 20px;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 12px;
-            position: relative;
         }
-        .user-avatar {
-            width: 44px; height: 44px;
+        .avatar {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             background: var(--gradient);
             display: flex;
@@ -99,69 +170,35 @@
             overflow: hidden;
             cursor: pointer;
         }
-        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .user-info h3 { font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .user-info p { font-size: 11px; color: var(--text-sec); }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-details h3 { font-size: 15px; display: flex; align-items: center; gap: 6px; }
+        .user-details p { font-size: 11px; color: var(--text-sec); }
         .plus-badge {
-            background: var(--plus);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
             border-radius: 50%;
             width: 18px; height: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 10px;
-            margin-left: 6px;
             cursor: help;
         }
-        .plus-tooltip {
-            position: absolute;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-size: 11px;
-            white-space: nowrap;
-            z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .search-box { padding: 12px; border-bottom: 1px solid var(--border); }
-        .search-box input {
-            width: 100%;
-            padding: 10px 12px;
-            background: var(--input);
-            border: 1px solid var(--border);
+        .nav-menu { flex: 1; padding: 16px; }
+        .nav-item {
+            padding: 10px 16px;
+            margin: 4px 0;
             border-radius: 10px;
-            color: var(--text);
-            font-size: 13px;
-        }
-        .chats-list { flex: 1; overflow-y: auto; padding: 8px; }
-        .chat-item {
+            cursor: pointer;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 2px;
+            font-size: 14px;
         }
-        .chat-item:hover { background: var(--hover); }
-        .chat-item.active { background: var(--accent); }
-        .chat-avatar {
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: var(--gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            overflow: hidden;
-        }
-        .chat-info { flex: 1; }
-        .chat-name { font-weight: 500; font-size: 14px; }
-        .chat-last-msg { font-size: 11px; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nav-item:hover { background: var(--hover); }
+        .nav-item.active { background: var(--accent); color: white; }
         
-        .chat-area {
+        .chat-main {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -175,15 +212,6 @@
             gap: 12px;
             background: var(--card);
         }
-        .chat-header-avatar {
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: var(--gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -196,77 +224,48 @@
             display: flex;
             align-items: flex-start;
             gap: 10px;
-            max-width: 80%;
-            animation: slideIn 0.2s;
+            max-width: 70%;
         }
-        .message-own {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-        }
+        .message-own { align-self: flex-end; flex-direction: row-reverse; }
         .message-avatar {
-            width: 36px; height: 36px;
+            width: 32px; height: 32px;
             border-radius: 50%;
             background: var(--accent);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 14px;
             overflow: hidden;
-            flex-shrink: 0;
-        }
-        .message-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .message-bubble {
-            background: var(--input);
-            padding: 10px 16px;
-            border-radius: 20px;
-            max-width: 100%;
-        }
-        .message-own .message-bubble {
-            background: var(--accent);
-            color: white;
-        }
-        .message-name {
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .message-time { font-size: 10px; margin-top: 4px; opacity: 0.7; }
-        .input-area {
-            display: flex;
-            gap: 12px;
-            padding: 16px;
-            border-top: 1px solid var(--border);
-            background: var(--card);
-        }
-        .input-area input { flex: 1; }
-        .input-area button {
-            background: var(--accent);
-            border: none;
-            padding: 0 20px;
-            border-radius: 10px;
-            color: white;
             cursor: pointer;
         }
+        .message-bubble {
+            background: var(--input);
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+        }
+        .message-own .message-bubble { background: var(--accent); color: white; }
+        .message-time { font-size: 10px; margin-top: 4px; opacity: 0.7; }
+        .input-area {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            background: var(--card);
+        }
+        .input-area input { flex: 1; padding: 12px; background: var(--input); border: none; border-radius: 24px; color: var(--text); }
+        .input-area button { background: var(--accent); border: none; padding: 0 24px; border-radius: 24px; color: white; cursor: pointer; }
         
         .right-panel {
             width: 280px;
-            background: var(--card);
+            background: var(--sidebar);
             border-left: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             overflow-y: auto;
             padding: 16px;
         }
-        .profile-card {
-            text-align: center;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
+        .profile-card { text-align: center; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
         .profile-avatar {
             width: 72px; height: 72px;
             border-radius: 50%;
@@ -279,228 +278,178 @@
             overflow: hidden;
             cursor: pointer;
         }
-        .profile-name { font-weight: 600; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .profile-bio { font-size: 12px; color: var(--text-sec); margin-top: 4px; }
-        .section-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--text-sec);
-            margin: 16px 0 8px 0;
-        }
-        .add-friend-area {
-            background: var(--input);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 16px;
-        }
-        .add-friend-area h4 {
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-        .add-friend-input {
-            display: flex;
-            gap: 8px;
-        }
-        .add-friend-input input {
-            flex: 1;
-            padding: 8px 12px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text);
-        }
-        .add-friend-input button {
-            background: var(--accent);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 10px;
-            color: white;
-            cursor: pointer;
-        }
-        .friend-item, .request-item, .search-item, .user-item {
-            background: var(--input);
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.2s;
-        }
-        .setting-btn {
-            background: var(--input);
-            border-radius: 12px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            margin-bottom: 8px;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
+        .stats { display: flex; justify-content: space-around; margin: 16px 0; text-align: center; }
+        .stat-value { font-size: 20px; font-weight: 600; }
+        .stat-label { font-size: 11px; color: var(--text-sec); }
+        .section-title { font-size: 11px; text-transform: uppercase; color: var(--text-sec); margin: 16px 0 8px 0; }
+        .add-friend-area { background: var(--input); border-radius: 12px; padding: 12px; margin-bottom: 16px; }
+        .add-friend-input { display: flex; gap: 8px; }
+        .add-friend-input input { flex: 1; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+        .add-friend-input button { background: var(--accent); border: none; padding: 8px 16px; border-radius: 8px; color: white; cursor: pointer; }
+        .friend-item, .request-item, .search-item { background: var(--input); border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .setting-btn { background: var(--input); border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; margin-bottom: 8px; font-size: 13px; transition: all 0.2s; }
         .setting-btn:hover { background: var(--hover); transform: translateX(4px); }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: var(--card);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 450px;
+            padding: 24px;
+        }
         .hidden { display: none; }
         .error { color: var(--danger); }
         .success { color: var(--success); }
         .text-muted { color: var(--text-sec); }
         .mt-2 { margin-top: 8px; }
         
-        .auth-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #0f0c29, #1a1a3e);
-        }
-        .auth-card {
-            background: rgba(30,30,40,0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 48px;
-            padding: 40px;
-            width: 420px;
-            animation: fadeIn 0.5s;
-        }
-        .auth-card h1 {
-            text-align: center;
-            font-size: 42px;
-            margin-bottom: 24px;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .auth-card input {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 16px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 16px;
-            color: white;
-        }
-        .auth-card button {
-            width: 100%;
-            padding: 14px;
-            background: var(--gradient);
-            border: none;
-            border-radius: 40px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .auth-card .secondary { background: rgba(255,255,255,0.1); margin-top: 12px; }
-        .captcha-block {
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px;
-            padding: 12px;
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        .captcha-number { font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 8px; }
-        
         @media (max-width: 900px) {
-            .servers-sidebar { display: none; }
+            .auth-wrapper { flex-direction: column; }
+            .auth-brand { display: none; }
+            .auth-forms { width: 100%; }
+            .app-container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
             .right-panel { display: none; }
-            .chats-sidebar { width: 100%; }
-            .auth-card { width: 90%; padding: 24px; }
         }
     </style>
 </head>
 <body class="dark">
-<!-- АВТОРИЗАЦИЯ -->
-<div id="authScreen" class="auth-container">
-    <div class="auth-card">
-        <h1>🔷 SWILTS</h1>
-        <div id="loginForm">
-            <input type="text" id="loginUsername" placeholder="Никнейм">
-            <input type="password" id="loginPassword" placeholder="Пароль">
-            <button id="doLogin">Войти</button>
-            <button id="showReg" class="secondary">Создать аккаунт</button>
-            <div id="loginMsg" style="margin-top:12px; text-align:center; color:#ed4245;"></div>
-        </div>
-        <div id="regForm" style="display:none;">
-            <input type="text" id="regUsername" placeholder="Никнейм">
-            <input type="email" id="regEmail" placeholder="Email">
-            <input type="password" id="regPassword" placeholder="Пароль">
-            <div class="captcha-block">
-                <div class="captcha-number" id="captchaNum">0</div>
-                <input type="text" id="regCaptcha" placeholder="Введите число">
+<div id="app">
+    <!-- АВТОРИЗАЦИЯ -->
+    <div id="authScreen" class="auth-container">
+        <div class="auth-wrapper">
+            <div class="auth-brand">
+                <div class="logo">🔷</div>
+                <h1>SWILTS</h1>
+                <p>Современный мессенджер с защищённым общением</p>
+                <div class="auth-features">
+                    <div class="auth-feature"><span>💬</span> Мгновенные сообщения</div>
+                    <div class="auth-feature"><span>👥</span> Групповые чаты</div>
+                    <div class="auth-feature"><span>🔒</span> Безопасность и конфиденциальность</div>
+                    <div class="auth-feature"><span>🎨</span> Кастомизация профиля</div>
+                </div>
             </div>
-            <button id="doRegister">Зарегистрироваться</button>
-            <button id="backToLogin" class="secondary">Назад</button>
-            <div id="regMsg" style="margin-top:12px; text-align:center;"></div>
+            <div class="auth-forms">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" data-tab="login">🔑 Вход</div>
+                    <div class="auth-tab" data-tab="register">📝 Регистрация</div>
+                </div>
+                <div id="loginForm" class="auth-form active">
+                    <h2>Добро пожаловать!</h2>
+                    <p>Войдите в свой аккаунт</p>
+                    <input type="text" id="loginUsername" placeholder="Никнейм">
+                    <input type="password" id="loginPassword" placeholder="Пароль">
+                    <button id="doLogin">Войти</button>
+                    <div id="loginMsg" class="mt-2 error" style="text-align:center;"></div>
+                </div>
+                <div id="registerForm" class="auth-form">
+                    <h2>Создать аккаунт</h2>
+                    <p>Присоединяйтесь к сообществу</p>
+                    <input type="text" id="regUsername" placeholder="Никнейм">
+                    <input type="email" id="regEmail" placeholder="Email">
+                    <input type="password" id="regPassword" placeholder="Пароль">
+                    <div class="captcha-block">
+                        <div class="captcha-number" id="captchaNum">0</div>
+                        <input type="text" id="regCaptcha" placeholder="Введите число">
+                    </div>
+                    <button id="doRegister">Зарегистрироваться</button>
+                    <div id="regMsg" class="mt-2" style="text-align:center;"></div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
-<div id="mainApp" style="display:none;">
-    <div class="app">
-        <div class="servers-sidebar">
-            <div class="server-icon active">🏠</div>
-            <div class="server-divider"></div>
-            <div class="server-icon">👥</div>
-            <div class="server-icon">💬</div>
-        </div>
-        
-        <div class="chats-sidebar">
-            <div class="user-header">
-                <div class="user-avatar" id="sideAvatar">👤</div>
+    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
+    <div id="mainApp" class="hidden">
+        <div class="app-container">
+            <!-- ЛЕВАЯ ПАНЕЛЬ -->
+            <div class="sidebar">
                 <div class="user-info">
-                    <h3><span id="sideName"></span><span id="sidePlusBadge" class="plus-badge hidden" data-tooltip="">💎</span></h3>
-                    <p id="sideTag"></p>
-                    <p id="sideCreated" style="font-size:10px;"></p>
+                    <div class="avatar" id="sideAvatar">👤</div>
+                    <div class="user-details">
+                        <h3><span id="sideName"></span><span id="sidePlusBadge" class="plus-badge hidden">💎</span></h3>
+                        <p id="sideTag"></p>
+                        <p id="sideCreated" style="font-size:10px;"></p>
+                    </div>
+                </div>
+                <div class="nav-menu">
+                    <div class="nav-item active" data-view="chats">💬 Чаты</div>
+                    <div class="nav-item" data-view="friends">👥 Друзья</div>
+                    <div class="nav-item" data-view="groups">👥 Группы</div>
+                </div>
+                <div style="flex:1;"></div>
+                <div class="nav-item" id="themeDarkBtn">🌙 Тёмная</div>
+                <div class="nav-item" id="themeLightBtn">☀️ Светлая</div>
+                <div class="nav-item" id="logoutBtn">🚪 Выйти</div>
+                <div class="nav-item" id="plusBtn" style="background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a1a2e;">💎 SWILTS+</div>
+                <div class="nav-item" id="secretBtn" onclick="window.open('https://xn--d1ah4a.com/login','_blank')">🔐 SECRET</div>
+            </div>
+
+            <!-- ЦЕНТРАЛЬНЫЙ ЧАТ -->
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div class="avatar" id="chatAvatar" style="width:40px;height:40px;">👤</div>
+                    <div><strong id="chatName">Выберите чат</strong></div>
+                </div>
+                <div class="messages" id="messages">
+                    <div class="text-muted" style="text-align:center; margin-top:40px;">👈 Выберите чат</div>
+                </div>
+                <div class="input-area" id="inputArea" style="display:none;">
+                    <input type="text" id="messageInput" placeholder="Сообщение...">
+                    <button id="sendBtn">Отправить</button>
                 </div>
             </div>
-            <div class="search-box"><input type="text" id="searchChatInput" placeholder="Поиск..."></div>
-            <div class="chats-list" id="chatsList"><div class="text-muted" style="text-align:center; padding:20px;">Загрузка...</div></div>
-        </div>
-        
-        <div class="chat-area">
-            <div class="chat-header">
-                <div class="chat-header-avatar" id="chatAvatar">👤</div>
-                <div><strong id="chatName">Выберите чат</strong></div>
-            </div>
-            <div class="messages" id="messages">
-                <div class="text-muted" style="text-align:center; margin-top:40px;">👈 Выберите чат</div>
-            </div>
-            <div class="input-area" id="inputArea" style="display:none;">
-                <input type="text" id="messageInput" placeholder="Сообщение...">
-                <button id="sendBtn">Отправить</button>
-            </div>
-        </div>
-        
-        <div class="right-panel">
-            <div class="profile-card">
-                <div class="profile-avatar" id="profAvatar">👤</div>
-                <div class="profile-name" id="profName"></div>
-                <div class="profile-bio" id="profBio"></div>
-            </div>
-            <div class="setting-btn" id="editProfileBtn">🎨 Редактировать профиль</div>
-            <div class="setting-btn" id="changePassBtn">🔐 Сменить пароль</div>
-            <div class="setting-btn" id="plusBtn" style="background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a1a2e;">💎 SWILTS+</div>
-            
-            <!-- КРАСИВОЕ ДОБАВЛЕНИЕ В ДРУЗЬЯ -->
-            <div class="add-friend-area">
-                <h4>➕ Добавить друга</h4>
-                <div class="add-friend-input">
-                    <input type="text" id="searchUserInput" placeholder="Никнейм (например prisanok)">
-                    <button id="searchUserBtn">Найти</button>
+
+            <!-- ПРАВАЯ ПАНЕЛЬ -->
+            <div class="right-panel">
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profAvatar">👤</div>
+                    <div class="profile-name" id="profName"></div>
+                    <div class="profile-bio" id="profBio"></div>
                 </div>
-                <div id="searchResults" class="mt-2"></div>
-            </div>
-            
-            <div id="requestsContainer"></div>
-            
-            <div class="section-title">💬 Группы</div>
-            <button class="setting-btn" id="createGroupBtn" style="background:var(--accent); color:white;">➕ Создать группу</button>
-            <div id="groupInvitesList"></div>
-            
-            <div id="adminPanel" class="hidden" style="margin-top:16px;">
-                <div class="section-title">👑 АДМИН</div>
-                <div class="setting-btn" id="trollBtn" style="background:var(--danger);">🎭 ТРОЛЬ</div>
-                <input type="text" id="trollName" placeholder="Никнейм" class="mt-2" style="width:100%; padding:8px; background:var(--input); border:1px solid var(--border); border-radius:10px; color:var(--text); margin-bottom:8px;">
-                <div class="setting-btn" id="allUsersBtn">👥 Все пользователи</div>
-                <div id="usersList" class="hidden mt-2"></div>
+                <div class="stats">
+                    <div><div class="stat-value" id="friendsCount">0</div><div class="stat-label">друзей</div></div>
+                    <div><div class="stat-value" id="requestsCount">0</div><div class="stat-label">запросов</div></div>
+                    <div><div class="stat-value" id="groupsCount">0</div><div class="stat-label">групп</div></div>
+                </div>
+                
+                <div class="setting-btn" id="editProfileBtn">🎨 Редактировать профиль</div>
+                <div class="setting-btn" id="changePassBtn">🔐 Сменить пароль</div>
+                
+                <div class="add-friend-area">
+                    <h4 style="margin-bottom:8px;">➕ Добавить друга</h4>
+                    <div class="add-friend-input">
+                        <input type="text" id="searchUserInput" placeholder="Никнейм">
+                        <button id="searchUserBtn">Найти</button>
+                    </div>
+                    <div id="searchResults" class="mt-2"></div>
+                </div>
+                
+                <div id="requestsContainer"></div>
+                
+                <div class="section-title">💬 Группы</div>
+                <button class="setting-btn" id="createGroupBtn" style="background:var(--accent); color:white;">➕ Создать группу</button>
+                <div id="groupInvitesList"></div>
+                
+                <div id="adminPanel" class="hidden">
+                    <div class="section-title">👑 АДМИН</div>
+                    <div class="setting-btn" id="trollBtn" style="background:var(--danger);">🎭 ТРОЛЬ</div>
+                    <input type="text" id="trollName" placeholder="Никнейм" class="mt-2" style="width:100%; padding:8px; background:var(--input); border:none; border-radius:8px; color:var(--text);">
+                    <div class="setting-btn" id="allUsersBtn">👥 Все пользователи</div>
+                    <div id="usersList" class="hidden mt-2"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -513,20 +462,11 @@ let currentChat = null;
 let socket = null;
 let captchaValue = 0;
 let userIP = '';
+let currentView = 'chats';
+
 fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>userIP=d.ip);
 
-// Тултип для подписки
-function showTooltip(e, text) {
-    let tooltip = document.createElement('div');
-    tooltip.className = 'plus-tooltip';
-    tooltip.innerText = text;
-    tooltip.style.position = 'absolute';
-    tooltip.style.top = (e.pageY - 30) + 'px';
-    tooltip.style.left = (e.pageX + 10) + 'px';
-    document.body.appendChild(tooltip);
-    setTimeout(() => tooltip.remove(), 2000);
-}
-
+// КАПЧА
 async function loadCaptcha() {
     const res = await fetch('/captcha');
     const data = await res.json();
@@ -535,6 +475,7 @@ async function loadCaptcha() {
 }
 loadCaptcha();
 
+// ТЕМА
 function setTheme(theme) {
     if (theme === 'light') {
         document.body.classList.remove('dark');
@@ -547,7 +488,10 @@ function setTheme(theme) {
     }
 }
 setTheme(localStorage.getItem('theme') || 'dark');
+document.getElementById('themeDarkBtn')?.addEventListener('click', () => setTheme('dark'));
+document.getElementById('themeLightBtn')?.addEventListener('click', () => setTheme('light'));
 
+// WEBSOCKET
 function initSocket() {
     socket = io();
     socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
@@ -575,11 +519,7 @@ function appendMessage(msg, isOwn, time, username, avatar) {
     div.className = `message ${isOwn ? 'message-own' : ''}`;
     let avatarHtml = '';
     if (!isOwn) {
-        if (avatar) {
-            avatarHtml = `<div class="message-avatar"><img src="${avatar}"></div>`;
-        } else {
-            avatarHtml = `<div class="message-avatar">${username ? username[0] : '?'}</div>`;
-        }
+        avatarHtml = `<div class="message-avatar" onclick="openUserProfile(${currentChat.id})">${avatar ? `<img src="${avatar}">` : (username ? username[0] : '?')}</div>`;
     }
     div.innerHTML = avatarHtml + `<div class="message-bubble"><div class="message-name">${!isOwn ? (username || '') : ''}</div>${escapeHtml(msg)}<div class="message-time">${new Date(time).toLocaleTimeString()}</div></div>`;
     container.appendChild(div);
@@ -601,20 +541,14 @@ function showNotification(sender, msg) {
     setTimeout(() => notif.remove(), 3000);
 }
 
+// ============ ЧАТЫ ============
 async function loadChats() {
-    const friendsRes = await fetch('/friends', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id })
-    });
+    const friendsRes = await fetch('/friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
     const friendsData = await friendsRes.json();
-    const groupsRes = await fetch('/groups', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id })
-    });
+    const groupsRes = await fetch('/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
     const groupsData = await groupsRes.json();
     const container = document.getElementById('chatsList');
+    if (!container) return;
     container.innerHTML = '';
     if (friendsData.friends) {
         friendsData.friends.forEach(f => {
@@ -636,9 +570,6 @@ async function loadChats() {
             container.appendChild(div);
         });
     }
-    if ((!friendsData.friends || friendsData.friends.length === 0) && (!groupsData.groups || groupsData.groups.length === 0)) {
-        container.innerHTML = '<div class="text-muted" style="text-align:center; padding:20px;">Нет чатов</div>';
-    }
 }
 
 async function selectChat(type, id, name, avatar) {
@@ -654,11 +585,7 @@ async function loadMessages() {
     if (!currentChat) return;
     let url = currentChat.type === 'friend' ? '/messages' : '/group/messages';
     let body = currentChat.type === 'friend' ? { u1: currentUser.id, u2: currentChat.id } : { groupId: currentChat.id };
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json();
     const container = document.getElementById('messages');
     container.innerHTML = '';
@@ -668,10 +595,8 @@ async function loadMessages() {
             const div = document.createElement('div');
             div.className = `message ${isOwn ? 'message-own' : ''}`;
             let avatarHtml = '';
-            if (!isOwn && m.fromAvatar) {
-                avatarHtml = `<div class="message-avatar"><img src="${m.fromAvatar}"></div>`;
-            } else if (!isOwn && m.fromName) {
-                avatarHtml = `<div class="message-avatar">${m.fromName[0]}</div>`;
+            if (!isOwn && currentChat.type === 'friend') {
+                avatarHtml = `<div class="message-avatar" onclick="openUserProfile(${currentChat.id})">${m.fromAvatar ? `<img src="${m.fromAvatar}">` : (m.fromName ? m.fromName[0] : '?')}</div>`;
             }
             div.innerHTML = avatarHtml + `<div class="message-bubble"><div class="message-name">${!isOwn ? (m.fromName || '') : ''}</div>${escapeHtml(m.message)}<div class="message-time">${new Date(m.timestamp).toLocaleTimeString()}</div></div>`;
             container.appendChild(div);
@@ -685,32 +610,12 @@ async function sendMessage() {
     if (!msg || !currentChat) return;
     if (currentChat.type === 'friend') {
         appendMessage(msg, true, new Date(), null, null);
-        socket.emit('private-message', {
-            from: currentUser.id,
-            to: currentChat.id,
-            msg: msg,
-            fromName: currentUser.username,
-            fromAvatar: currentUser.avatar
-        });
-        await fetch('/send-message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: currentChat.id, message: msg })
-        });
+        socket.emit('private-message', { from: currentUser.id, to: currentChat.id, msg: msg, fromName: currentUser.username, fromAvatar: currentUser.avatar });
+        await fetch('/send-message', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: currentChat.id, message: msg }) });
     } else {
         appendMessage(msg, true, new Date(), null, null);
-        socket.emit('group-message', {
-            groupId: currentChat.id,
-            from: currentUser.id,
-            fromName: currentUser.username,
-            msg: msg,
-            groupName: currentChat.name
-        });
-        await fetch('/group/send-message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ group_id: currentChat.id, from_user_id: currentUser.id, message: msg })
-        });
+        socket.emit('group-message', { groupId: currentChat.id, from: currentUser.id, fromName: currentUser.username, msg: msg, groupName: currentChat.name });
+        await fetch('/group/send-message', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: currentChat.id, from_user_id: currentUser.id, message: msg }) });
     }
     document.getElementById('messageInput').value = '';
 }
@@ -718,13 +623,52 @@ async function sendMessage() {
 document.getElementById('sendBtn')?.addEventListener('click', sendMessage);
 document.getElementById('messageInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-async function loadRequests() {
-    const res = await fetch('/requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id })
-    });
+// ============ ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ============
+async function openUserProfile(userId) {
+    const res = await fetch(`/user/${userId}`);
     const data = await res.json();
+    if (!data.success) return;
+    const user = data.user;
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-content">
+        <div class="profile-avatar" style="width:80px;height:80px; margin:0 auto 12px;">${user.avatar ? `<img src="${user.avatar}" style="width:100%;height:100%;border-radius:50%;">` : '👤'}</div>
+        <h3 style="text-align:center;">${user.username}#${user.tag}</h3>
+        <p style="text-align:center; color:var(--text-sec); margin-bottom:16px;">${user.bio || 'Нет описания'}</p>
+        <div style="display:flex; justify-content:space-around; margin:16px 0;">
+            <div><strong>📅 Регистрация</strong><br>${new Date(user.created_at).toLocaleDateString()}</div>
+            ${user.hasPlus ? `<div><strong>💎 SWILTS+</strong><br>${user.plus_expires_at ? new Date(user.plus_expires_at).toLocaleDateString() : 'навсегда'}</div>` : ''}
+        </div>
+        <button id="closeProfileModal" style="background:var(--accent); border:none; padding:10px; border-radius:10px; color:white; width:100%; cursor:pointer;">Закрыть</button>
+    </div>`;
+    document.body.appendChild(modal);
+    document.getElementById('closeProfileModal').onclick = () => modal.remove();
+}
+
+// ============ ДРУЗЬЯ ============
+async function loadFriends() {
+    const res = await fetch('/friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
+    const data = await res.json();
+    document.getElementById('friendsCount').innerText = data.friends ? data.friends.length : 0;
+    const container = document.getElementById('friendsList');
+    if (container) {
+        container.innerHTML = '';
+        if (data.friends) {
+            data.friends.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'friend-item';
+                div.onclick = () => selectChat('friend', f.id, f.username, f.avatar);
+                div.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><div class="avatar" style="width:36px;height:36px;">${f.avatar ? `<img src="${f.avatar}">` : f.username[0]}</div><div><div class="friend-name">${f.username}</div><div class="friend-tag">#${f.tag}</div></div></div>`;
+                container.appendChild(div);
+            });
+        }
+    }
+}
+
+async function loadRequests() {
+    const res = await fetch('/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
+    const data = await res.json();
+    document.getElementById('requestsCount').innerText = data.requests ? data.requests.length : 0;
     const container = document.getElementById('requestsContainer');
     container.innerHTML = '';
     if (data.requests && data.requests.length > 0) {
@@ -733,40 +677,29 @@ async function loadRequests() {
             const div = document.createElement('div');
             div.className = 'request-item';
             div.innerHTML = `<span>${req.username}#${req.tag}</span>
-                            <div><button onclick="acceptRequest(${req.id}, ${req.user_id})" style="background:var(--success); border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">✅</button>
-                            <button onclick="declineRequest(${req.id})" style="background:var(--danger); border:none; padding:4px 8px; border-radius:8px; cursor:pointer; margin-left:5px;">❌</button></div>`;
+                            <div><button onclick="acceptRequest(${req.id}, ${req.user_id})" style="background:#23a55a; border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">✅</button>
+                            <button onclick="declineRequest(${req.id})" style="background:#ed4245; border:none; padding:4px 8px; border-radius:8px; cursor:pointer; margin-left:5px;">❌</button></div>`;
             container.appendChild(div);
         });
     }
 }
 
 window.acceptRequest = async (reqId, fromId) => {
-    await fetch('/friend/accept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: reqId, from: fromId, to: currentUser.id })
-    });
+    await fetch('/friend/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: reqId, from: fromId, to: currentUser.id }) });
     loadRequests();
+    loadFriends();
     loadChats();
 };
-
 window.declineRequest = async (reqId) => {
-    await fetch('/friend/decline', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: reqId })
-    });
+    await fetch('/friend/decline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: reqId }) });
     loadRequests();
 };
 
+// ============ ПОИСК ============
 document.getElementById('searchUserBtn')?.addEventListener('click', async () => {
     const query = document.getElementById('searchUserInput').value;
     if (!query) return;
-    const res = await fetch('/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: query })
-    });
+    const res = await fetch('/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: query }) });
     const data = await res.json();
     const container = document.getElementById('searchResults');
     if (data.isDiscord) {
@@ -778,8 +711,8 @@ document.getElementById('searchUserBtn')?.addEventListener('click', async () => 
         data.users.forEach(u => {
             const div = document.createElement('div');
             div.className = 'search-item';
-            div.innerHTML = `<span>${u.username}#${u.tag}</span>
-                            <button onclick="addFriend(${u.id})" style="background:var(--success); border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">➕</button>`;
+            div.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><div class="avatar" style="width:32px;height:32px;">${u.avatar ? `<img src="${u.avatar}">` : u.username[0]}</div><div><div>${u.username}#${u.tag}</div></div></div>
+                            <button onclick="addFriend(${u.id})" style="background:#23a55a; border:none; padding:4px 12px; border-radius:8px; cursor:pointer;">➕</button>`;
             container.appendChild(div);
         });
     } else {
@@ -789,11 +722,7 @@ document.getElementById('searchUserBtn')?.addEventListener('click', async () => 
 
 window.addFriend = async (userId) => {
     if (userId === currentUser.id) { alert('Нельзя добавить себя'); return; }
-    const res = await fetch('/friend/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: currentUser.id, to: userId })
-    });
+    const res = await fetch('/friend/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ from: currentUser.id, to: userId }) });
     const data = await res.json();
     if (data.success) {
         document.getElementById('searchResults').innerHTML = '<div class="success">✅ Запрос отправлен</div>';
@@ -803,14 +732,30 @@ window.addFriend = async (userId) => {
     }
 };
 
+// ============ ГРУППЫ ============
+async function loadGroups() {
+    const res = await fetch('/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
+    const data = await res.json();
+    document.getElementById('groupsCount').innerText = data.groups ? data.groups.length : 0;
+    const container = document.getElementById('groupsList');
+    if (container) {
+        container.innerHTML = '';
+        if (data.groups) {
+            data.groups.forEach(g => {
+                const div = document.createElement('div');
+                div.className = 'friend-item';
+                div.onclick = () => selectChat('group', g.id, g.name, g.avatar);
+                div.innerHTML = `<div><div class="friend-name">${g.name}</div></div>`;
+                container.appendChild(div);
+            });
+        }
+    }
+}
+
 document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
     const name = prompt('Название группы:');
     if (!name) return;
-    const friendsRes = await fetch('/friends', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id })
-    });
+    const friendsRes = await fetch('/friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
     const friendsData = await friendsRes.json();
     const friends = friendsData.friends || [];
     if (friends.length === 0) { alert('Нужны друзья для создания группы'); return; }
@@ -825,7 +770,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     modal.style.alignItems = 'center';
     modal.style.justifyContent = 'center';
     modal.style.zIndex = '2000';
-    modal.innerHTML = `<div style="background: var(--card); border-radius: 24px; padding: 24px; width: 90%; max-width: 400px;">
+    modal.innerHTML = `<div style="background:var(--card); border-radius:24px; padding:24px; width:90%; max-width:400px;">
                         <h3 style="margin-bottom:16px;">Выберите участников</h3>
                         <div id="groupMembersSelect" style="max-height:300px; overflow-y:auto;"></div>
                         <button id="confirmGroupBtn" style="background:var(--accent); border:none; padding:12px; border-radius:12px; color:white; width:100%; margin-top:16px; cursor:pointer;">Создать</button>
@@ -847,20 +792,17 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
             if (!selected.includes(f.id)) {
                 selected.push(f.id);
                 div.querySelector('button').innerHTML = '✓';
-                div.querySelector('button').style.background = 'var(--success)';
+                div.querySelector('button').style.background = '#23a55a';
             }
         };
         container.appendChild(div);
     });
     document.getElementById('confirmGroupBtn').onclick = async () => {
-        const res = await fetch('/group/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, owner: currentUser.id, members: selected })
-        });
+        const res = await fetch('/group/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, owner: currentUser.id, members: selected }) });
         const data = await res.json();
         if (data.success) {
             modal.remove();
+            loadGroups();
             loadChats();
         } else {
             alert(data.error);
@@ -870,42 +812,36 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
 });
 
 async function loadGroupInvites() {
-    const res = await fetch('/group/invites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id })
-    });
+    const res = await fetch('/group/invites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
     const data = await res.json();
     const container = document.getElementById('groupInvitesList');
-    container.innerHTML = '';
-    if (data.invites && data.invites.length > 0) {
-        container.innerHTML = '<div class="section-title">📩 Приглашения</div>';
-        data.invites.forEach(inv => {
-            const div = document.createElement('div');
-            div.className = 'request-item';
-            div.innerHTML = `<span>Приглашение в "${inv.group_name}" от ${inv.fromName}</span>
-                            <div><button onclick="acceptGroupInvite(${inv.id}, ${inv.group_id})" style="background:var(--success); border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">✅</button>
-                            <button onclick="declineGroupInvite(${inv.id})" style="background:var(--danger); border:none; padding:4px 8px; border-radius:8px; cursor:pointer; margin-left:5px;">❌</button></div>`;
-            container.appendChild(div);
-        });
+    if (container) {
+        container.innerHTML = '';
+        if (data.invites && data.invites.length > 0) {
+            container.innerHTML = '<div class="section-title">📩 Приглашения</div>';
+            data.invites.forEach(inv => {
+                const div = document.createElement('div');
+                div.className = 'request-item';
+                div.innerHTML = `<span>Приглашение в "${inv.group_name}" от ${inv.fromName}</span>
+                                <div><button onclick="acceptGroupInvite(${inv.id}, ${inv.group_id})" style="background:#23a55a; border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">✅</button>
+                                <button onclick="declineGroupInvite(${inv.id})" style="background:#ed4245; border:none; padding:4px 8px; border-radius:8px; cursor:pointer; margin-left:5px;">❌</button></div>`;
+                container.appendChild(div);
+            });
+        }
     }
 }
-
 window.acceptGroupInvite = async (invId, groupId) => {
-    await fetch('/group/accept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: invId, groupId, userId: currentUser.id })
-    });
-    loadChats();
+    await fetch('/group/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: invId, groupId, userId: currentUser.id }) });
+    loadGroups();
     loadGroupInvites();
+    loadChats();
 };
-
 window.declineGroupInvite = async (invId) => {
     await fetch('/group/decline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: invId }) });
     loadGroupInvites();
 };
 
+// ============ ПРОФИЛЬ ============
 function updateProfileDisplay() {
     document.getElementById('sideName').innerText = currentUser.username;
     document.getElementById('sideTag').innerText = '#' + currentUser.tag;
@@ -917,9 +853,7 @@ function updateProfileDisplay() {
     if (currentUser.hasPlus) {
         const badge = document.getElementById('sidePlusBadge');
         badge.classList.remove('hidden');
-        const expires = currentUser.plus_expires_at ? new Date(currentUser.plus_expires_at).toLocaleDateString() : 'навсегда';
-        badge.setAttribute('data-tooltip', `💎 SWILTS+ активна до ${expires}`);
-        badge.onmouseenter = (e) => showTooltip(e, `💎 SWILTS+ активна до ${expires}`);
+        badge.title = currentUser.plus_expires_at ? `SWILTS+ до ${new Date(currentUser.plus_expires_at).toLocaleDateString()}` : 'SWILTS+ навсегда';
     }
     if (currentUser.avatar) {
         document.getElementById('sideAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
@@ -929,34 +863,41 @@ function updateProfileDisplay() {
 
 function openEditProfile() {
     const modal = document.createElement('div');
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.right = '0';
-    modal.style.bottom = '0';
-    modal.style.background = 'rgba(0,0,0,0.8)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '2000';
-    modal.innerHTML = `<div style="background: var(--card); border-radius: 24px; padding: 24px; width: 90%; max-width: 400px;">
-                        <h3 style="margin-bottom:16px;">Редактировать профиль</h3>
-                        <input type="text" id="editAvatar" placeholder="Ссылка на аватар" value="${currentUser.avatar || ''}" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:1px solid var(--border); border-radius:10px; color:var(--text);">
-                        <textarea id="editBio" rows="3" placeholder="О себе" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:1px solid var(--border); border-radius:10px; color:var(--text);">${currentUser.bio || ''}</textarea>
-                        <button id="saveProfileBtn" style="background:var(--accent); border:none; padding:12px; border-radius:12px; color:white; width:100%; cursor:pointer;">Сохранить</button>
-                        <button id="closeProfileBtn" style="background:var(--hover); border:none; padding:12px; border-radius:12px; margin-top:8px; width:100%; cursor:pointer;">Закрыть</button>
-                        <div id="profileMsg" class="mt-2"></div>
-                    </div>`;
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-content">
+        <h3 style="margin-bottom:16px;">Редактировать профиль</h3>
+        <label>Аватар (до 1MB, jpg/png/gif)</label>
+        <input type="file" id="avatarFile" accept="image/*" style="margin-bottom:16px; background:var(--input); border:none; padding:8px; border-radius:8px; color:var(--text);">
+        ${currentUser.hasPlus ? `<label>Баннер (только для SWILTS+, jpg/png/gif)</label><input type="file" id="bannerFile" accept="image/*" style="margin-bottom:16px; background:var(--input); border:none; padding:8px; border-radius:8px; color:var(--text);">` : '<p class="text-muted" style="margin-bottom:16px;">💎 Баннер доступен только с SWILTS+</p>'}
+        <label>О себе</label>
+        <textarea id="editBio" rows="3" style="width:100%; padding:12px; background:var(--input); border:none; border-radius:10px; color:var(--text); margin-bottom:16px;">${currentUser.bio || ''}</textarea>
+        <button id="saveProfileBtn">Сохранить</button>
+        <button id="closeProfileBtn" style="background:var(--hover); margin-top:8px;">Закрыть</button>
+        <div id="profileMsg" class="mt-2"></div>
+    </div>`;
     document.body.appendChild(modal);
     document.getElementById('saveProfileBtn').onclick = async () => {
-        const avatar = document.getElementById('editAvatar').value;
+        const avatarFile = document.getElementById('avatarFile').files[0];
+        const bannerFile = document.getElementById('bannerFile').files[0];
         const bio = document.getElementById('editBio').value;
-        await fetch('/update-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ avatar, bio })
-        });
-        if (avatar) currentUser.avatar = avatar;
+        
+        if (avatarFile) {
+            const fd = new FormData();
+            fd.append('avatar', avatarFile);
+            const res = await fetch('/upload-avatar', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) currentUser.avatar = data.url;
+            else alert(data.error);
+        }
+        if (bannerFile && currentUser.hasPlus) {
+            const fd = new FormData();
+            fd.append('banner', bannerFile);
+            const res = await fetch('/upload-banner', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) currentUser.banner = data.url;
+            else alert(data.error);
+        }
+        await fetch('/update-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ avatar: currentUser.avatar, bio }) });
         if (bio) currentUser.bio = bio;
         updateProfileDisplay();
         document.getElementById('profileMsg').innerHTML = '<span class="success">✅ Сохранено</span>';
@@ -967,46 +908,26 @@ function openEditProfile() {
 
 function openChangePassword() {
     const modal = document.createElement('div');
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.right = '0';
-    modal.style.bottom = '0';
-    modal.style.background = 'rgba(0,0,0,0.8)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '2000';
-    modal.innerHTML = `<div style="background: var(--card); border-radius: 24px; padding: 24px; width: 90%; max-width: 400px;">
-                        <h3 style="margin-bottom:16px;">Смена пароля</h3>
-                        <input type="password" id="oldPass" placeholder="Старый пароль" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:1px solid var(--border); border-radius:10px; color:var(--text);">
-                        <input type="password" id="newPass" placeholder="Новый пароль" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:1px solid var(--border); border-radius:10px; color:var(--text);">
-                        <input type="password" id="confirmPass" placeholder="Подтвердите" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:1px solid var(--border); border-radius:10px; color:var(--text);">
-                        <button id="savePassBtn" style="background:var(--accent); border:none; padding:12px; border-radius:12px; color:white; width:100%; cursor:pointer;">Сменить</button>
-                        <button id="closePassBtn" style="background:var(--hover); border:none; padding:12px; border-radius:12px; margin-top:8px; width:100%; cursor:pointer;">Закрыть</button>
-                        <div id="passMsg" class="mt-2"></div>
-                    </div>`;
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-content">
+        <h3 style="margin-bottom:16px;">Смена пароля</h3>
+        <input type="password" id="oldPass" placeholder="Старый пароль" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:none; border-radius:10px; color:var(--text);">
+        <input type="password" id="newPass" placeholder="Новый пароль" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:none; border-radius:10px; color:var(--text);">
+        <input type="password" id="confirmPass" placeholder="Подтвердите" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:none; border-radius:10px; color:var(--text);">
+        <button id="savePassBtn">Сменить</button>
+        <button id="closePassBtn" style="background:var(--hover); margin-top:8px;">Закрыть</button>
+        <div id="passMsg" class="mt-2"></div>
+    </div>`;
     document.body.appendChild(modal);
     document.getElementById('savePassBtn').onclick = async () => {
         const oldPass = document.getElementById('oldPass').value;
         const newPass = document.getElementById('newPass').value;
         const confirmPass = document.getElementById('confirmPass').value;
-        if (newPass !== confirmPass) {
-            document.getElementById('passMsg').innerHTML = '<span class="error">❌ Пароли не совпадают</span>';
-            return;
-        }
-        const res = await fetch('/change-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass })
-        });
+        if (newPass !== confirmPass) { document.getElementById('passMsg').innerHTML = '<span class="error">❌ Пароли не совпадают</span>'; return; }
+        const res = await fetch('/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass }) });
         const data = await res.json();
-        if (data.success) {
-            document.getElementById('passMsg').innerHTML = '<span class="success">✅ Пароль изменён</span>';
-            setTimeout(() => modal.remove(), 1500);
-        } else {
-            document.getElementById('passMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>';
-        }
+        if (data.success) { document.getElementById('passMsg').innerHTML = '<span class="success">✅ Пароль изменён</span>'; setTimeout(() => modal.remove(), 1500); }
+        else { document.getElementById('passMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>'; }
     };
     document.getElementById('closePassBtn').onclick = () => modal.remove();
 }
@@ -1015,12 +936,12 @@ document.getElementById('editProfileBtn')?.addEventListener('click', openEditPro
 document.getElementById('changePassBtn')?.addEventListener('click', openChangePassword);
 document.getElementById('plusBtn')?.addEventListener('click', () => window.open('/plus.html', '_blank'));
 
+// ============ АДМИН ============
 async function loadAdmin() {
     if (currentUser.username === 'prisanok') {
         document.getElementById('adminPanel').classList.remove('hidden');
     }
 }
-
 async function loadAllUsers() {
     const res = await fetch('/all-users');
     const data = await res.json();
@@ -1031,47 +952,31 @@ async function loadAllUsers() {
             const div = document.createElement('div');
             div.className = 'user-item';
             div.innerHTML = `<span>${u.username}#${u.tag} ${u.banned ? '(забанен)' : ''}</span>
-                            <div>${u.banned ? `<button onclick="unbanUser(${u.id})" style="background:var(--success); border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">Разбан</button>` : `<button onclick="banUser(${u.id})" style="background:var(--danger); border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">Бан</button>`}</div>`;
+                            <div>${u.banned ? `<button onclick="unbanUser(${u.id})" style="background:#23a55a; border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">Разбан</button>` : `<button onclick="banUser(${u.id})" style="background:#ed4245; border:none; padding:4px 8px; border-radius:8px; cursor:pointer;">Бан</button>`}</div>`;
             container.appendChild(div);
         });
     }
     container.classList.remove('hidden');
 }
-
 window.banUser = async (id) => {
     const reason = prompt('Причина бана:');
     if (!reason) return;
-    await fetch('/ban', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: id, reason })
-    });
+    await fetch('/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, reason }) });
     loadAllUsers();
 };
-
 window.unbanUser = async (id) => {
-    await fetch('/unban', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: id })
-    });
+    await fetch('/unban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id }) });
     loadAllUsers();
 };
-
 document.getElementById('allUsersBtn')?.addEventListener('click', () => {
     const list = document.getElementById('usersList');
     if (list.classList.contains('hidden')) loadAllUsers();
     else list.classList.add('hidden');
 });
-
 document.getElementById('trollBtn')?.addEventListener('click', async () => {
     const name = document.getElementById('trollName').value;
     if (!name) return;
-    const res = await fetch('/troll', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: name, adminUsername: currentUser.username })
-    });
+    const res = await fetch('/troll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
     const data = await res.json();
     if (data.success) {
         currentUser = data.user;
@@ -1081,6 +986,7 @@ document.getElementById('trollBtn')?.addEventListener('click', async () => {
     }
 });
 
+// ============ АВТОРИЗАЦИЯ ============
 async function checkSession() {
     const res = await fetch('/session');
     const data = await res.json();
@@ -1089,38 +995,36 @@ async function checkSession() {
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
         updateProfileDisplay();
-        loadChats();
+        loadFriends();
         loadRequests();
+        loadGroups();
         loadGroupInvites();
+        loadChats();
         loadAdmin();
         initSocket();
     }
 }
-
 async function login() {
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
-    const res = await fetch('/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
+    const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
     const data = await res.json();
     if (data.success) {
         currentUser = data.user;
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
         updateProfileDisplay();
-        loadChats();
+        loadFriends();
         loadRequests();
+        loadGroups();
         loadGroupInvites();
+        loadChats();
         loadAdmin();
         initSocket();
     } else {
         document.getElementById('loginMsg').innerHTML = '❌ ' + data.error;
     }
 }
-
 async function register() {
     const username = document.getElementById('regUsername').value;
     const email = document.getElementById('regEmail').value;
@@ -1131,20 +1035,18 @@ async function register() {
         loadCaptcha();
         return;
     }
-    const res = await fetch('/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, captcha, ip: userIP })
-    });
+    const res = await fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, email, password, captcha, ip: userIP }) });
     const data = await res.json();
     if (data.success) {
         currentUser = data.user;
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
         updateProfileDisplay();
-        loadChats();
+        loadFriends();
         loadRequests();
+        loadGroups();
         loadGroupInvites();
+        loadChats();
         loadAdmin();
         initSocket();
     } else {
@@ -1152,17 +1054,30 @@ async function register() {
     }
 }
 
+// ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК АВТОРИЗАЦИИ
+document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        document.getElementById(tab.dataset.tab + 'Form').classList.add('active');
+    });
+});
+
+// ПЕРЕКЛЮЧЕНИЕ МЕНЮ В ГЛАВНОМ ИНТЕРФЕЙСЕ
+document.querySelectorAll('.nav-item[data-view]').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item[data-view]').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        currentView = item.dataset.view;
+        document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById(`${currentView}View`)?.classList.remove('hidden');
+    });
+});
+
 document.getElementById('doLogin')?.addEventListener('click', login);
-document.getElementById('showReg')?.addEventListener('click', () => {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('regForm').style.display = 'block';
-    loadCaptcha();
-});
-document.getElementById('backToLogin')?.addEventListener('click', () => {
-    document.getElementById('regForm').style.display = 'none';
-    document.getElementById('loginForm').style.display = 'block';
-});
 document.getElementById('doRegister')?.addEventListener('click', register);
+document.getElementById('logoutBtn')?.addEventListener('click', async () => { await fetch('/logout', { method: 'POST' }); location.reload(); });
 
 function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
