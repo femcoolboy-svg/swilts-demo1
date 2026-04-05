@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SWILTS — Мессенджер</title>
+    <title>SWILTS — Мессенджер с SWILTS+</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -19,6 +19,7 @@
             --accent-hover: #4752c4;
             --danger: #dc3545;
             --success: #28a745;
+            --plus: linear-gradient(135deg, #FFD700, #FFA500);
             --gradient: linear-gradient(135deg, #667eea, #764ba2);
         }
         
@@ -34,6 +35,7 @@
             --accent-hover: #4752c4;
             --danger: #dc3545;
             --success: #28a745;
+            --plus: linear-gradient(135deg, #FFD700, #FFA500);
             --gradient: linear-gradient(135deg, #667eea, #764ba2);
         }
         
@@ -54,6 +56,11 @@
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(50px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%,100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
         
         @keyframes glow {
@@ -107,6 +114,8 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: var(--border); color: var(--text-primary); }
+        .btn-plus { background: var(--plus); color: #1a1a2e; font-weight: bold; }
+        .btn-plus:hover { transform: scale(1.02); }
         .btn-secret { background: #ff6b35; color: white; }
         .btn-secret:hover { background: #e55a2b; }
         
@@ -132,7 +141,7 @@
             background: var(--bg-card);
             border-radius: 24px;
         }
-        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info { display: flex; align-items: center; gap: 15px; position: relative; }
         .avatar {
             width: 50px; height: 50px; border-radius: 50%;
             background: var(--accent);
@@ -145,7 +154,20 @@
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-name { font-weight: 700; font-size: 18px; }
         .user-tag { font-size: 12px; color: var(--text-secondary); }
-        .theme-buttons { display: flex; gap: 10px; }
+        .plus-badge {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--plus);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .theme-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         
         .grid { display: grid; grid-template-columns: 320px 1fr 320px; gap: 20px; }
         @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; gap: 16px; } }
@@ -171,7 +193,8 @@
         }
         .friend-item:hover, .group-item:hover, .search-result-item:hover { background: var(--bg-hover); transform: translateX(4px); }
         .friend-avatar {
-            width: 48px; height: 48px; border-radius: 50%;
+            width: 48px; height: 48px;
+            border-radius: 50%;
             background: var(--accent);
             display: flex;
             align-items: center;
@@ -181,11 +204,12 @@
             flex-shrink: 0;
         }
         .friend-info { flex: 1; margin-left: 12px; }
-        .friend-name { font-weight: 600; font-size: 14px; }
+        .friend-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
         .friend-tag { font-size: 11px; color: var(--text-secondary); }
+        .plus-icon { font-size: 12px; background: var(--plus); border-radius: 50%; padding: 2px 4px; }
         
         .chat-area { display: flex; flex-direction: column; height: 550px; }
-        .chat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -225,6 +249,20 @@
             justify-content: center;
             font-size: 40px;
             overflow: hidden;
+            position: relative;
+        }
+        .profile-plus-badge {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--plus);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
         }
         .profile-name { text-align: center; margin-top: 12px; font-weight: 700; font-size: 18px; }
         .profile-bio { text-align: center; font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
@@ -243,7 +281,6 @@
         }
         .menu-item:hover { background: var(--bg-hover); transform: translateX(4px); }
         
-        /* КРАСИВЫЙ ДИЗАЙН ВХОДА/РЕГИСТРАЦИИ */
         .auth-card {
             max-width: 450px;
             margin: 60px auto;
@@ -281,17 +318,9 @@
             font-size: 16px;
             font-weight: 600;
         }
-        .auth-card .btn-primary {
-            background: var(--gradient);
-        }
-        .auth-card .btn-secondary {
-            background: var(--border);
-            color: var(--text-primary);
-        }
         
         .call-btn { background: var(--accent); border-radius: 50%; width: 45px; height: 45px; font-size: 20px; padding: 0; }
         .call-btn.active { background: var(--danger); animation: pulse 1s infinite; }
-        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         
         .incoming-call {
             position: fixed; bottom: 100px; right: 20px;
@@ -313,6 +342,7 @@
             display: flex; align-items: center; justify-content: space-between;
             padding: 10px; margin: 5px 0; background: var(--bg-primary); border-radius: 12px;
         }
+        .color-preview { width: 30px; height: 30px; border-radius: 50%; margin-left: 10px; }
         
         .hidden { display: none; }
         .error { color: var(--danger); }
@@ -327,6 +357,7 @@
 </head>
 <body class="dark">
 <div class="container" id="app">
+    <!-- АВТОРИЗАЦИЯ -->
     <div id="authPanel">
         <div class="auth-card">
             <h1>🔷 SWILTS</h1>
@@ -352,21 +383,28 @@
         </div>
     </div>
 
+    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="mainPanel" class="hidden">
         <div class="header">
             <div class="user-info">
                 <div class="avatar" id="userAvatar">👤</div>
-                <div><div class="user-name" id="userName"></div><div class="user-tag" id="userTag"></div></div>
+                <div>
+                    <div class="user-name" id="userName" style="color: var(--user-color, inherit);"></div>
+                    <div class="user-tag" id="userTag"></div>
+                </div>
+                <div id="plusBadge" class="plus-badge hidden">💎</div>
             </div>
             <div class="theme-buttons">
                 <button class="btn btn-secondary" id="themeDarkBtn">🌙 Тёмная</button>
                 <button class="btn btn-secondary" id="themeLightBtn">☀️ Светлая</button>
                 <button class="btn btn-danger" id="logoutBtn">🚪 Выйти</button>
+                <button class="btn btn-plus" id="plusBtn">💎 SWILTS+</button>
                 <button class="btn btn-secret" id="secretBtn" onclick="window.open('https://xn--d1ah4a.com/login', '_blank')">🔐 SECRET</button>
             </div>
         </div>
 
         <div class="grid">
+            <!-- ЛЕВАЯ КОЛОНКА -->
             <div>
                 <div class="card">
                     <div class="panel-title">🔍 ПОИСК ДРУЗЕЙ</div>
@@ -407,6 +445,7 @@
                 </div>
             </div>
 
+            <!-- ЦЕНТРАЛЬНЫЙ ЧАТ -->
             <div class="card chat-area">
                 <div class="chat-header">
                     <select id="chatType" style="width:auto; flex:1;">
@@ -431,12 +470,16 @@
                 </div>
             </div>
 
+            <!-- ПРАВАЯ КОЛОНКА -->
             <div>
                 <div class="card">
                     <div class="profile-banner" id="profileBanner"></div>
                     <div style="text-align: center;">
-                        <div class="profile-avatar" id="profileAvatar">👤</div>
-                        <div class="profile-name" id="profileName"></div>
+                        <div class="profile-avatar" id="profileAvatar">
+                            👤
+                            <div id="profilePlusBadge" class="profile-plus-badge hidden">💎</div>
+                        </div>
+                        <div class="profile-name" id="profileName" style="color: var(--user-color, inherit);"></div>
                         <div class="profile-bio" id="profileBio"></div>
                     </div>
                     <div class="profile-stats">
@@ -449,6 +492,7 @@
                     <div class="menu-item" id="changeUsernameBtn">✏️ Сменить ник</div>
                     <div class="menu-item" id="editStatusBtn">🟢 Сменить статус</div>
                     <div class="menu-item" id="groupInviteSettingBtn">🔒 Настройки групп</div>
+                    <div class="menu-item" id="plusSettingsBtn" style="background: var(--plus); color: #1a1a2e;">💎 Настройки SWILTS+</div>
                 </div>
             </div>
         </div>
@@ -508,6 +552,83 @@ function setTheme(theme) {
 setTheme(localStorage.getItem('theme') || 'dark');
 document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
 document.getElementById('themeLightBtn').onclick = () => setTheme('light');
+
+// SWILTS+ кнопка
+document.getElementById('plusBtn').onclick = () => { window.open('/plus.html', '_blank'); };
+document.getElementById('plusSettingsBtn').onclick = async () => {
+    // Проверяем статус подписки
+    const res = await fetch('/plus/status');
+    const data = await res.json();
+    if (!data.hasPlus) {
+        alert('У вас нет активной подписки SWILTS+. Оформите её на странице SWILTS+');
+        window.open('/plus.html', '_blank');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>💎 Настройки SWILTS+</h3>
+            <label>Цвет ника (RGB/HEX)</label>
+            <input type="color" id="plusColor" value="${currentUser.plus_color || '#5865f2'}">
+            <div style="display:flex; gap:10px; margin:10px 0;">
+                <div style="flex:1;">Выберите значок:</div>
+                <select id="plusBadgeSelect">
+                    <option value="👑" ${currentUser.plus_badge === '👑' ? 'selected' : ''}>👑 Корона</option>
+                    <option value="💎" ${currentUser.plus_badge === '💎' ? 'selected' : ''}>💎 Бриллиант</option>
+                    <option value="⭐" ${currentUser.plus_badge === '⭐' ? 'selected' : ''}>⭐ Звезда</option>
+                    <option value="🎖️" ${currentUser.plus_badge === '🎖️' ? 'selected' : ''}>🎖️ Медаль</option>
+                    <option value="🔥" ${currentUser.plus_badge === '🔥' ? 'selected' : ''}>🔥 Огонь</option>
+                </select>
+            </div>
+            <label>Анимированный аватар (GIF)</label>
+            <input type="file" id="animatedAvatar" accept="image/gif">
+            <label>Видео-баннер</label>
+            <input type="file" id="videoBanner" accept="video/mp4,video/webm">
+            <button id="savePlusSettings" class="btn btn-primary" style="margin-top:16px;">💾 Сохранить</button>
+            <button id="closePlusModal" class="btn btn-secondary" style="margin-top:10px;">Закрыть</button>
+            <div id="plusMsg" class="mt-2"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('savePlusSettings').onclick = async () => {
+        const color = document.getElementById('plusColor').value;
+        const badge = document.getElementById('plusBadgeSelect').value;
+        
+        // Сохраняем настройки
+        await fetch('/plus/update-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plus_color: color, plus_badge: badge })
+        });
+        
+        // Загрузка анимированного аватара
+        const avatarFile = document.getElementById('animatedAvatar').files[0];
+        if (avatarFile) {
+            const fd = new FormData();
+            fd.append('avatar', avatarFile);
+            const uploadRes = await fetch('/upload-animated-avatar', { method: 'POST', body: fd });
+            const uploadData = await uploadRes.json();
+            if (!uploadData.success) alert('Ошибка загрузки аватара: ' + (uploadData.error || 'неизвестно'));
+        }
+        
+        // Загрузка видео-баннера
+        const bannerFile = document.getElementById('videoBanner').files[0];
+        if (bannerFile) {
+            const fd = new FormData();
+            fd.append('banner', bannerFile);
+            const uploadRes = await fetch('/upload-video-banner', { method: 'POST', body: fd });
+            const uploadData = await uploadRes.json();
+            if (!uploadData.success) alert('Ошибка загрузки баннера: ' + (uploadData.error || 'неизвестно'));
+        }
+        
+        document.getElementById('plusMsg').innerHTML = '<span class="success">✅ Настройки сохранены! Обновите страницу.</span>';
+        setTimeout(() => { modal.remove(); location.reload(); }, 1500);
+    };
+    document.getElementById('closePlusModal').onclick = () => modal.remove();
+};
 
 // WebSocket
 function initSocket() {
@@ -662,7 +783,7 @@ async function loadFriends() {
         div.className = 'friend-item';
         div.onclick = () => { currentChatType = 'private'; currentChatId = f.id; document.getElementById('chatType').value = 'private'; switchChat(); };
         let avatarHtml = (f.avatar && f.avatar !== '') ? `<img src="${f.avatar}">` : f.username[0].toUpperCase();
-        div.innerHTML = `<div class="friend-avatar">${avatarHtml}</div><div class="friend-info"><div class="friend-name">${f.username}</div><div class="friend-tag">#${f.tag}</div></div>`;
+        div.innerHTML = `<div class="friend-avatar">${avatarHtml}</div><div class="friend-info"><div class="friend-name">${f.username}${f.plus_badge ? `<span class="plus-icon">${f.plus_badge}</span>` : ''}<div class="friend-tag">#${f.tag}</div></div></div>`;
         container.appendChild(div);
         const opt = document.createElement('option'); opt.value = f.id; opt.text = `${f.username}#${f.tag}`;
         select.appendChild(opt);
@@ -908,9 +1029,32 @@ async function updateProfileDisplay() {
     document.getElementById('userName').innerText = currentUser.username;
     document.getElementById('userTag').innerText = '#' + currentUser.tag;
     document.getElementById('profileName').innerText = currentUser.username + '#' + currentUser.tag;
+    
+    // Применяем цвет ника из SWILTS+
+    if (currentUser.plus_color) {
+        document.documentElement.style.setProperty('--user-color', currentUser.plus_color);
+        document.getElementById('userName').style.color = currentUser.plus_color;
+        document.getElementById('profileName').style.color = currentUser.plus_color;
+    }
+    
+    // Показываем бейдж SWILTS+
+    if (currentUser.hasPlus) {
+        document.getElementById('plusBadge').classList.remove('hidden');
+        document.getElementById('profilePlusBadge').classList.remove('hidden');
+        if (currentUser.plus_badge) {
+            document.getElementById('plusBadge').innerHTML = currentUser.plus_badge;
+            document.getElementById('profilePlusBadge').innerHTML = currentUser.plus_badge;
+        }
+    }
+    
     if (currentUser.avatar && currentUser.avatar !== '') {
-        document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
-        document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
+        if (currentUser.hasPlus && currentUser.plus_animated_avatar) {
+            document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.plus_animated_avatar}">`;
+            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.plus_animated_avatar}">`;
+        } else {
+            document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
+            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
+        }
     }
     if (currentUser.banner && currentUser.banner !== '') {
         document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.banner})`;
@@ -960,7 +1104,7 @@ async function checkSession() {
 async function login() {
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
-    const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, ip: userIP }) });
+    const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
     const data = await res.json();
     if (data.success) { 
         currentUser = data.user; 
