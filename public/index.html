@@ -3,16 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SWILTS — Современный мессенджер</title>
+    <title>SWILTS — Мессенджер с друзьями и серверами</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* ============ ПЕРЕМЕННЫЕ ============ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body.dark {
             --bg-primary: #0a0c10;
             --bg-secondary: #111214;
@@ -56,7 +51,7 @@
         body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             color: var(--text-primary);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
             transition: all 0.3s;
             min-height: 100vh;
         }
@@ -73,61 +68,15 @@
             z-index: 0;
         }
 
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 80% 80%, rgba(118,75,162,0.15) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
+        .container { max-width: 1500px; margin: 0 auto; padding: 24px; position: relative; z-index: 1; }
 
-        .container {
-            max-width: 1500px;
-            margin: 0 auto;
-            padding: 24px;
-            position: relative;
-            z-index: 1;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
-        /* ============ АНИМАЦИИ ============ */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes pulse {
-            0%,100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        @keyframes float {
-            0%,100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-
-        /* ============ ОСНОВНЫЕ КЛАССЫ ============ */
-        .card {
-            background: var(--bg-card);
-            border-radius: 28px;
-            padding: 24px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s;
-            border: 1px solid var(--border);
-        }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
+        .card { background: var(--bg-card); border-radius: 28px; padding: 24px; box-shadow: var(--shadow); transition: all 0.3s; border: 1px solid var(--border); }
+        .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
         .btn {
             padding: 12px 24px;
@@ -139,38 +88,14 @@
             font-size: 15px;
             font-family: inherit;
         }
-        .btn-primary {
-            background: var(--gradient);
-            color: white;
-        }
-        .btn-primary:hover {
-            transform: scale(1.02);
-            filter: brightness(1.05);
-        }
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #c03537;
-            transform: scale(1.02);
-        }
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        .btn-secondary {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        .btn-plus {
-            background: var(--plus);
-            color: #1a1a2e;
-            font-weight: bold;
-        }
-        .btn-secondary:hover, .btn-plus:hover {
-            transform: scale(1.02);
-        }
+        .btn-primary { background: var(--gradient); color: white; }
+        .btn-primary:hover { transform: scale(1.02); filter: brightness(1.05); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #c03537; transform: scale(1.02); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text-primary); }
+        .btn-plus { background: var(--plus); color: #1a1a2e; font-weight: bold; }
+        .btn-secondary:hover, .btn-plus:hover { transform: scale(1.02); }
 
         input, select, textarea {
             width: 100%;
@@ -189,7 +114,6 @@
             box-shadow: 0 0 0 3px rgba(88,101,242,0.2);
         }
 
-        /* ============ ШАПКА ============ */
         .header {
             display: flex;
             justify-content: space-between;
@@ -216,21 +140,10 @@
             color: transparent;
             animation: float 3s infinite;
         }
-        .site-title .emoji {
-            font-size: 34px;
-        }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            position: relative;
-        }
-
+        .user-info { display: flex; align-items: center; gap: 18px; position: relative; }
         .avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+            width: 60px; height: 60px; border-radius: 50%;
             background: var(--gradient);
             display: flex;
             align-items: center;
@@ -239,37 +152,13 @@
             overflow: hidden;
             transition: all 0.3s;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        .avatar:hover {
-            transform: scale(1.05);
-            filter: brightness(1.05);
-        }
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-        .user-name {
-            font-weight: 700;
-            font-size: 20px;
-            transition: color 0.3s;
-        }
-        .user-tag {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .user-created {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 3px;
-        }
-
+        .avatar:hover { transform: scale(1.05); }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { font-weight: 700; font-size: 20px; }
+        .user-tag { font-size: 13px; color: var(--text-secondary); }
+        .user-created { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
         .plus-badge {
             position: absolute;
             bottom: -2px;
@@ -285,16 +174,7 @@
             border: 2px solid var(--bg-card);
         }
 
-        .theme-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .theme-buttons .btn {
-            padding: 10px 18px;
-        }
-
-        /* ============ ПРИВЕТСТВИЕ ============ */
+        .theme-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .greeting-toast {
             position: fixed;
             bottom: 30px;
@@ -313,12 +193,8 @@
             animation: slideInRight 0.4s;
         }
 
-        /* ============ ОСНОВНАЯ СЕТКА ============ */
-        .main-layout {
-            display: flex;
-            gap: 24px;
-        }
-
+        .main-layout { display: flex; gap: 24px; }
+        
         /* ЛЕВАЯ ПАНЕЛЬ СЕРВЕРОВ */
         .servers-sidebar {
             width: 88px;
@@ -331,11 +207,8 @@
             gap: 14px;
             border: 1px solid var(--border);
         }
-
         .server-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
+            width: 56px; height: 56px; border-radius: 50%;
             background: var(--accent);
             display: flex;
             align-items: center;
@@ -344,30 +217,11 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .server-icon:hover {
-            border-radius: 18px;
-            transform: scale(1.05);
-        }
-        .server-icon.active {
-            border-radius: 18px;
-            background: var(--gradient);
-            box-shadow: 0 0 0 4px var(--accent);
-        }
-        .server-add {
-            background: var(--bg-hover);
-            font-size: 32px;
-        }
-        .server-add:hover {
-            background: var(--accent);
-            color: white;
-        }
-
-        .servers-divider {
-            width: 40px;
-            height: 2px;
-            background: var(--border);
-            margin: 8px 0;
-        }
+        .server-icon:hover { border-radius: 18px; transform: scale(1.05); }
+        .server-icon.active { border-radius: 18px; background: var(--gradient); box-shadow: 0 0 0 4px var(--accent); }
+        .server-add { background: var(--bg-hover); font-size: 32px; }
+        .server-add:hover { background: var(--accent); color: white; }
+        .servers-divider { width: 40px; height: 2px; background: var(--border); margin: 8px 0; }
 
         /* ПАНЕЛЬ КАНАЛОВ */
         .channels-sidebar {
@@ -377,31 +231,10 @@
             padding: 20px;
             border: 1px solid var(--border);
         }
-
-        .server-header {
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-        .server-name {
-            font-weight: 700;
-            font-size: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .category {
-            margin-top: 20px;
-        }
-        .category-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-            cursor: pointer;
-        }
+        .server-header { padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+        .server-name { font-weight: 700; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+        .category { margin-top: 20px; }
+        .category-title { font-size: 12px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px; letter-spacing: 1px; cursor: pointer; }
         .channel {
             padding: 10px 14px;
             border-radius: 12px;
@@ -413,16 +246,8 @@
             transition: all 0.2s;
             margin-bottom: 4px;
         }
-        .channel:hover {
-            background: var(--bg-hover);
-        }
-        .channel.active {
-            background: var(--bg-hover);
-            color: var(--accent);
-        }
-        .channel-voice {
-            color: var(--text-secondary);
-        }
+        .channel:hover { background: var(--bg-hover); }
+        .channel.active { background: var(--bg-hover); color: var(--accent); }
 
         /* ЧАТ */
         .chat-area {
@@ -434,17 +259,8 @@
             overflow: hidden;
             border: 1px solid var(--border);
         }
-
-        .chat-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg-card);
-        }
-        .chat-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
+        .chat-header { padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
+        .chat-header h2 { font-size: 20px; font-weight: 600; }
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -455,7 +271,6 @@
             background: var(--bg-primary);
             min-height: 500px;
         }
-
         .message {
             max-width: 75%;
             padding: 12px 18px;
@@ -464,67 +279,27 @@
             font-size: 15px;
             animation: slideInLeft 0.2s;
         }
-        .message-own {
-            align-self: flex-end;
-            background: var(--accent);
-            color: white;
-            border-bottom-right-radius: 6px;
-        }
-        .message-other {
-            align-self: flex-start;
-            background: var(--bg-input);
-            border-bottom-left-radius: 6px;
-        }
-        .message-time {
-            font-size: 10px;
-            margin-top: 6px;
-            opacity: 0.7;
-        }
-        .message strong {
-            font-size: 13px;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .input-area {
-            display: flex;
-            gap: 14px;
-            padding: 20px 24px;
-            background: var(--bg-card);
-            border-top: 1px solid var(--border);
-        }
-        .input-area input {
-            flex: 1;
-            margin: 0;
-            font-size: 15px;
-        }
-        .input-area .btn {
-            padding: 12px 28px;
-        }
+        .message-own { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 6px; }
+        .message-other { align-self: flex-start; background: var(--bg-input); border-bottom-left-radius: 6px; }
+        .message-time { font-size: 10px; margin-top: 6px; opacity: 0.7; }
+        .message strong { font-size: 13px; display: block; margin-bottom: 4px; }
+        .input-area { display: flex; gap: 14px; padding: 20px 24px; background: var(--bg-card); border-top: 1px solid var(--border); }
+        .input-area input { flex: 1; margin: 0; }
 
         /* ПРАВАЯ ПАНЕЛЬ */
         .right-panel {
-            width: 300px;
+            width: 320px;
             background: var(--bg-card);
             border-radius: 28px;
             padding: 20px;
             border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
-
-        .profile-banner {
-            width: 100%;
-            height: 100px;
-            border-radius: 20px;
-            background: var(--gradient);
-            margin-bottom: -40px;
-            background-size: cover;
-            background-position: center;
-        }
-
+        .profile-banner { width: 100%; height: 100px; border-radius: 20px; background: var(--gradient); margin-bottom: -40px; background-size: cover; background-position: center; }
         .profile-avatar {
-            width: 88px;
-            height: 88px;
-            border-radius: 50%;
+            width: 88px; height: 88px; border-radius: 50%;
             border: 4px solid var(--bg-card);
             margin: 0 auto;
             background: var(--accent);
@@ -536,52 +311,48 @@
             position: relative;
             cursor: pointer;
         }
-        .profile-avatar:hover {
-            transform: scale(1.02);
-        }
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .profile-name { text-align: center; margin-top: 14px; font-weight: 700; font-size: 20px; }
+        .profile-bio { text-align: center; font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+        .stats { display: flex; justify-content: space-around; padding: 16px; background: var(--bg-input); border-radius: 20px; }
+        .stat { text-align: center; }
+        .stat-value { font-weight: 700; font-size: 26px; }
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
-        .profile-name {
-            text-align: center;
-            margin-top: 14px;
-            font-weight: 700;
-            font-size: 20px;
-        }
-        .profile-bio {
-            text-align: center;
-            font-size: 13px;
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             color: var(--text-secondary);
-            margin-top: 6px;
+            margin-bottom: 12px;
         }
-
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-            padding: 16px;
+        .list-item {
             background: var(--bg-input);
-            border-radius: 20px;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .stat {
-            text-align: center;
+        .list-item:hover { background: var(--bg-hover); transform: translateX(4px); }
+        .friend-avatar-small {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            font-size: 20px;
+            overflow: hidden;
         }
-        .stat-value {
-            font-weight: 700;
-            font-size: 26px;
-        }
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
+        .friend-name { font-weight: 600; font-size: 15px; }
+        .friend-tag { font-size: 12px; color: var(--text-secondary); }
+        .friend-created { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+        .request-buttons { display: flex; gap: 8px; }
         .menu-item {
             padding: 14px;
-            margin: 10px 0;
             background: var(--bg-input);
             border-radius: 16px;
             cursor: pointer;
@@ -590,12 +361,19 @@
             font-weight: 500;
             font-size: 15px;
         }
-        .menu-item:hover {
-            background: var(--bg-hover);
-            transform: translateX(5px);
+        .menu-item:hover { background: var(--bg-hover); transform: translateX(5px); }
+
+        /* ГРУППЫ */
+        .group-create-modal .friend-select-item {
+            background: var(--bg-input);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* АВТОРИЗАЦИЯ */
         .auth-card {
             max-width: 500px;
             margin: 80px auto;
@@ -605,28 +383,10 @@
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border);
         }
-        .auth-card h1 {
-            text-align: center;
-            margin-bottom: 36px;
-            font-size: 52px;
-            background: linear-gradient(135deg, #5865f2, #764ba2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 800;
-        }
-        .auth-card input {
-            margin-bottom: 18px;
-            padding: 16px 20px;
-            font-size: 16px;
-        }
-        .auth-card button {
-            margin-top: 10px;
-            font-size: 16px;
-            padding: 14px;
-        }
+        .auth-card h1 { text-align: center; margin-bottom: 36px; font-size: 52px; background: linear-gradient(135deg, #5865f2, #764ba2); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+        .auth-card input { margin-bottom: 18px; padding: 16px 20px; font-size: 16px; }
+        .auth-card button { margin-top: 10px; font-size: 16px; padding: 14px; }
 
-        /* МОДАЛКИ */
         .modal {
             position: fixed;
             top: 0;
@@ -650,14 +410,7 @@
             border: 1px solid var(--border);
             animation: slideInLeft 0.3s;
         }
-        .modal-content h3 {
-            margin-bottom: 24px;
-            font-size: 28px;
-        }
-        .modal-content input, .modal-content select {
-            margin-bottom: 18px;
-            padding: 14px;
-        }
+        .modal-content h3 { margin-bottom: 24px; font-size: 28px; }
 
         .hidden { display: none; }
         .error { color: var(--danger); }
@@ -665,13 +418,11 @@
         .text-center { text-align: center; }
         .text-muted { color: var(--text-secondary); }
         .mt-2 { margin-top: 10px; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .flex { display: flex; align-items: center; gap: 12px; }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-input); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
         @media (max-width: 1200px) {
             .main-layout { flex-direction: column; }
@@ -682,7 +433,6 @@
 </head>
 <body class="dark">
 <div class="container">
-    <!-- АВТОРИЗАЦИЯ -->
     <div id="authPanel">
         <div class="auth-card">
             <h1>🔷 SWILTS</h1>
@@ -706,10 +456,9 @@
         </div>
     </div>
 
-    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="mainPanel" class="hidden">
         <div class="header">
-            <div class="site-title"><span class="emoji">🔷</span><span>SWILTS</span></div>
+            <div class="site-title"><span>🔷</span><span>SWILTS</span></div>
             <div class="user-info">
                 <div class="avatar" id="userAvatar">👤</div>
                 <div class="user-details">
@@ -740,11 +489,11 @@
                 <div class="server-header">
                     <div class="server-name">
                         <span id="currentServerName">Выберите сервер</span>
-                        <span id="serverMenuBtn" style="cursor:pointer; font-size:18px;">⚙️</span>
+                        <span id="serverMenuBtn" style="cursor:pointer;">⚙️</span>
                     </div>
                 </div>
                 <div id="channelsList"></div>
-                <div id="membersList" class="member-list" style="margin-top:24px;">
+                <div style="margin-top:20px;">
                     <div class="category-title">📢 УЧАСТНИКИ</div>
                     <div id="serverMembers"></div>
                 </div>
@@ -755,14 +504,14 @@
                 <div class="chat-header">
                     <h2 id="currentChannelName"># Выберите канал</h2>
                 </div>
-                <div id="messages" class="messages"><div class="text-center text-muted" style="margin-top:80px;">👈 Выберите канал для начала общения</div></div>
+                <div id="messages" class="messages"><div class="text-center text-muted" style="margin-top:80px;">👈 Выберите канал</div></div>
                 <div class="input-area">
                     <input type="text" id="messageInput" placeholder="Сообщение...">
                     <button class="btn btn-primary" id="sendMsgBtn">📤 Отправить</button>
                 </div>
             </div>
 
-            <!-- ПРАВАЯ ПАНЕЛЬ -->
+            <!-- ПРАВАЯ ПАНЕЛЬ (ДРУЗЬЯ, ГРУППЫ, ПРОФИЛЬ) -->
             <div class="right-panel">
                 <div class="profile-banner" id="profileBanner"></div>
                 <div class="text-center">
@@ -773,15 +522,41 @@
                 <div class="stats">
                     <div class="stat"><div class="stat-value" id="friendsCount">0</div><div class="stat-label">друзей</div></div>
                     <div class="stat"><div class="stat-value" id="requestsCount">0</div><div class="stat-label">запросов</div></div>
+                    <div class="stat"><div class="stat-value" id="groupsCount">0</div><div class="stat-label">групп</div></div>
                 </div>
+
+                <!-- ПОИСК ДРУЗЕЙ -->
+                <div class="section-title">🔍 ПОИСК</div>
+                <div class="flex" style="margin-bottom:16px;">
+                    <input type="text" id="searchInput" placeholder="Никнейм или тег..." style="flex:1;">
+                    <button class="btn btn-primary" id="searchBtn">Найти</button>
+                </div>
+                <div id="searchResults"></div>
+
+                <!-- ЗАПРОСЫ В ДРУЗЬЯ -->
+                <div class="section-title">📨 ЗАПРОСЫ</div>
+                <div id="requestsList"></div>
+
+                <!-- ДРУЗЬЯ -->
+                <div class="section-title">👥 ДРУЗЬЯ</div>
+                <div id="friendsList"></div>
+
+                <!-- ГРУППЫ -->
+                <div class="section-title">💬 ГРУППЫ</div>
+                <button class="btn btn-primary" id="createGroupBtn" style="width:100%; margin-bottom:12px;">➕ Создать группу</button>
+                <div id="groupsList"></div>
+
+                <!-- НАСТРОЙКИ ПРОФИЛЯ -->
                 <div class="menu-item" id="editAvatarBtn">📷 Сменить аватар</div>
                 <div class="menu-item" id="changeUsernameBtn">✏️ Сменить ник</div>
                 <div class="menu-item" id="editStatusBtn">🟢 Сменить статус</div>
-                <div class="menu-item" id="friendsBtn">👥 Друзья</div>
+
+                <!-- АДМИН ПАНЕЛЬ -->
                 <div id="adminPanel" class="hidden" style="margin-top:20px;">
+                    <div class="section-title">👑 АДМИН</div>
                     <div class="menu-item" id="trollBtn" style="background:var(--danger);">🎭 ТРОЛЬ</div>
                     <input type="text" id="trollName" placeholder="Никнейм" class="mt-2">
-                    <div class="menu-item" id="allUsersBtn" style="margin-top:10px;">👥 Все пользователи</div>
+                    <div class="menu-item" id="allUsersBtn">👥 Все пользователи</div>
                     <div id="usersList" class="hidden" style="margin-top:10px;"></div>
                 </div>
             </div>
@@ -794,6 +569,7 @@
 let currentUser = null;
 let currentServerId = null;
 let currentChannelId = null;
+let currentChatType = 'server';
 let socket = null;
 
 let userIP = '';
@@ -829,16 +605,20 @@ function initSocket() {
     socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
     socket.on('server-message', (data) => {
         if (currentChannelId === data.channelId) {
-            appendMessage(data.message, false, data.time, data.username);
+            appendServerMessage(data.message, false, data.time, data.username);
         }
     });
     socket.on('private-message', (data) => {
         showNotification(data.fromName, data.msg);
         loadFriends();
     });
+    socket.on('group-message', (data) => {
+        showNotification(data.groupName, data.msg);
+        loadGroups();
+    });
 }
 
-function appendMessage(msg, isOwn, time, username) {
+function appendServerMessage(msg, isOwn, time, username) {
     const container = document.getElementById('messages');
     const div = document.createElement('div');
     div.className = `message ${isOwn ? 'message-own' : 'message-other'}`;
@@ -910,16 +690,12 @@ async function selectServer(serverId) {
         if (data.members) {
             data.members.forEach(m => {
                 const div = document.createElement('div');
-                div.className = 'member';
                 div.style.display = 'flex';
                 div.style.alignItems = 'center';
                 div.style.gap = '12px';
                 div.style.padding = '10px';
                 div.style.borderRadius = '12px';
                 div.style.cursor = 'pointer';
-                div.style.transition = 'background 0.2s';
-                div.onmouseenter = () => div.style.background = 'var(--bg-hover)';
-                div.onmouseleave = () => div.style.background = 'transparent';
                 div.innerHTML = `<div class="avatar" style="width:36px;height:36px;font-size:16px;">${m.avatar ? `<img src="${m.avatar}">` : m.username[0]}</div>
                                 <div><div class="friend-name">${m.username}</div><div class="friend-tag">${m.role === 'owner' ? 'Владелец' : (m.role === 'admin' ? 'Админ' : 'Участник')}</div></div>`;
                 membersContainer.appendChild(div);
@@ -975,8 +751,6 @@ document.getElementById('createServerBtn').onclick = async () => {
     if (data.success) {
         loadServers();
         setTimeout(() => selectServer(data.serverId), 500);
-    } else {
-        alert('Ошибка создания сервера');
     }
 };
 
@@ -989,6 +763,25 @@ async function loadFriends() {
     });
     const data = await res.json();
     document.getElementById('friendsCount').innerText = data.friends ? data.friends.length : 0;
+    const container = document.getElementById('friendsList');
+    container.innerHTML = '';
+    if (data.friends) {
+        data.friends.forEach(f => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.onclick = () => alert(`Чат с ${f.username} будет доступен позже`);
+            const date = f.created_at ? new Date(f.created_at).toLocaleDateString() : 'неизвестно';
+            div.innerHTML = `<div class="flex" style="width:100%;">
+                                <div class="friend-avatar-small">${f.avatar ? `<img src="${f.avatar}">` : f.username[0]}</div>
+                                <div>
+                                    <div class="friend-name">${f.username}${f.plus_badge ? `<span style="background:var(--plus);border-radius:50%;padding:2px 6px;margin-left:6px;font-size:11px;">${f.plus_badge}</span>` : ''}</div>
+                                    <div class="friend-tag">#${f.tag}</div>
+                                    <div class="friend-created">📅 ${date}</div>
+                                </div>
+                             </div>`;
+            container.appendChild(div);
+        });
+    }
 }
 
 async function loadRequests() {
@@ -999,7 +792,178 @@ async function loadRequests() {
     });
     const data = await res.json();
     document.getElementById('requestsCount').innerText = data.requests ? data.requests.length : 0;
+    const container = document.getElementById('requestsList');
+    container.innerHTML = '';
+    if (data.requests) {
+        data.requests.forEach(req => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `<span>👤 ${req.username}#${req.tag}</span>
+                            <div class="request-buttons">
+                                <button class="btn btn-success" style="padding:5px 10px;" onclick="acceptRequest(${req.id}, ${req.user_id})">✅</button>
+                                <button class="btn btn-danger" style="padding:5px 10px;" onclick="declineRequest(${req.id})">❌</button>
+                            </div>`;
+            container.appendChild(div);
+        });
+    }
 }
+
+async function acceptRequest(requestId, fromId) {
+    await fetch('/friend/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: requestId, from: fromId, to: currentUser.id })
+    });
+    loadFriends();
+    loadRequests();
+}
+
+async function declineRequest(requestId) {
+    await fetch('/friend/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: requestId })
+    });
+    loadFriends();
+    loadRequests();
+}
+
+// ============ ПОИСК ПОЛЬЗОВАТЕЛЕЙ ============
+document.getElementById('searchBtn').onclick = async () => {
+    const query = document.getElementById('searchInput').value;
+    if (!query) return;
+    const res = await fetch('/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: query })
+    });
+    const data = await res.json();
+    const container = document.getElementById('searchResults');
+    if (data.isDiscord) {
+        window.open(`https://discord.com/users/${data.id}`, '_blank');
+        alert('🔷 Переход в Discord');
+        return;
+    }
+    container.innerHTML = '';
+    if (data.users && data.users.length) {
+        data.users.forEach(u => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `<span>${u.username}#${u.tag}</span>
+                            <button class="btn btn-success" style="padding:5px 10px;" onclick="addFriend(${u.id})">➕</button>`;
+            container.appendChild(div);
+        });
+    } else {
+        container.innerHTML = '<div class="error">❌ Пользователь не найден</div>';
+    }
+};
+
+async function addFriend(userId) {
+    if (userId === currentUser.id) {
+        alert('Нельзя добавить себя');
+        return;
+    }
+    const res = await fetch('/friend/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: currentUser.id, to: userId })
+    });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById('searchResults').innerHTML = '<div class="success">✅ Запрос отправлен</div>';
+        loadRequests();
+    } else {
+        alert('❌ ' + data.error);
+    }
+}
+
+// ============ ГРУППЫ ============
+async function loadGroups() {
+    const res = await fetch('/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id })
+    });
+    const data = await res.json();
+    document.getElementById('groupsCount').innerText = data.groups ? data.groups.length : 0;
+    const container = document.getElementById('groupsList');
+    container.innerHTML = '';
+    if (data.groups) {
+        data.groups.forEach(g => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.onclick = () => alert(`Чат группы "${g.name}" будет доступен позже`);
+            div.innerHTML = `<div class="friend-name">${g.name}</div>`;
+            container.appendChild(div);
+        });
+    }
+}
+
+document.getElementById('createGroupBtn').onclick = async () => {
+    const name = prompt('Название группы:');
+    if (!name) return;
+    
+    const res = await fetch('/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id })
+    });
+    const data = await res.json();
+    const friends = data.friends || [];
+    if (friends.length < 2) {
+        alert('Нужно минимум 2 друга для создания группы');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-content">
+                        <h3>Выберите участников (минимум 2)</h3>
+                        <div id="groupFriends"></div>
+                        <button class="btn btn-primary" id="confirmGroupBtn" style="margin-top:16px;">Создать группу</button>
+                        <button class="btn btn-secondary" id="closeGroupModal">Отмена</button>
+                        <div id="groupCreateMsg" class="mt-2"></div>
+                       </div>`;
+    document.body.appendChild(modal);
+    
+    const container = document.getElementById('groupFriends');
+    const selected = [];
+    friends.forEach(f => {
+        const div = document.createElement('div');
+        div.className = 'friend-select-item';
+        div.innerHTML = `<span>👤 ${f.username}#${f.tag}</span>
+                        <button class="btn btn-success" data-id="${f.id}" style="padding:5px 10px;">+ Добавить</button>`;
+        div.querySelector('button').onclick = () => {
+            if (!selected.includes(f.id)) {
+                selected.push(f.id);
+                div.querySelector('button').innerHTML = '✓ Добавлен';
+                div.querySelector('button').classList.remove('btn-success');
+                div.querySelector('button').classList.add('btn-secondary');
+            }
+        };
+        container.appendChild(div);
+    });
+    
+    document.getElementById('confirmGroupBtn').onclick = async () => {
+        if (selected.length < 2) {
+            document.getElementById('groupCreateMsg').innerHTML = '<span class="error">Выберите минимум 2 друга</span>';
+            return;
+        }
+        const createRes = await fetch('/group/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, owner: currentUser.id, members: selected })
+        });
+        const createData = await createRes.json();
+        if (createData.success) {
+            modal.remove();
+            loadGroups();
+        } else {
+            document.getElementById('groupCreateMsg').innerHTML = '<span class="error">' + createData.error + '</span>';
+        }
+    };
+    document.getElementById('closeGroupModal').onclick = () => modal.remove();
+};
 
 // ============ ПРОФИЛЬ ============
 async function updateProfileDisplay() {
@@ -1026,7 +990,7 @@ function uploadFile(url) {
         const res = await fetch(url, { method: 'POST', body: fd });
         const data = await res.json();
         if (data.success) location.reload();
-        else alert(data.error || 'Ошибка загрузки');
+        else alert(data.error || 'Ошибка');
     };
     input.click();
 }
@@ -1056,7 +1020,6 @@ document.getElementById('editStatusBtn').onclick = async () => {
     });
     location.reload();
 };
-document.getElementById('friendsBtn').onclick = () => alert('Список друзей и заявок будет в следующем обновлении');
 
 // ============ АДМИН ============
 async function loadAdmin() {
@@ -1143,6 +1106,7 @@ function showMain() {
     updateProfileDisplay();
     loadFriends();
     loadRequests();
+    loadGroups();
     loadServers();
     loadAdmin();
     initSocket();
