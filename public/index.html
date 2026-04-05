@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>SWILTS — Современный мессенджер</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -32,6 +33,8 @@
             --plus: linear-gradient(135deg, #FFD700, #FFA500);
             --gradient: linear-gradient(135deg, #5865f2, #4752c4);
             --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 20px rgba(88, 101, 242, 0.3);
         }
 
         body.light {
@@ -54,14 +57,49 @@
             --plus: linear-gradient(135deg, #FFD700, #FFA500);
             --gradient: linear-gradient(135deg, #5865f2, #4752c4);
             --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12);
+            --shadow-glow: 0 0 20px rgba(88, 101, 242, 0.15);
         }
 
         body {
-            background: var(--bg-primary);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             color: var(--text-primary);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             transition: all 0.3s ease;
             min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(88, 101, 242, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         /* ============ АНИМАЦИИ ============ */
@@ -85,14 +123,14 @@
             50% { transform: scale(1.05); opacity: 0.8; }
         }
 
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
-
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-8px); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(88, 101, 242, 0.3); }
+            100% { box-shadow: 0 0 25px rgba(88, 101, 242, 0.6); }
         }
 
         .animate-fade { animation: fadeIn 0.4s ease-out; }
@@ -101,24 +139,19 @@
         .animate-pulse { animation: pulse 2s infinite; }
 
         /* ============ ОСНОВНЫЕ КЛАССЫ ============ */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
         .card {
             background: var(--bg-card);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 20px;
             box-shadow: var(--shadow);
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             border: 1px solid var(--border);
+            backdrop-filter: blur(2px);
         }
 
         .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
         }
 
         .btn {
@@ -135,10 +168,26 @@
         .btn-primary {
             background: var(--gradient);
             color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn-primary:hover::before {
+            left: 100%;
         }
         .btn-primary:hover {
             transform: scale(1.02);
             filter: brightness(1.05);
+            box-shadow: var(--shadow-glow);
         }
 
         .btn-danger {
@@ -209,6 +258,25 @@
             border-radius: 28px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
+            backdrop-filter: blur(5px);
+        }
+
+        .site-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #5865f2, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .site-title .emoji {
+            font-size: 28px;
+            animation: pulse 2s infinite;
         }
 
         .user-info {
@@ -230,10 +298,12 @@
             overflow: hidden;
             transition: all 0.3s;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .avatar:hover {
             transform: scale(1.05);
             filter: brightness(1.05);
+            box-shadow: var(--shadow-glow);
         }
         .avatar img {
             width: 100%;
@@ -241,6 +311,10 @@
             object-fit: cover;
         }
 
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
         .user-name {
             font-weight: 700;
             font-size: 18px;
@@ -277,6 +351,36 @@
             flex-wrap: wrap;
         }
 
+        /* ============ ПРИВЕТСТВИЕ (МАЛЕНЬКОЕ ОКОШКО) ============ */
+        .greeting-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--gradient);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 50px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            animation: slideInRight 0.4s ease-out, fadeIn 0.4s;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+        .greeting-toast .wave {
+            font-size: 24px;
+            animation: float 2s ease-in-out infinite;
+        }
+        .greeting-toast .username {
+            background: rgba(0,0,0,0.2);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 14px;
+        }
+
         /* ============ СЕТКА ============ */
         .grid {
             display: grid;
@@ -291,6 +395,9 @@
             }
             .container {
                 padding: 12px;
+            }
+            .site-title {
+                font-size: 18px;
             }
         }
 
@@ -538,15 +645,16 @@
             background: var(--bg-card);
             border-radius: 32px;
             padding: 40px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-lg);
             border: 1px solid var(--border);
             animation: fadeIn 0.5s ease-out;
+            backdrop-filter: blur(10px);
         }
         .auth-card h1 {
             text-align: center;
             margin-bottom: 32px;
             font-size: 44px;
-            background: var(--gradient);
+            background: linear-gradient(135deg, #5865f2, #764ba2);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -679,11 +787,15 @@
 
     <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="mainPanel" class="hidden">
-        <!-- ШАПКА -->
+        <!-- ШАПКА С НАЗВАНИЕМ САЙТА -->
         <div class="header">
+            <div class="site-title">
+                <span class="emoji">🔷</span>
+                <span>SWILTS</span>
+            </div>
             <div class="user-info">
                 <div class="avatar" id="userAvatar">👤</div>
-                <div>
+                <div class="user-details">
                     <div class="user-name" id="userName" style="transition: color 0.3s;"></div>
                     <div class="user-tag" id="userTag"></div>
                     <div class="user-created" id="userCreated"></div>
@@ -975,6 +1087,26 @@ function showNotification(sender, msg) {
     notif.innerHTML = `<strong>📩 ${sender}</strong><br>${msg.substring(0, 50)}${msg.length > 50 ? '...' : ''}`;
     document.body.appendChild(notif);
     setTimeout(() => notif.remove(), 3000);
+}
+
+// ============ ПРИВЕТСТВИЕ (МАЛЕНЬКОЕ ОКОШКО) ============
+function showGreeting() {
+    const hours = new Date().getHours();
+    let greeting = '';
+    let emoji = '';
+    if (hours >= 7 && hours <= 10) { greeting = 'Доброе утро'; emoji = '🌅'; }
+    else if (hours >= 11 && hours <= 23) { greeting = 'Добрый день'; emoji = '☀️'; }
+    else { greeting = 'Доброй ночи'; emoji = '🌙'; }
+    
+    const toast = document.createElement('div');
+    toast.className = 'greeting-toast';
+    toast.innerHTML = `<span class="wave">${emoji}</span><span>${greeting},</span><span class="username">${currentUser.username}#${currentUser.tag}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
 }
 
 // ============ ДРУЗЬЯ ============
@@ -1585,23 +1717,7 @@ function showMain() {
     loadGroupInvites();
     loadAdmin();
     initSocket();
-    
-    const hours = new Date().getHours();
-    let greeting = '';
-    if (hours >= 7 && hours <= 10) greeting = 'Доброе утро';
-    else if (hours >= 11 && hours <= 23) greeting = 'Добрый день';
-    else greeting = 'Доброй ночи';
-    const modal = document.createElement('div');
-    modal.className = 'incoming-call';
-    modal.style.top = '50%';
-    modal.style.left = '50%';
-    modal.style.transform = 'translate(-50%, -50%)';
-    modal.style.background = 'var(--bg-card)';
-    modal.style.padding = '30px 50px';
-    modal.style.width = 'auto';
-    modal.innerHTML = `<h2 style="color: var(--accent);">${greeting}</h2><p style="font-size: 24px;">${currentUser.username}#${currentUser.tag}</p>`;
-    document.body.appendChild(modal);
-    setTimeout(() => modal.remove(), 3000);
+    showGreeting();
 }
 
 document.getElementById('loginBtn').onclick = login;
