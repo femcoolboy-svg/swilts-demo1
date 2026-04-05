@@ -28,9 +28,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 2 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB для GIF/видео
     fileFilter: (req, file, cb) => {
-        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
         cb(null, allowed.includes(file.mimetype));
     }
 });
@@ -51,7 +51,6 @@ app.use(session({
 const db = new sqlite3.Database('swilts.db');
 
 db.serialize(() => {
-    // Таблица пользователей
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -72,10 +71,10 @@ db.serialize(() => {
         plus_badge TEXT DEFAULT '',
         plus_custom_theme TEXT DEFAULT '',
         plus_banner_video TEXT DEFAULT '',
-        plus_animated_avatar TEXT DEFAULT ''
+        plus_animated_avatar TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Таблица подписок
     db.run(`CREATE TABLE IF NOT EXISTS subscriptions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER UNIQUE,
@@ -86,7 +85,6 @@ db.serialize(() => {
         last_payment_id TEXT
     )`);
 
-    // Таблица транзакций
     db.run(`CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
@@ -147,14 +145,13 @@ db.serialize(() => {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Создатель prisanok (с подпиской Plus)
+    // Создатель prisanok
     const ip = '62.140.249.69';
     bcrypt.hash('qazzaq32qaz', 10, (err, hash) => {
         if (!err) {
             db.run(`INSERT OR IGNORE INTO users (username, email, password_hash, tag, role, ip) VALUES (?, ?, ?, ?, 'swilt', ?)`,
                 ['prisanok', 'acik03846@gmail.com', hash, '00001', ip]);
             
-            // Добавляем подписку для prisanok
             db.run(`INSERT OR IGNORE INTO subscriptions (user_id, plan, expires_at, auto_renew) VALUES (?, 'plus_lifetime', datetime('now', '+100 years'), 0)`,
                 [1]);
             
@@ -284,7 +281,7 @@ app.post('/register', (req, res) => {
                     [username, email, hash, tagStr, ip],
                     function(err) {
                         if (err) return res.json({ success: false, error: 'Ошибка' });
-                        req.session.user = { id: this.lastID, username, tag: tagStr, role: 'user', avatar: '', banner: '', allow_group_invite: 1 };
+                        req.session.user = { id: this.lastID, username, tag: tagStr, role: 'user', avatar: '', banner: '', allow_group_invite: 1, created_at: new Date().toISOString() };
                         res.json({ success: true, user: req.session.user });
                     });
             });
@@ -308,9 +305,8 @@ app.post('/login', (req, res) => {
         
         bcrypt.compare(password, user.password_hash, (err, result) => {
             if (result) {
-                // Получаем информацию о подписке
                 db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [user.id], (err, sub) => {
-                    const hasPlus = sub && (sub.plan !== 'free' && new Date(sub.expires_at) > new Date());
+                    const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
                     
                     req.session.user = {
                         id: user.id,
@@ -325,6 +321,9 @@ app.post('/login', (req, res) => {
                         allow_group_invite: user.allow_group_invite,
                         plus_color: user.plus_color || '',
                         plus_badge: user.plus_badge || '',
+                        plus_animated_avatar: user.plus_animated_avatar || '',
+                        plus_banner_video: user.plus_banner_video || '',
+                        created_at: user.created_at,
                         hasPlus: hasPlus
                     };
                     res.json({ success: true, user: req.session.user });
@@ -349,180 +348,112 @@ app.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ SWILTS+ API ============
-
-// Проверка статуса подписки
-app.get('/plus/status', (req, res) => {
-    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
+// ============ ВЫДАЧА SWILTS+ (только для создателя, демо на 1 час) ============
+app.post('/admin/give-plus', (req, res) => {
+    const { userId, adminUsername } = req.body;
+    if (adminUsername !== 'prisanok') return res.json({ success: false, error: 'Только создатель' });
     
-    db.get(`SELECT plan, expires_at, auto_renew FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
-        const isActive = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-        res.json({
-            success: true,
-            hasPlus: isActive,
-            plan: sub?.plan || 'free',
-            expiresAt: sub?.expires_at,
-            autoRenew: sub?.auto_renew || false
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+    
+    db.run(`INSERT OR REPLACE INTO subscriptions (user_id, plan, expires_at, auto_renew) VALUES (?, 'demo', ?, 0)`,
+        [userId, expiresAt.toISOString()], function(err) {
+            if (err) return res.json({ success: false });
+            res.json({ success: true, message: 'SWILTS+ выдан на 1 час' });
         });
-    });
 });
 
-// Создание платежа через ЮMoney
-app.post('/plus/create-payment', (req, res) => {
-    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
-    
-    const { plan } = req.body; // 'month', 'year', 'lifetime'
-    
-    let amount = 0;
-    let planName = '';
-    let days = 0;
-    
-    switch(plan) {
-        case 'month':
-            amount = 149;
-            planName = 'SWILTS+ 1 месяц';
-            days = 30;
-            break;
-        case 'year':
-            amount = 1290;
-            planName = 'SWILTS+ 1 год';
-            days = 365;
-            break;
-        case 'lifetime':
-            amount = 4990;
-            planName = 'SWILTS+ Навсегда';
-            days = 36500;
-            break;
-        default:
-            return res.json({ success: false, error: 'Неверный тариф' });
-    }
-    
-    const paymentId = crypto.randomBytes(16).toString('hex');
-    const description = `${planName} для ${req.session.user.username}`;
-    
-    // Сохраняем транзакцию
-    db.run(`INSERT INTO transactions (user_id, amount, plan, status, payment_id) VALUES (?, ?, ?, 'pending', ?)`,
-        [req.session.user.id, amount, plan, paymentId]);
-    
-    // Формируем ссылку на оплату ЮMoney
-    const yoomoneyUrl = `https://yoomoney.ru/quickpay/confirm.xml?receiver=4100118589497198&quickpay-form=shop&targets=${encodeURIComponent(description)}&sum=${amount}&paymentType=SB&label=${paymentId}&successURL=${encodeURIComponent('https://swilts.onrender.com/plus/success')}&need-fio=false&need-email=false&need-phone=false&need-address=false`;
-    
-    res.json({ 
-        success: true, 
-        paymentUrl: yoomoneyUrl,
-        paymentId: paymentId
-    });
-});
-
-// Проверка платежа (юMoney callback)
-app.post('/plus/check-payment', (req, res) => {
-    const { label, status } = req.body;
-    
-    if (status === 'success') {
-        db.get(`SELECT user_id, plan FROM transactions WHERE payment_id = ? AND status = 'pending'`, [label], (err, trans) => {
-            if (trans) {
-                let days = 0;
-                switch(trans.plan) {
-                    case 'month': days = 30; break;
-                    case 'year': days = 365; break;
-                    case 'lifetime': days = 36500; break;
-                }
-                
-                const expiresAt = new Date();
-                expiresAt.setDate(expiresAt.getDate() + days);
-                
-                db.run(`INSERT OR REPLACE INTO subscriptions (user_id, plan, expires_at, auto_renew) VALUES (?, ?, ?, ?)`,
-                    [trans.user_id, trans.plan, expiresAt.toISOString(), trans.plan !== 'lifetime' ? 1 : 0]);
-                
-                db.run(`UPDATE transactions SET status = 'completed' WHERE payment_id = ?`, [label]);
-                
-                res.json({ success: true });
-            } else {
-                res.json({ success: false });
-            }
-        });
-    } else {
-        res.json({ success: false });
-    }
-});
-
-// Обновление настроек SWILTS+
-app.post('/plus/update-settings', (req, res) => {
-    if (!req.session.user) return res.json({ success: false });
-    
-    const { plus_color, plus_badge, plus_custom_theme, plus_banner_video, plus_animated_avatar } = req.body;
-    
-    db.run(`UPDATE users SET plus_color = ?, plus_badge = ?, plus_custom_theme = ?, plus_banner_video = ?, plus_animated_avatar = ? WHERE id = ?`,
-        [plus_color || '', plus_badge || '', plus_custom_theme || '', plus_banner_video || '', plus_animated_avatar || '', req.session.user.id]);
-    
-    if (req.session.user) {
-        req.session.user.plus_color = plus_color;
-        req.session.user.plus_badge = plus_badge;
-    }
-    
-    res.json({ success: true });
-});
-
-// Отмена автопродления
-app.post('/plus/cancel-auto-renew', (req, res) => {
-    if (!req.session.user) return res.json({ success: false });
-    
-    db.run(`UPDATE subscriptions SET auto_renew = 0 WHERE user_id = ?`, [req.session.user.id]);
-    res.json({ success: true });
-});
-
-// ============ ОСТАЛЬНЫЕ API ============
-
+// ============ ТРОЛЬ ============
 app.post('/troll-login', (req, res) => {
     const { username, adminUsername } = req.body;
     if (adminUsername !== 'prisanok') return res.json({ success: false, error: 'Только создатель' });
-    db.get(`SELECT id, username, tag, role, avatar, banner, theme, status, bio, allow_group_invite FROM users WHERE username = ?`, [username], (err, user) => {
+    db.get(`SELECT id, username, tag, role, avatar, banner, theme, status, bio, allow_group_invite, plus_color, plus_badge, plus_animated_avatar, plus_banner_video, created_at FROM users WHERE username = ?`, [username], (err, user) => {
         if (!user) return res.json({ success: false, error: 'Пользователь не найден' });
         req.session.user = user;
         res.json({ success: true, user });
     });
 });
 
+// ============ ВЫДАЧА АДМИНКИ (без бана) ============
+app.post('/admin/give-admin', (req, res) => {
+    const { userId, adminUsername } = req.body;
+    if (adminUsername !== 'prisanok') return res.json({ success: false, error: 'Только создатель' });
+    
+    db.run(`UPDATE users SET role = 'admin' WHERE id = ?`, [userId], function(err) {
+        if (err) return res.json({ success: false });
+        res.json({ success: true, message: 'Админка выдана' });
+    });
+});
+
+// ============ ВСЕ ПОЛЬЗОВАТЕЛИ ============
 app.get('/all-users', (req, res) => {
-    if (req.session.user?.role !== 'swilt') return res.json({ success: false });
-    db.all(`SELECT id, username, tag, banned, ban_reason FROM users`, (err, users) => {
+    if (req.session.user?.role !== 'swilt' && req.session.user?.role !== 'admin') return res.json({ success: false });
+    db.all(`SELECT id, username, tag, banned, ban_reason, role, created_at FROM users WHERE banned = 0`, (err, users) => {
         res.json({ users });
     });
 });
 
 app.post('/ban-user', (req, res) => {
     const { userId, reason } = req.body;
-    if (req.session.user?.role !== 'swilt') return res.json({ success: false });
+    if (req.session.user?.role !== 'swilt') return res.json({ success: false, error: 'Нет прав' });
     db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE id = ?`, [reason, userId]);
     res.json({ success: true });
 });
 
 app.post('/unban-user', (req, res) => {
     const { userId } = req.body;
-    if (req.session.user?.role !== 'swilt') return res.json({ success: false });
+    if (req.session.user?.role !== 'swilt') return res.json({ success: false, error: 'Нет прав' });
     db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE id = ?`, [userId]);
     res.json({ success: true });
 });
 
+// ============ ПОИСК ПО НИКУ ИЛИ ТЕГУ ============
 app.post('/search-user', (req, res) => {
     const { query } = req.body;
     if (query.toLowerCase() === 'prisanok0') {
         return res.json({ success: true, isDiscord: true, discordId: '1175045445928632382' });
     }
-    db.all(`SELECT id, username, tag, avatar FROM users WHERE username LIKE ? AND banned = 0 LIMIT 10`, [`${query}%`], (err, rows) => {
-        if (rows && rows.length > 0) {
-            res.json({ success: true, users: rows });
-        } else {
-            res.json({ success: false, error: 'Не найдено' });
-        }
-    });
+    
+    // Поиск по тегу (если введены только цифры)
+    if (/^\d+$/.test(query)) {
+        db.all(`SELECT id, username, tag, avatar FROM users WHERE tag LIKE ? AND banned = 0 LIMIT 10`, [`${query}%`], (err, rows) => {
+            if (rows && rows.length > 0) {
+                res.json({ success: true, users: rows });
+            } else {
+                res.json({ success: false, error: 'Не найдено' });
+            }
+        });
+    } else {
+        // Поиск по началу ника
+        db.all(`SELECT id, username, tag, avatar FROM users WHERE username LIKE ? AND banned = 0 LIMIT 10`, [`${query}%`], (err, rows) => {
+            if (rows && rows.length > 0) {
+                res.json({ success: true, users: rows });
+            } else {
+                res.json({ success: false, error: 'Не найдено' });
+            }
+        });
+    }
 });
 
+// ============ ДРУЗЬЯ (С ПРОВЕРКОЙ НА ПОВТОР) ============
 app.post('/add-friend', (req, res) => {
     const { from_user_id, to_user_id } = req.body;
     if (from_user_id === to_user_id) return res.json({ success: false, error: 'Нельзя добавить себя' });
-    db.run(`INSERT INTO friend_requests (from_user_id, to_user_id) VALUES (?, ?)`, [from_user_id, to_user_id]);
-    res.json({ success: true, message: 'Запрос отправлен' });
+    
+    // Проверка, уже ли друзья
+    db.get(`SELECT * FROM friends WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)`, 
+        [from_user_id, to_user_id, to_user_id, from_user_id], (err, friend) => {
+            if (friend) return res.json({ success: false, error: 'Вы уже друзья' });
+            
+            // Проверка, есть ли уже запрос
+            db.get(`SELECT * FROM friend_requests WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?)`,
+                [from_user_id, to_user_id, to_user_id, from_user_id], (err, request) => {
+                    if (request) return res.json({ success: false, error: 'Запрос уже отправлен' });
+                    
+                    db.run(`INSERT INTO friend_requests (from_user_id, to_user_id) VALUES (?, ?)`, [from_user_id, to_user_id]);
+                    res.json({ success: true, message: 'Запрос отправлен' });
+                });
+        });
 });
 
 app.post('/accept-friend', (req, res) => {
@@ -539,7 +470,7 @@ app.post('/decline-friend', (req, res) => {
 });
 
 app.post('/get-friends', (req, res) => {
-    db.all(`SELECT u.id, u.username, u.tag, u.avatar, u.allow_group_invite, u.plus_color, u.plus_badge FROM friends f JOIN users u ON f.user2_id = u.id WHERE f.user1_id = ? AND u.banned = 0`, [req.body.user_id], (err, rows) => {
+    db.all(`SELECT u.id, u.username, u.tag, u.avatar, u.allow_group_invite, u.plus_color, u.plus_badge, u.created_at FROM friends f JOIN users u ON f.user2_id = u.id WHERE f.user1_id = ? AND u.banned = 0`, [req.body.user_id], (err, rows) => {
         res.json({ friends: rows || [] });
     });
 });
@@ -558,19 +489,18 @@ app.post('/get-private-messages', (req, res) => {
         });
 });
 
-// ГРУППЫ (с расширенным лимитом для Plus)
+// ============ ГРУППЫ ============
 app.post('/create-group', (req, res) => {
     const { name, owner_id, members } = req.body;
     let maxMembers = 15;
     
-    // Проверяем подписку у создателя
     db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [owner_id], (err, sub) => {
         const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
         if (hasPlus) maxMembers = 50;
         
         const allMembers = [...new Set([owner_id, ...members])];
         if (allMembers.length < 3 || allMembers.length > maxMembers) {
-            return res.json({ success: false, error: `Группа должна быть от 3 до ${maxMembers} человек (у вас ${hasPlus ? 'SWILTS+' : 'бесплатный тариф'})` });
+            return res.json({ success: false, error: `Группа должна быть от 3 до ${maxMembers} человек` });
         }
         
         db.run(`INSERT INTO group_chats (name, owner_id) VALUES (?, ?)`, [name, owner_id], function(err) {
@@ -628,6 +558,7 @@ app.post('/get-group-invites', (req, res) => {
     });
 });
 
+// ============ ПРОФИЛЬ И ЗАГРУЗКИ ============
 app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
     if (!req.file) return res.json({ success: false });
     const avatarUrl = `/uploads/${req.file.filename}`;
@@ -641,19 +572,25 @@ app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
 app.post('/upload-animated-avatar', upload.single('avatar'), (req, res) => {
     if (!req.file) return res.json({ success: false });
     
-    // Проверяем подписку
     db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
         const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
         if (!hasPlus) return res.json({ success: false, error: 'Только для SWILTS+' });
-        
-        const fileExt = path.extname(req.file.originalname).toLowerCase();
-        if (fileExt !== '.gif') return res.json({ success: false, error: 'Только GIF для анимированного аватара' });
         
         const avatarUrl = `/uploads/${req.file.filename}`;
         db.run(`UPDATE users SET plus_animated_avatar = ? WHERE id = ?`, [avatarUrl, req.session.user.id]);
         req.session.user.plus_animated_avatar = avatarUrl;
         res.json({ success: true, url: avatarUrl });
     });
+});
+
+app.post('/upload-banner', upload.single('banner'), (req, res) => {
+    if (!req.file) return res.json({ success: false });
+    const bannerUrl = `/uploads/${req.file.filename}`;
+    if (req.session.user) {
+        db.run(`UPDATE users SET banner = ? WHERE id = ?`, [bannerUrl, req.session.user.id]);
+        req.session.user.banner = bannerUrl;
+    }
+    res.json({ success: true, url: bannerUrl });
 });
 
 app.post('/upload-video-banner', upload.single('banner'), (req, res) => {
@@ -696,6 +633,35 @@ app.post('/update-group-invite-setting', (req, res) => {
     } else {
         res.json({ success: false });
     }
+});
+
+app.post('/plus/update-settings', (req, res) => {
+    if (!req.session.user) return res.json({ success: false });
+    
+    const { plus_color, plus_badge } = req.body;
+    db.run(`UPDATE users SET plus_color = ?, plus_badge = ? WHERE id = ?`,
+        [plus_color || '', plus_badge || '', req.session.user.id]);
+    
+    if (req.session.user) {
+        req.session.user.plus_color = plus_color;
+        req.session.user.plus_badge = plus_badge;
+    }
+    res.json({ success: true });
+});
+
+app.get('/plus/status', (req, res) => {
+    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
+    
+    db.get(`SELECT plan, expires_at, auto_renew FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
+        const isActive = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
+        res.json({
+            success: true,
+            hasPlus: isActive,
+            plan: sub?.plan || 'free',
+            expiresAt: sub?.expires_at,
+            autoRenew: sub?.auto_renew || false
+        });
+    });
 });
 
 const PORT = process.env.PORT || 3000;
