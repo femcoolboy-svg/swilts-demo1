@@ -239,3 +239,14 @@ checkStatus();
 </script>
 </body>
 </html>
+document.getElementById('plusSettingsBtn').onclick = async () => {
+    const res = await fetch('/plus/status');
+    const data = await res.json();
+    if (!data.hasPlus) {
+        alert('❌ Только для SWILTS+. Оформите подписку на странице SWILTS+');
+        window.open('/plus.html', '_blank');
+        return;
+    }
+    
+    // ... остальной код настроек
+};
