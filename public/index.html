@@ -11,7 +11,6 @@
             box-sizing: border-box;
         }
 
-        /* ============ ПЕРЕМЕННЫЕ ТЕМ (МЯГКИЕ ЦВЕТА) ============ */
         body.dark {
             --bg-primary: #0f1117;
             --bg-secondary: #1a1d24;
@@ -66,7 +65,6 @@
             min-height: 100vh;
         }
 
-        /* ============ АНИМАЦИИ ============ */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-16px); }
             to { opacity: 1; transform: translateY(0); }
@@ -83,20 +81,7 @@
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.03); opacity: 0.9; }
         }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
 
-        .animate-fade { animation: fadeIn 0.35s ease-out; }
-        .animate-slide-left { animation: slideInLeft 0.3s ease-out; }
-        .animate-slide-right { animation: slideInRight 0.3s ease-out; }
-
-        /* ============ ОСНОВНЫЕ КЛАССЫ ============ */
         .container {
             max-width: 1440px;
             margin: 0 auto;
@@ -185,7 +170,6 @@
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
-        /* ============ ШАПКА ============ */
         .header {
             display: flex;
             justify-content: space-between;
@@ -221,7 +205,6 @@
         }
         .avatar:hover {
             transform: scale(1.05);
-            filter: brightness(1.05);
         }
         .avatar img {
             width: 100%;
@@ -231,7 +214,6 @@
         .user-name {
             font-weight: 700;
             font-size: 18px;
-            transition: color 0.2s;
         }
         .user-tag {
             font-size: 12px;
@@ -262,7 +244,6 @@
             flex-wrap: wrap;
         }
 
-        /* ============ СЕТКА ============ */
         .grid {
             display: grid;
             grid-template-columns: 320px 1fr 340px;
@@ -276,7 +257,6 @@
             .container { padding: 12px; }
         }
 
-        /* ============ ПАНЕЛИ ============ */
         .panel-title {
             font-size: 11px;
             text-transform: uppercase;
@@ -344,7 +324,6 @@
             margin-top: 2px;
         }
 
-        /* ============ ЧАТ ============ */
         .chat-area {
             display: flex;
             flex-direction: column;
@@ -359,6 +338,70 @@
             border-bottom: 1px solid var(--border);
             background: var(--bg-card);
         }
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .chat-header-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            overflow: hidden;
+        }
+        .chat-header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .chat-header-details {
+            flex: 1;
+        }
+        .chat-header-name {
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .chat-header-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .premium-tag {
+            background: var(--plus);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .plus-expiry {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .call-btn {
+            background: var(--accent);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 20px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .call-btn.active {
+            background: var(--danger);
+            animation: pulse 1s infinite;
+        }
+
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -400,7 +443,6 @@
         }
         .input-area input { flex: 1; margin: 0; }
 
-        /* ============ ПРОФИЛЬ ============ */
         .profile-banner {
             width: 100%;
             height: 100px;
@@ -492,7 +534,6 @@
             transform: translateX(4px);
         }
 
-        /* ============ АВТОРИЗАЦИЯ ============ */
         .auth-card {
             max-width: 460px;
             margin: 80px auto;
@@ -520,19 +561,6 @@
             margin-top: 8px;
         }
 
-        /* ============ ЗВОНКИ ============ */
-        .call-btn {
-            background: var(--accent);
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            font-size: 20px;
-            padding: 0;
-        }
-        .call-btn.active {
-            background: var(--danger);
-            animation: pulse 1s infinite;
-        }
         .incoming-call {
             position: fixed;
             bottom: 100px;
@@ -547,7 +575,6 @@
             animation: slideInRight 0.3s ease-out;
         }
 
-        /* ============ МОДАЛКИ ============ */
         .modal {
             position: fixed;
             top: 0;
@@ -581,7 +608,6 @@
             margin-bottom: 16px;
         }
 
-        /* ============ УТИЛИТЫ ============ */
         .hidden { display: none; }
         .error { color: var(--danger); }
         .success { color: var(--success); }
@@ -593,7 +619,6 @@
         .flex { display: flex; align-items: center; gap: 12px; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
 
-        /* СКРОЛЛБАР */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-input); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
@@ -630,7 +655,6 @@
 
     <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="mainPanel" class="hidden">
-        <!-- ШАПКА -->
         <div class="header">
             <div class="user-info">
                 <div class="avatar" id="userAvatar">👤</div>
@@ -649,7 +673,6 @@
             </div>
         </div>
 
-        <!-- ОСНОВНАЯ СЕТКА -->
         <div class="grid">
             <!-- ЛЕВАЯ КОЛОНКА -->
             <div>
@@ -694,15 +717,15 @@
 
             <!-- ЦЕНТРАЛЬНЫЙ ЧАТ -->
             <div class="chat-area">
-                <div class="chat-header">
-                    <div class="flex-between" style="gap: 10px;">
-                        <select id="chatType" style="flex: 1;">
-                            <option value="private">💬 Личные сообщения</option>
-                            <option value="group">👥 Групповой чат</option>
-                        </select>
-                        <select id="friendSelect" class="hidden" style="flex: 1;"></select>
-                        <select id="groupSelect" class="hidden" style="flex: 1;"></select>
-                        <button class="btn call-btn" id="callBtn">📞</button>
+                <div class="chat-header" id="chatHeader">
+                    <div class="chat-header-info">
+                        <div class="chat-header-avatar" id="chatAvatar">👤</div>
+                        <div class="chat-header-details">
+                            <div class="chat-header-name" id="chatName">Выберите чат</div>
+                            <div class="chat-header-status" id="chatStatus"></div>
+                            <div class="plus-expiry" id="chatExpiry"></div>
+                        </div>
+                        <button class="btn call-btn" id="callBtn" style="display: none;">📞</button>
                     </div>
                 </div>
                 <div id="messages" class="messages">
@@ -718,7 +741,7 @@
                 </div>
             </div>
 
-            <!-- ПРАВАЯ КОЛОНКА (ПРОФИЛЬ) -->
+            <!-- ПРАВАЯ КОЛОНКА -->
             <div>
                 <div class="card">
                     <div class="profile-banner" id="profileBanner"></div>
@@ -751,17 +774,15 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-// ============ ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ============
 let currentUser = null;
-let currentChatType = 'private';
-let currentChatId = null;
+let currentChat = null;
 let socket = null;
 let pc = null;
 let stream = null;
 let callActive = false;
 let muted = false;
-
 let userIP = '';
+
 fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => userIP = d.ip);
 
 // ============ КАПЧА ============
@@ -795,14 +816,14 @@ setTheme(localStorage.getItem('theme') || 'dark');
 document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
 document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
-// ============ WEB SOCKET ============
+// ============ WEBSOCKET ============
 function initSocket() {
     socket = io();
     socket.on('connect', () => {
         if (currentUser) socket.emit('register', currentUser.id);
     });
     socket.on('private-message', (data) => {
-        if (currentChatType === 'private' && currentChatId === data.from) {
+        if (currentChat?.type === 'private' && currentChat?.id === data.from) {
             appendMessage(data.msg, false, data.time);
         } else {
             showNotification(data.fromName || 'Друг', data.msg);
@@ -810,7 +831,7 @@ function initSocket() {
         loadFriends();
     });
     socket.on('group-message', (data) => {
-        if (currentChatType === 'group' && currentChatId === data.group) {
+        if (currentChat?.type === 'group' && currentChat?.id === data.group) {
             appendMessage(data.msg, false, data.time);
         } else {
             showNotification(data.groupName || 'Группа', data.msg);
@@ -867,7 +888,7 @@ function endCall() {
     callActive = false;
     document.getElementById('callControls').classList.add('hidden');
     document.getElementById('callBtn').classList.remove('active');
-    if (socket && currentChatId && currentChatType === 'private') socket.emit('call-end', { to: currentChatId });
+    if (socket && currentChat?.type === 'private') socket.emit('call-end', { to: currentChat.id });
 }
 function toggleMute() {
     if (stream) {
@@ -889,14 +910,8 @@ function showCall(from, fromName, offer) {
     document.getElementById('acceptCall').onclick = async () => { modal.remove(); await acceptCall(from, offer); };
     document.getElementById('rejectCall').onclick = () => { modal.remove(); socket.emit('call-end', { to: from }); };
 }
-document.getElementById('callBtn').onclick = () => {
-    if (currentChatType === 'private' && currentChatId) startCall(currentChatId);
-    else alert('Выберите друга');
-};
-document.getElementById('muteBtn').onclick = toggleMute;
-document.getElementById('endCallBtn').onclick = endCall;
 
-// ============ UI ФУНКЦИИ ============
+// ============ UI ============
 function appendMessage(msg, isOwn, time) {
     const container = document.getElementById('messages');
     const div = document.createElement('div');
@@ -910,9 +925,49 @@ function showNotification(sender, msg) {
     notif.className = 'incoming-call';
     notif.style.background = 'var(--accent)';
     notif.style.bottom = '20px';
-    notif.innerHTML = `<strong>📩 ${sender}</strong><br>${msg.substring(0, 50)}${msg.length > 50 ? '...' : ''}`;
+    notif.innerHTML = `<strong>📩 ${escapeHtml(sender)}</strong><br>${escapeHtml(msg.substring(0, 50))}${msg.length > 50 ? '...' : ''}`;
     document.body.appendChild(notif);
     setTimeout(() => notif.remove(), 3000);
+}
+
+// ============ ОБНОВЛЕНИЕ ШАПКИ ЧАТА ============
+function updateChatHeader() {
+    if (!currentChat) {
+        document.getElementById('chatName').innerHTML = 'Выберите чат';
+        document.getElementById('chatStatus').innerHTML = '';
+        document.getElementById('chatExpiry').innerHTML = '';
+        document.getElementById('chatAvatar').innerHTML = '👤';
+        document.getElementById('callBtn').style.display = 'none';
+        return;
+    }
+    
+    const avatarHtml = currentChat.avatar 
+        ? `<img src="${currentChat.avatar}">` 
+        : (currentChat.type === 'private' ? '👤' : '👥');
+    document.getElementById('chatAvatar').innerHTML = avatarHtml;
+    document.getElementById('chatName').innerHTML = escapeHtml(currentChat.name);
+    
+    if (currentChat.type === 'private') {
+        if (currentChat.hasPlus) {
+            const badge = currentChat.plusBadge || '💎';
+            document.getElementById('chatName').innerHTML = `${escapeHtml(currentChat.name)} <span class="premium-tag">${badge} PREMIUM</span>`;
+            if (currentChat.plusExpiry) {
+                const date = new Date(currentChat.plusExpiry);
+                document.getElementById('chatExpiry').innerHTML = `⭐ Подписка до: ${date.toLocaleDateString()}`;
+            } else {
+                document.getElementById('chatExpiry').innerHTML = `⭐ Навсегда`;
+            }
+            document.getElementById('chatStatus').innerHTML = '';
+        } else {
+            document.getElementById('chatExpiry').innerHTML = '';
+            document.getElementById('chatStatus').innerHTML = 'Обычный пользователь';
+        }
+        document.getElementById('callBtn').style.display = 'flex';
+    } else {
+        document.getElementById('chatExpiry').innerHTML = '';
+        document.getElementById('chatStatus').innerHTML = `Групповой чат • ${currentChat.memberCount || ''}`;
+        document.getElementById('callBtn').style.display = 'none';
+    }
 }
 
 // ============ ДРУЗЬЯ ============
@@ -925,34 +980,33 @@ async function loadFriends() {
     const data = await res.json();
     document.getElementById('friendsCount').innerText = data.friends.length;
     const container = document.getElementById('friendsList');
-    const select = document.getElementById('friendSelect');
     container.innerHTML = '';
-    select.innerHTML = '<option value="">-- Выберите друга --</option>';
-    data.friends.forEach(f => {
+    
+    for (const f of data.friends) {
+        const userRes = await fetch(`/user/${f.id}`);
+        const userData = await userRes.json();
+        const friendFull = userData.success ? userData.user : f;
+        
         const div = document.createElement('div');
         div.className = 'list-item';
-        div.onclick = () => {
-            currentChatType = 'private';
-            currentChatId = f.id;
-            document.getElementById('chatType').value = 'private';
-            switchChat();
-        };
-        const date = f.created_at ? new Date(f.created_at).toLocaleDateString() : 'неизвестно';
+        div.onclick = () => selectChat('private', friendFull.id, friendFull.username, friendFull.avatar, friendFull.hasPlus, friendFull.plus_expires_at, friendFull.plus_badge);
+        
+        const avatarHtml = friendFull.avatar ? `<img src="${friendFull.avatar}">` : friendFull.username[0];
+        const premiumIcon = friendFull.hasPlus ? `<span style="background:var(--plus);border-radius:50%;padding:2px 6px;margin-left:6px;font-size:11px;">${friendFull.plus_badge || '💎'}</span>` : '';
+        const date = friendFull.created_at ? new Date(friendFull.created_at).toLocaleDateString() : 'неизвестно';
+        
         div.innerHTML = `<div class="flex" style="width:100%;">
-                            <div class="friend-avatar-small">${f.avatar ? `<img src="${f.avatar}">` : f.username[0]}</div>
+                            <div class="friend-avatar-small">${avatarHtml}</div>
                             <div>
-                                <div class="friend-name">${escapeHtml(f.username)}${f.plus_badge ? `<span style="background:var(--plus);border-radius:50%;padding:2px 6px;margin-left:6px;font-size:11px;">${f.plus_badge}</span>` : ''}</div>
-                                <div class="friend-tag">#${f.tag}</div>
+                                <div class="friend-name">${escapeHtml(friendFull.username)}${premiumIcon}</div>
+                                <div class="friend-tag">#${friendFull.tag}</div>
                                 <div class="friend-created">📅 ${date}</div>
                             </div>
                          </div>`;
         container.appendChild(div);
-        const opt = document.createElement('option');
-        opt.value = f.id;
-        opt.text = `${f.username}#${f.tag}`;
-        select.appendChild(opt);
-    });
+    }
 }
+
 async function loadRequests() {
     const res = await fetch('/requests', {
         method: 'POST',
@@ -963,7 +1017,7 @@ async function loadRequests() {
     document.getElementById('requestsCount').innerText = data.requests.length;
     const container = document.getElementById('requestsList');
     container.innerHTML = '';
-    data.requests.forEach(req => {
+    (data.requests || []).forEach(req => {
         const div = document.createElement('div');
         div.className = 'list-item';
         div.innerHTML = `<span>👤 ${escapeHtml(req.username)}#${req.tag}</span>
@@ -974,6 +1028,7 @@ async function loadRequests() {
         container.appendChild(div);
     });
 }
+
 async function loadGroups() {
     const res = await fetch('/groups', {
         method: 'POST',
@@ -983,26 +1038,16 @@ async function loadGroups() {
     const data = await res.json();
     document.getElementById('groupsCount').innerText = data.groups.length;
     const container = document.getElementById('groupsList');
-    const select = document.getElementById('groupSelect');
     container.innerHTML = '';
-    select.innerHTML = '<option value="">-- Выберите группу --</option>';
-    data.groups.forEach(g => {
+    (data.groups || []).forEach(g => {
         const div = document.createElement('div');
         div.className = 'list-item';
-        div.onclick = () => {
-            currentChatType = 'group';
-            currentChatId = g.id;
-            document.getElementById('chatType').value = 'group';
-            switchChat();
-        };
-        div.innerHTML = `<div class="friend-name">${escapeHtml(g.name)}</div>`;
+        div.onclick = () => selectChat('group', g.id, g.name, g.avatar);
+        div.innerHTML = `<div class="friend-name">👥 ${escapeHtml(g.name)}</div>`;
         container.appendChild(div);
-        const opt = document.createElement('option');
-        opt.value = g.id;
-        opt.text = g.name;
-        select.appendChild(opt);
     });
 }
+
 async function loadGroupInvites() {
     const res = await fetch('/group/invites', {
         method: 'POST',
@@ -1024,13 +1069,33 @@ async function loadGroupInvites() {
     });
 }
 
+// ============ ВЫБОР ЧАТА ============
+async function selectChat(type, id, name, avatar, hasPlus = false, plusExpiry = null, plusBadge = '💎') {
+    currentChat = {
+        type: type,
+        id: id,
+        name: name,
+        avatar: avatar,
+        hasPlus: hasPlus,
+        plusExpiry: plusExpiry,
+        plusBadge: plusBadge
+    };
+    updateChatHeader();
+    
+    if (type === 'private') {
+        await loadPrivateMessages();
+    } else {
+        await loadGroupMessages();
+    }
+}
+
 // ============ СООБЩЕНИЯ ============
 async function loadPrivateMessages() {
-    if (!currentChatId) return;
+    if (!currentChat || currentChat.type !== 'private') return;
     const res = await fetch('/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ u1: currentUser.id, u2: currentChatId })
+        body: JSON.stringify({ u1: currentUser.id, u2: currentChat.id })
     });
     const data = await res.json();
     const container = document.getElementById('messages');
@@ -1044,12 +1109,13 @@ async function loadPrivateMessages() {
     });
     container.scrollTop = container.scrollHeight;
 }
+
 async function loadGroupMessages() {
-    if (!currentChatId) return;
+    if (!currentChat || currentChat.type !== 'group') return;
     const res = await fetch('/group/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId: currentChatId })
+        body: JSON.stringify({ groupId: currentChat.id })
     });
     const data = await res.json();
     const container = document.getElementById('messages');
@@ -1063,57 +1129,30 @@ async function loadGroupMessages() {
     });
     container.scrollTop = container.scrollHeight;
 }
-function switchChat() {
-    if (currentChatType === 'private') {
-        document.getElementById('friendSelect').classList.remove('hidden');
-        document.getElementById('groupSelect').classList.add('hidden');
-        loadPrivateMessages();
-    } else {
-        document.getElementById('friendSelect').classList.add('hidden');
-        document.getElementById('groupSelect').classList.remove('hidden');
-        loadGroupMessages();
-    }
-}
+
 async function sendMessage() {
     const msg = document.getElementById('messageInput').value;
-    if (!msg || !currentChatId) return;
-    if (currentChatType === 'private') {
+    if (!msg || !currentChat) return;
+    
+    if (currentChat.type === 'private') {
         appendMessage(msg, true, new Date());
-        socket.emit('private-message', { from: currentUser.id, to: currentChatId, msg, fromName: currentUser.username });
+        socket.emit('private-message', { from: currentUser.id, to: currentChat.id, msg, fromName: currentUser.username });
         await fetch('/send-message', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: currentChatId, message: msg })
+            body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: currentChat.id, message: msg })
         });
     } else {
         appendMessage(msg, true, new Date());
-        socket.emit('group-message', { group: currentChatId, from: currentUser.id, fromName: currentUser.username, msg });
+        socket.emit('group-message', { group: currentChat.id, from: currentUser.id, fromName: currentUser.username, msg, groupName: currentChat.name });
         await fetch('/group/send-message', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ group_id: currentChatId, from_user_id: currentUser.id, message: msg })
+            body: JSON.stringify({ group_id: currentChat.id, from_user_id: currentUser.id, message: msg })
         });
     }
     document.getElementById('messageInput').value = '';
 }
-document.getElementById('chatType').onchange = (e) => {
-    currentChatType = e.target.value;
-    if (currentChatType === 'private') currentChatId = document.getElementById('friendSelect').value;
-    else currentChatId = document.getElementById('groupSelect').value;
-    switchChat();
-};
-document.getElementById('friendSelect').onchange = () => {
-    currentChatId = document.getElementById('friendSelect').value;
-    switchChat();
-};
-document.getElementById('groupSelect').onchange = () => {
-    currentChatId = document.getElementById('groupSelect').value;
-    switchChat();
-};
-document.getElementById('sendMsgBtn').onclick = sendMessage;
-document.getElementById('messageInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
-});
 
 // ============ ПОИСК ============
 document.getElementById('searchBtn').onclick = async () => {
@@ -1133,17 +1172,23 @@ document.getElementById('searchBtn').onclick = async () => {
     }
     container.innerHTML = '';
     if (data.users && data.users.length) {
-        data.users.forEach(u => {
+        for (const u of data.users) {
+            const userRes = await fetch(`/user/${u.id}`);
+            const userData = await userRes.json();
+            const hasPlus = userData.success ? userData.user.hasPlus : false;
+            const premiumIcon = hasPlus ? '💎' : '';
+            
             const div = document.createElement('div');
             div.className = 'list-item';
-            div.innerHTML = `<span>${escapeHtml(u.username)}#${u.tag}</span>
+            div.innerHTML = `<span>${escapeHtml(u.username)}#${u.tag} ${premiumIcon}</span>
                             <button class="btn btn-success" style="padding:5px 10px;" onclick="addFriend(${u.id})">➕</button>`;
             container.appendChild(div);
-        });
+        }
     } else {
         container.innerHTML = '<span class="error">❌ Пользователь не найден</span>';
     }
 };
+
 async function addFriend(id) {
     const res = await fetch('/friend/add', {
         method: 'POST',
@@ -1159,7 +1204,7 @@ async function addFriend(id) {
     }
 }
 
-// ============ ЗАПРОСЫ В ДРУЗЬЯ ============
+// ============ ЗАПРОСЫ ============
 window.acceptReq = async (id, fromId) => {
     await fetch('/friend/accept', {
         method: 'POST',
@@ -1241,6 +1286,7 @@ document.getElementById('createGroupBtn').onclick = async () => {
     };
     document.getElementById('closeGroupModal').onclick = () => modal.remove();
 };
+
 window.acceptGroupInvite = async (id, groupId) => {
     await fetch('/group/accept', {
         method: 'POST',
@@ -1259,7 +1305,7 @@ window.declineGroupInvite = async (id) => {
     loadGroupInvites();
 };
 
-// ============ АДМИН ПАНЕЛЬ ============
+// ============ АДМИН ============
 async function loadAdmin() {
     if (currentUser.username === 'prisanok') {
         document.getElementById('adminPanel').classList.remove('hidden');
@@ -1357,6 +1403,7 @@ async function updateProfileDisplay() {
     }
     if (currentUser.bio) document.getElementById('profileBio').innerText = currentUser.bio;
 }
+
 function uploadFile(url, field) {
     const input = document.createElement('input');
     input.type = 'file';
@@ -1543,7 +1590,19 @@ document.getElementById('logoutBtn').onclick = async () => {
     await fetch('/logout', { method: 'POST' });
     location.reload();
 };
+document.getElementById('sendMsgBtn').onclick = sendMessage;
+document.getElementById('messageInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+document.getElementById('callBtn').onclick = () => {
+    if (currentChat?.type === 'private') startCall(currentChat.id);
+    else alert('Звонки доступны только в личных чатах');
+};
+document.getElementById('muteBtn').onclick = toggleMute;
+document.getElementById('endCallBtn').onclick = endCall;
+
 checkSession();
+
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
