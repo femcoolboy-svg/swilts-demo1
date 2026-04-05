@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWILTS+ — Премиум подписка</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .header { text-align: center; margin-bottom: 50px; }
+        .header h1 { font-size: 48px; background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .header p { color: #ccc; margin-top: 10px; }
+        
+        .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 50px; }
+        .plan {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .plan:hover { transform: translateY(-10px); }
+        .plan h3 { font-size: 28px; margin-bottom: 10px; }
+        .plan .price { font-size: 42px; font-weight: bold; margin: 20px 0; }
+        .plan .price small { font-size: 16px; }
+        .plan ul { list-style: none; margin: 20px 0; }
+        .plan li { padding: 8px 0; color: #ccc; }
+        .plan button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .plan button:hover { transform: scale(1.02); }
+        .plan button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .features {
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 40px;
+        }
+        .features h2 { text-align: center; margin-bottom: 30px; color: white; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .feature { text-align: center; padding: 20px; }
+        .feature .icon { font-size: 48px; margin-bottom: 15px; }
+        .feature h4 { color: white; margin-bottom: 10px; }
+        .feature p { color: #ccc; font-size: 14px; }
+        
+        .back-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+        
+        .status-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .status-card h3 { color: #FFD700; margin-bottom: 10px; }
+        .status-card p { color: #ccc; }
+        
+        @media (max-width: 768px) {
+            .plans { grid-template-columns: 1fr; }
+            .header h1 { font-size: 32px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💎 SWILTS+</h1>
+        <p>Расширь возможности своего мессенджера</p>
+    </div>
+    
+    <div id="statusContainer"></div>
+    
+    <div class="plans">
+        <div class="plan">
+            <h3>🌙 Бесплатно</h3>
+            <div class="price">0 ₽</div>
+            <ul>
+                <li>✅ Основные функции</li>
+                <li>✅ До 100 друзей</li>
+                <li>✅ Группы до 15 человек</li>
+                <li>✅ Стандартные аватарки</li>
+                <li>❌ Кастомный цвет ника</li>
+                <li>❌ Анимированные аватарки</li>
+            </ul>
+            <button disabled>Текущий тариф</button>
+        </div>
+        
+        <div class="plan">
+            <h3>💎 SWILTS+</h3>
+            <div class="price">149 ₽<small>/мес</small></div>
+            <ul>
+                <li>✅ Кастомный цвет ника</li>
+                <li>✅ Эксклюзивный значок 👑</li>
+                <li>✅ Группы до 50 человек</li>
+                <li>✅ Безлимит друзей</li>
+                <li>✅ Анимированные аватарки (GIF)</li>
+                <li>✅ Видео-баннер профиля</li>
+                <li>✅ Приоритетная поддержка</li>
+            </ul>
+            <button onclick="subscribe('month')">Купить за 149 ₽</button>
+        </div>
+        
+        <div class="plan">
+            <h3>💎 SWILTS+</h3>
+            <div class="price">1 290 ₽<small>/год</small></div>
+            <ul>
+                <li>✅ Все преимущества Plus</li>
+                <li>✅ Экономия 498 ₽</li>
+                <li>✅ Автопродление можно отключить</li>
+            </ul>
+            <button onclick="subscribe('year')">Купить за 1 290 ₽</button>
+        </div>
+        
+        <div class="plan">
+            <h3>👑 SWILTS+</h3>
+            <div class="price">4 990 ₽<small>/навсегда</small></div>
+            <ul>
+                <li>✅ Все преимущества Plus</li>
+                <li>✅ Пожизненная подписка</li>
+                <li>✅ Эксклюзивный значок 👑🔥</li>
+                <li>✅ Доступ к бета-функциям</li>
+            </ul>
+            <button onclick="subscribe('lifetime')">Купить навсегда</button>
+        </div>
+    </div>
+    
+    <div class="features">
+        <h2>✨ Все преимущества SWILTS+</h2>
+        <div class="features-grid">
+            <div class="feature"><div class="icon">🎨</div><h4>Кастомный цвет ника</h4><p>Выбери любой цвет для своего имени</p></div>
+            <div class="feature"><div class="icon">👑</div><h4>Эксклюзивный значок</h4><p>Выделись среди друзей</p></div>
+            <div class="feature"><div class="icon">🎬</div><h4>Анимированный аватар</h4><p>Загрузи GIF-аватарку</p></div>
+            <div class="feature"><div class="icon">🎥</div><h4>Видео-баннер</h4><p>Красивое видео в профиле</p></div>
+            <div class="feature"><div class="icon">👥</div><h4>Группы до 50 человек</h4><p>Создавай большие сообщества</p></div>
+            <div class="feature"><div class="icon">💬</div><h4>Безлимит друзей</h4><p>Добавляй сколько хочешь</p></div>
+        </div>
+    </div>
+    
+    <div style="text-align: center;">
+        <a href="/" class="back-btn">← Вернуться в SWILTS</a>
+    </div>
+</div>
+
+<script>
+async function checkStatus() {
+    try {
+        const res = await fetch('/plus/status');
+        const data = await res.json();
+        const container = document.getElementById('statusContainer');
+        if (data.hasPlus) {
+            container.innerHTML = `
+                <div class="status-card">
+                    <h3>✅ У вас активна подписка SWILTS+!</h3>
+                    <p>Тариф: ${data.plan === 'month' ? '1 месяц' : data.plan === 'year' ? '1 год' : 'Навсегда'}</p>
+                    <p>Действует до: ${new Date(data.expiresAt).toLocaleDateString()}</p>
+                    ${data.autoRenew ? '<p>🔄 Автопродление включено</p>' : '<p>⛔ Автопродление отключено</p>'}
+                    ${data.plan !== 'lifetime' ? `<button onclick="cancelAutoRenew()" class="btn" style="background:#dc3545; color:white; padding:10px 20px; border-radius:12px; margin-top:10px;">Отключить автопродление</button>` : ''}
+                </div>
+            `;
+        }
+    } catch(e) {}
+}
+
+async function subscribe(plan) {
+    const res = await fetch('/plus/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan })
+    });
+    const data = await res.json();
+    if (data.success) {
+        window.open(data.paymentUrl, '_blank');
+        alert('Вы будете перенаправлены на оплату. После оплаты подписка активируется автоматически.');
+    } else {
+        alert('Ошибка: ' + data.error);
+    }
+}
+
+async function cancelAutoRenew() {
+    const res = await fetch('/plus/cancel-auto-renew', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+        alert('Автопродление отключено');
+        location.reload();
+    }
+}
+
+checkStatus();
+</script>
+</body>
+</html>
