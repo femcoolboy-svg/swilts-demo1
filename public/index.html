@@ -6,12 +6,8 @@
     <title>SWILTS — Мессенджер</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body.dark {
             --bg-primary: #0e0e10;
             --bg-secondary: #1a1a2e;
@@ -26,6 +22,7 @@
             --accent-hover: #4752c4;
             --danger: #ed4245;
             --success: #23a55a;
+            --plus: linear-gradient(135deg, #FFD700, #FFA500);
             --gradient: linear-gradient(135deg, #5865f2, #4752c4);
             --shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
@@ -44,6 +41,7 @@
             --accent-hover: #4752c4;
             --danger: #ed4245;
             --success: #23a55a;
+            --plus: linear-gradient(135deg, #FFD700, #FFA500);
             --gradient: linear-gradient(135deg, #5865f2, #4752c4);
             --shadow: 0 8px 24px rgba(0,0,0,0.08);
         }
@@ -56,26 +54,11 @@
             min-height: 100vh;
         }
 
-        .container {
-            max-width: 1500px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+        .container { max-width: 1500px; margin: 0 auto; padding: 20px; }
 
-        /* АНИМАЦИИ */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
 
-        .animate-fade { animation: fadeIn 0.4s; }
-        .animate-slide-left { animation: slideInLeft 0.3s; }
-
-        /* ОСНОВНЫЕ КЛАССЫ */
         .card {
             background: var(--bg-card);
             border-radius: 24px;
@@ -94,29 +77,13 @@
             font-size: 14px;
             font-family: inherit;
         }
-        .btn-primary {
-            background: var(--gradient);
-            color: white;
-        }
-        .btn-primary:hover {
-            transform: scale(1.02);
-            filter: brightness(1.05);
-        }
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        .btn-secondary {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        .btn-secondary:hover {
-            background: var(--border);
-        }
+        .btn-primary { background: var(--gradient); color: white; }
+        .btn-primary:hover { transform: scale(1.02); filter: brightness(1.05); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text-primary); }
+        .btn-plus { background: var(--plus); color: #1a1a2e; font-weight: bold; }
+        .btn-secondary:hover, .btn-plus:hover { transform: scale(1.02); }
 
         input {
             width: 100%;
@@ -126,7 +93,6 @@
             border-radius: 12px;
             color: var(--text-primary);
             font-size: 14px;
-            transition: all 0.2s;
         }
         input:focus {
             outline: none;
@@ -179,36 +145,31 @@
             overflow: hidden;
             cursor: pointer;
         }
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .user-details {
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { font-weight: 700; font-size: 16px; }
+        .user-tag { font-size: 11px; color: var(--text-secondary); }
+        .plus-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: var(--plus);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
             display: flex;
-            flex-direction: column;
-        }
-        .user-name {
-            font-weight: 700;
-            font-size: 16px;
-        }
-        .user-tag {
+            align-items: center;
+            justify-content: center;
             font-size: 11px;
-            color: var(--text-secondary);
+            border: 2px solid var(--bg-card);
         }
 
-        .theme-buttons {
-            display: flex;
-            gap: 8px;
-        }
+        .theme-buttons { display: flex; gap: 8px; }
 
-        /* ОСНОВНАЯ СЕТКА — КАК НА СКРИНШОТЕ */
-        .main-layout {
-            display: flex;
-            gap: 20px;
-        }
+        /* ОСНОВНАЯ СЕТКА */
+        .main-layout { display: flex; gap: 20px; }
 
-        /* ЛЕВАЯ ПАНЕЛЬ (МЕНЮ) */
+        /* ЛЕВАЯ ПАНЕЛЬ */
         .left-menu {
             width: 240px;
             background: var(--bg-card);
@@ -228,19 +189,9 @@
             align-items: center;
             gap: 12px;
         }
-        .menu-item:hover {
-            background: var(--bg-hover);
-            transform: translateX(4px);
-        }
-        .menu-item.active {
-            background: var(--accent);
-            color: white;
-        }
-        .menu-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 12px 0;
-        }
+        .menu-item:hover { background: var(--bg-hover); transform: translateX(4px); }
+        .menu-item.active { background: var(--accent); color: white; }
+        .menu-divider { height: 1px; background: var(--border); margin: 12px 0; }
         .menu-header {
             font-size: 12px;
             text-transform: uppercase;
@@ -249,7 +200,7 @@
             letter-spacing: 1px;
         }
 
-        /* ЦЕНТРАЛЬНАЯ ПАНЕЛЬ (ДРУЗЬЯ, АКТИВНЫЕ КОНТАКТЫ) */
+        /* ЦЕНТРАЛЬНАЯ ПАНЕЛЬ */
         .center-panel {
             flex: 1;
             background: var(--bg-card);
@@ -257,18 +208,8 @@
             padding: 24px;
             border: 1px solid var(--border);
         }
-        .center-header {
-            margin-bottom: 24px;
-        }
-        .center-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-        .center-header p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-        }
+        .center-header { margin-bottom: 24px; }
+        .center-header h2 { font-size: 20px; font-weight: 600; }
 
         .add-friend-section {
             background: var(--bg-input);
@@ -276,17 +217,9 @@
             padding: 16px;
             margin-bottom: 24px;
         }
-        .add-friend-section h3 {
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-        .add-friend-input {
-            display: flex;
-            gap: 10px;
-        }
-        .add-friend-input input {
-            flex: 1;
-        }
+        .add-friend-section h3 { font-size: 14px; margin-bottom: 12px; }
+        .add-friend-input { display: flex; gap: 10px; }
+        .add-friend-input input { flex: 1; }
 
         .active-contacts {
             background: var(--bg-input);
@@ -294,19 +227,10 @@
             padding: 16px;
             text-align: center;
         }
-        .active-contacts h3 {
-            font-size: 14px;
-            margin-bottom: 12px;
-            text-align: left;
-        }
-        .active-contacts .empty {
-            color: var(--text-secondary);
-            font-size: 13px;
-            padding: 20px;
-        }
-        .friends-list {
-            margin-top: 16px;
-        }
+        .active-contacts h3 { font-size: 14px; margin-bottom: 12px; text-align: left; }
+        .active-contacts .empty { color: var(--text-secondary); font-size: 13px; padding: 20px; }
+
+        .friends-list { margin-top: 16px; }
         .friend-item {
             display: flex;
             align-items: center;
@@ -316,9 +240,7 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .friend-item:hover {
-            background: var(--bg-hover);
-        }
+        .friend-item:hover { background: var(--bg-hover); }
         .friend-avatar-small {
             width: 40px;
             height: 40px;
@@ -330,19 +252,11 @@
             font-size: 18px;
             overflow: hidden;
         }
-        .friend-info {
-            flex: 1;
-        }
-        .friend-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .friend-status {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
+        .friend-info { flex: 1; }
+        .friend-name { font-weight: 600; font-size: 14px; }
+        .friend-status { font-size: 11px; color: var(--text-secondary); }
 
-        /* ПРАВАЯ ПАНЕЛЬ (НАСТРОЙКИ ПРОФИЛЯ) */
+        /* ПРАВАЯ ПАНЕЛЬ */
         .right-panel {
             width: 260px;
             background: var(--bg-card);
@@ -369,15 +283,8 @@
             overflow: hidden;
             cursor: pointer;
         }
-        .profile-name {
-            font-weight: 700;
-            font-size: 16px;
-        }
-        .profile-bio {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
+        .profile-name { font-weight: 700; font-size: 16px; }
+        .profile-bio { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
         .settings-btn {
             width: 100%;
@@ -390,22 +297,14 @@
             font-size: 13px;
             transition: all 0.2s;
         }
-        .settings-btn:hover {
-            background: var(--bg-hover);
-            transform: translateX(4px);
-        }
+        .settings-btn:hover { background: var(--bg-hover); transform: translateX(4px); }
 
         .admin-panel {
             margin-top: 20px;
             padding-top: 16px;
             border-top: 1px solid var(--border);
         }
-        .admin-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-        }
+        .admin-title { font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px; }
 
         /* АВТОРИЗАЦИЯ */
         .auth-card {
@@ -426,12 +325,44 @@
             background-clip: text;
             color: transparent;
         }
-        .auth-card input {
+        .auth-card input { margin-bottom: 16px; }
+        .auth-card button { margin-top: 8px; }
+
+        /* МОДАЛКА РЕДАКТИРОВАНИЯ ПРОФИЛЯ */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 28px;
+            padding: 28px;
+            width: 90%;
+            max-width: 450px;
+            border: 1px solid var(--border);
+            animation: slideInLeft 0.3s;
+        }
+        .modal-content h3 { margin-bottom: 20px; font-size: 22px; }
+        .modal-content input, .modal-content select, .modal-content textarea {
+            width: 100%;
+            padding: 12px;
             margin-bottom: 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
         }
-        .auth-card button {
-            margin-top: 8px;
-        }
+        .modal-content button { margin-right: 10px; }
 
         .hidden { display: none; }
         .error { color: var(--danger); }
@@ -486,24 +417,24 @@
                     <div class="user-name" id="userName"></div>
                     <div class="user-tag" id="userTag"></div>
                 </div>
+                <div id="plusBadge" class="plus-badge hidden">💎</div>
             </div>
             <div class="theme-buttons">
                 <button class="btn btn-secondary" id="themeDarkBtn">🌙</button>
                 <button class="btn btn-secondary" id="themeLightBtn">☀️</button>
                 <button class="btn btn-danger" id="logoutBtn">🚪</button>
+                <button class="btn btn-plus" id="plusBtn">💎 SWILTS+</button>
             </div>
         </div>
 
         <!-- ОСНОВНАЯ СЕТКА -->
         <div class="main-layout">
-            <!-- ЛЕВАЯ ПАНЕЛЬ (МЕНЮ) -->
+            <!-- ЛЕВАЯ ПАНЕЛЬ -->
             <div class="left-menu">
                 <div class="menu-header">СЕРВЕРА</div>
                 <div class="menu-item" id="serversMenuItem">🏠 Сервера</div>
                 <div class="menu-item active" id="friendsMenuItem">👥 Друзья</div>
-                <div class="menu-item" id="nitroMenuItem">💎 Nitro</div>
-                <div class="menu-item" id="shopMenuItem">🛒 Магазин</div>
-                <div class="menu-item" id="questsMenuItem">📋 Задания</div>
+                <div class="menu-item" id="plusMenuItem">💎 SWILTS+</div>
                 <div class="menu-divider"></div>
                 <div class="menu-header">ЛИЧНЫЕ СООБЩЕНИЯ</div>
                 <div id="privateChatsList"></div>
@@ -545,15 +476,14 @@
                     <div class="profile-name" id="profileName"></div>
                     <div class="profile-bio" id="profileBio"></div>
                 </div>
-                <div class="settings-btn" id="editAvatarBtn">📷 Сменить аватар</div>
-                <div class="settings-btn" id="changeUsernameBtn">✏️ Сменить ник</div>
-                <div class="settings-btn" id="editStatusBtn">🟢 Сменить статус</div>
+                <div class="settings-btn" id="editProfileBtn">🎨 Редактировать профиль</div>
+                <div class="settings-btn" id="changePasswordBtn">🔐 Сменить пароль</div>
 
-                <!-- АДМИН ПАНЕЛЬ (ТОЛЬКО ДЛЯ СОЗДАТЕЛЯ) -->
+                <!-- АДМИН ПАНЕЛЬ -->
                 <div id="adminPanel" class="admin-panel hidden">
                     <div class="admin-title">👑 АДМИН</div>
                     <div class="settings-btn" id="trollBtn" style="background:var(--danger);">🎭 ТРОЛЬ</div>
-                    <input type="text" id="trollName" placeholder="Никнейм" class="mt-2" style="margin-top:8px;">
+                    <input type="text" id="trollName" placeholder="Никнейм" class="mt-2">
                     <div class="settings-btn" id="allUsersBtn">👥 Все пользователи</div>
                     <div id="usersList" class="hidden" style="margin-top:10px;"></div>
                 </div>
@@ -594,12 +524,14 @@ setTheme(localStorage.getItem('theme') || 'dark');
 document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
 document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
+// SWILTS+
+document.getElementById('plusBtn').onclick = () => window.open('/plus.html', '_blank');
+document.getElementById('plusMenuItem').onclick = () => window.open('/plus.html', '_blank');
+
 // WEBSOCKET
 function initSocket() {
     socket = io();
-    socket.on('connect', () => {
-        if (currentUser) socket.emit('register', currentUser.id);
-    });
+    socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
     socket.on('private-message', (data) => {
         showNotification(data.fromName, data.msg);
         loadFriends();
@@ -630,9 +562,7 @@ async function loadFriends() {
     });
     const data = await res.json();
     const container = document.getElementById('friendsList');
-    const activeContainer = document.getElementById('activeFriendsList');
     container.innerHTML = '<h3 style="margin-bottom:12px; font-size:14px;">Все друзья</h3>';
-    let hasActive = false;
     if (data.friends) {
         data.friends.forEach(f => {
             const div = document.createElement('div');
@@ -646,9 +576,6 @@ async function loadFriends() {
             container.appendChild(div);
         });
     }
-    if (!hasActive) {
-        activeContainer.innerHTML = '<div class="empty">Пока что тут тихо...<br>Если ваш друг начнёт чем-то заниматься — вы увидите это здесь!</div>';
-    }
 }
 
 async function loadRequests() {
@@ -658,8 +585,8 @@ async function loadRequests() {
         body: JSON.stringify({ userId: currentUser.id })
     });
     const data = await res.json();
+    const searchResult = document.getElementById('searchResult');
     if (data.requests && data.requests.length > 0) {
-        const searchResult = document.getElementById('searchResult');
         searchResult.innerHTML = '';
         data.requests.forEach(req => {
             const div = document.createElement('div');
@@ -747,58 +674,116 @@ async function addFriend(userId) {
     }
 }
 
+// ============ РЕДАКТИРОВАНИЕ ПРОФИЛЯ ============
+function openEditProfile() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>🎨 Редактировать профиль</h3>
+            <label>Аватар (ссылка или эмодзи)</label>
+            <input type="text" id="editAvatar" placeholder="🔗 Ссылка на изображение" value="${currentUser.avatar || ''}">
+            <label>О себе</label>
+            <textarea id="editBio" rows="3" placeholder="Расскажите о себе...">${currentUser.bio || ''}</textarea>
+            <label>Цвет ника (HEX)</label>
+            <input type="color" id="editColor" value="${currentUser.plus_color || '#5865f2'}">
+            <button id="saveProfileBtn" class="btn btn-primary">💾 Сохранить</button>
+            <button id="closeModalBtn" class="btn btn-secondary">Закрыть</button>
+            <div id="profileEditMsg" class="mt-2"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('saveProfileBtn').onclick = async () => {
+        const avatar = document.getElementById('editAvatar').value;
+        const bio = document.getElementById('editBio').value;
+        const color = document.getElementById('editColor').value;
+        
+        await fetch('/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatar, bio, color })
+        });
+        
+        if (avatar) currentUser.avatar = avatar;
+        if (bio) currentUser.bio = bio;
+        if (color) {
+            currentUser.plus_color = color;
+            document.documentElement.style.setProperty('--user-color', color);
+        }
+        
+        updateProfileDisplay();
+        document.getElementById('profileEditMsg').innerHTML = '<span class="success">✅ Сохранено! Обновите страницу.</span>';
+        setTimeout(() => location.reload(), 1500);
+    };
+    document.getElementById('closeModalBtn').onclick = () => modal.remove();
+}
+
+function openChangePassword() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>🔐 Смена пароля</h3>
+            <input type="password" id="oldPass" placeholder="Старый пароль">
+            <input type="password" id="newPass" placeholder="Новый пароль">
+            <input type="password" id="confirmPass" placeholder="Подтвердите">
+            <button id="savePassBtn" class="btn btn-primary">Сменить</button>
+            <button id="closePassBtn" class="btn btn-secondary">Закрыть</button>
+            <div id="passMsg" class="mt-2"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('savePassBtn').onclick = async () => {
+        const oldPass = document.getElementById('oldPass').value;
+        const newPass = document.getElementById('newPass').value;
+        const confirmPass = document.getElementById('confirmPass').value;
+        
+        if (newPass !== confirmPass) {
+            document.getElementById('passMsg').innerHTML = '<span class="error">❌ Пароли не совпадают</span>';
+            return;
+        }
+        
+        const res = await fetch('/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('passMsg').innerHTML = '<span class="success">✅ Пароль изменён</span>';
+            setTimeout(() => modal.remove(), 1500);
+        } else {
+            document.getElementById('passMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>';
+        }
+    };
+    document.getElementById('closePassBtn').onclick = () => modal.remove();
+}
+
+document.getElementById('editProfileBtn').onclick = openEditProfile;
+document.getElementById('changePasswordBtn').onclick = openChangePassword;
+
 // ============ ПРОФИЛЬ ============
 async function updateProfileDisplay() {
     document.getElementById('userName').innerText = currentUser.username;
     document.getElementById('userTag').innerText = '#' + currentUser.tag;
     document.getElementById('profileName').innerText = currentUser.username + '#' + currentUser.tag;
+    
+    if (currentUser.hasPlus) {
+        document.getElementById('plusBadge').classList.remove('hidden');
+    }
+    
     const av = currentUser.avatar;
-    if (av) {
+    if (av && av !== '') {
         document.getElementById('userAvatar').innerHTML = `<img src="${av}">`;
         document.getElementById('profileAvatar').innerHTML = `<img src="${av}">`;
     }
     if (currentUser.bio) document.getElementById('profileBio').innerText = currentUser.bio;
+    if (currentUser.plus_color) {
+        document.documentElement.style.setProperty('--user-color', currentUser.plus_color);
+    }
 }
-
-function uploadFile(url) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = async (e) => {
-        const fd = new FormData();
-        fd.append('file', e.target.files[0]);
-        const res = await fetch(url, { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.success) location.reload();
-        else alert(data.error || 'Ошибка');
-    };
-    input.click();
-}
-
-document.getElementById('editAvatarBtn').onclick = () => uploadFile('/avatar');
-document.getElementById('changeUsernameBtn').onclick = async () => {
-    const newName = prompt('Новый никнейм (3-20 символов):');
-    if (!newName) return;
-    const res = await fetch('/change-username', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newUsername: newName })
-    });
-    const data = await res.json();
-    if (data.success) location.reload();
-    else alert(data.error);
-};
-document.getElementById('editStatusBtn').onclick = async () => {
-    const s = prompt('Статус:\n1 - В сети\n2 - Не активен\n3 - Не беспокоить', '1');
-    let st = 'online';
-    if (s === '2') st = 'idle';
-    if (s === '3') st = 'dnd';
-    await fetch('/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: st, bio: currentUser.bio })
-    });
-    location.reload();
-};
 
 // ============ АДМИН ============
 async function loadAdmin() {
@@ -887,6 +872,7 @@ function showMain() {
     loadRequests();
     loadAdmin();
     initSocket();
+    
     const hours = new Date().getHours();
     let greeting = hours >= 7 && hours <= 10 ? 'Доброе утро' : (hours >= 11 && hours <= 23 ? 'Добрый день' : 'Доброй ночи');
     const toast = document.createElement('div');
@@ -908,11 +894,9 @@ document.getElementById('backToLoginBtn').onclick = () => { document.getElementB
 document.getElementById('registerBtn').onclick = register;
 document.getElementById('logoutBtn').onclick = async () => { await fetch('/logout', { method: 'POST' }); location.reload(); };
 
-// МЕНЮ (заглушки)
+// МЕНЮ
 document.getElementById('serversMenuItem').onclick = () => alert('Сервера будут доступны в следующем обновлении');
-document.getElementById('nitroMenuItem').onclick = () => alert('Nitro — премиум функции');
-document.getElementById('shopMenuItem').onclick = () => alert('Магазин стикеров и тем');
-document.getElementById('questsMenuItem').onclick = () => alert('Задания и достижения');
+document.getElementById('friendsMenuItem').onclick = () => location.reload();
 
 checkSession();
 </script>
