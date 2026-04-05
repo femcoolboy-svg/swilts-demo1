@@ -1,13 +1,17 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>SWILTS — Мессенджер</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        /* ТЕМЫ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ТЕМНАЯ ТЕМА (ОСНОВНАЯ) */
         body.dark {
             --bg: #0e0e10;
             --sidebar: #1a1a2e;
@@ -18,10 +22,13 @@
             --text-sec: #949ba4;
             --border: #2a2a3e;
             --accent: #5865f2;
+            --accent-hover: #4752c4;
             --danger: #ed4245;
             --success: #23a55a;
             --gradient: linear-gradient(135deg, #5865f2, #764ba2);
         }
+
+        /* СВЕТЛАЯ ТЕМА */
         body.light {
             --bg: #f2f3f5;
             --sidebar: #ffffff;
@@ -32,13 +39,20 @@
             --text-sec: #5c5e66;
             --border: #e3e5e8;
             --accent: #5865f2;
+            --accent-hover: #4752c4;
             --danger: #ed4245;
             --success: #23a55a;
             --gradient: linear-gradient(135deg, #5865f2, #764ba2);
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; transition: all 0.3s; }
-        
-        /* АВТОРИЗАЦИЯ (КАК НА ВТОРОЙ ФОТКЕ) */
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s;
+        }
+
+        /* ============ АВТОРИЗАЦИЯ ============ */
         .auth-container {
             display: flex;
             align-items: center;
@@ -55,12 +69,11 @@
             backdrop-filter: blur(20px);
             border-radius: 48px;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .auth-brand {
             flex: 1;
-            background: linear-gradient(135deg, rgba(88,101,242,0.2), rgba(118,75,162,0.2));
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.2), rgba(118, 75, 162, 0.2));
             padding: 48px;
             display: flex;
             flex-direction: column;
@@ -69,9 +82,9 @@
         }
         .auth-brand .logo { font-size: 64px; margin-bottom: 20px; }
         .auth-brand h1 { font-size: 36px; font-weight: 800; background: linear-gradient(135deg, #fff, #a0a0ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 16px; }
-        .auth-brand p { color: rgba(255,255,255,0.7); margin-bottom: 30px; }
+        .auth-brand p { color: rgba(255, 255, 255, 0.7); margin-bottom: 30px; }
         .auth-features { text-align: left; margin-top: 20px; }
-        .auth-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: rgba(255,255,255,0.8); }
+        .auth-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: rgba(255, 255, 255, 0.8); }
         .auth-forms {
             width: 420px;
             padding: 48px;
@@ -79,7 +92,7 @@
         .auth-tabs {
             display: flex;
             gap: 8px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 60px;
             padding: 4px;
             margin-bottom: 32px;
@@ -91,20 +104,24 @@
             border-radius: 60px;
             cursor: pointer;
             font-weight: 600;
-            color: rgba(255,255,255,0.6);
+            color: rgba(255, 255, 255, 0.6);
             transition: all 0.3s;
         }
-        .auth-tab.active { background: var(--gradient); color: white; box-shadow: 0 4px 12px rgba(88,101,242,0.3); }
+        .auth-tab.active {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+        }
         .auth-form { display: none; }
         .auth-form.active { display: block; animation: fadeIn 0.3s; }
         .auth-form h2 { font-size: 28px; margin-bottom: 8px; background: linear-gradient(135deg, #fff, #a0a0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .auth-form p { color: rgba(255,255,255,0.5); margin-bottom: 24px; }
+        .auth-form p { color: rgba(255, 255, 255, 0.5); margin-bottom: 24px; }
         .auth-form input {
             width: 100%;
             padding: 14px;
             margin-bottom: 16px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 16px;
             color: white;
             font-size: 15px;
@@ -123,7 +140,7 @@
         }
         .auth-form button:hover { transform: scale(1.02); }
         .captcha-block {
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 16px;
             padding: 12px;
             text-align: center;
@@ -131,19 +148,21 @@
         }
         .captcha-number { font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 8px; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* ОСНОВНОЙ ИНТЕРФЕЙС (КАК НА ПЕРВОЙ ФОТКЕ) */
-        .app-container {
+
+        /* ============ ОСНОВНОЙ ИНТЕРФЕЙС ============ */
+        .main-container {
             max-width: 1400px;
             width: 100%;
-            height: 95vh;
             margin: 20px auto;
             background: var(--sidebar);
             border-radius: 24px;
             display: flex;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            height: calc(100vh - 40px);
         }
+
+        /* ЛЕВАЯ ПАНЕЛЬ */
         .sidebar {
             width: 260px;
             background: var(--sidebar);
@@ -173,17 +192,23 @@
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-details h3 { font-size: 15px; display: flex; align-items: center; gap: 6px; }
         .user-details p { font-size: 11px; color: var(--text-sec); }
+        .user-details small { font-size: 10px; color: var(--text-sec); }
         .plus-badge {
             background: linear-gradient(135deg, #FFD700, #FFA500);
             border-radius: 50%;
-            width: 18px; height: 18px;
+            width: 18px;
+            height: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 10px;
             cursor: help;
         }
-        .nav-menu { flex: 1; padding: 16px; }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px;
+        }
         .nav-item {
             padding: 10px 16px;
             margin: 4px 0;
@@ -197,7 +222,25 @@
         }
         .nav-item:hover { background: var(--hover); }
         .nav-item.active { background: var(--accent); color: white; }
-        
+
+        .bottom-menu {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .bottom-item {
+            padding: 10px 16px;
+            margin: 4px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+        .bottom-item:hover { background: var(--hover); }
+
+        /* ЦЕНТРАЛЬНЫЙ ЧАТ */
         .chat-main {
             flex: 1;
             display: flex;
@@ -211,6 +254,17 @@
             align-items: center;
             gap: 12px;
             background: var(--card);
+        }
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            overflow: hidden;
         }
         .messages {
             flex: 1;
@@ -226,9 +280,13 @@
             gap: 10px;
             max-width: 70%;
         }
-        .message-own { align-self: flex-end; flex-direction: row-reverse; }
+        .message-own {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
         .message-avatar {
-            width: 32px; height: 32px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: var(--accent);
             display: flex;
@@ -244,8 +302,15 @@
             border-radius: 18px;
             font-size: 14px;
         }
-        .message-own .message-bubble { background: var(--accent); color: white; }
-        .message-time { font-size: 10px; margin-top: 4px; opacity: 0.7; }
+        .message-own .message-bubble {
+            background: var(--accent);
+            color: white;
+        }
+        .message-time {
+            font-size: 10px;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
         .input-area {
             padding: 16px;
             border-top: 1px solid var(--border);
@@ -253,9 +318,24 @@
             gap: 12px;
             background: var(--card);
         }
-        .input-area input { flex: 1; padding: 12px; background: var(--input); border: none; border-radius: 24px; color: var(--text); }
-        .input-area button { background: var(--accent); border: none; padding: 0 24px; border-radius: 24px; color: white; cursor: pointer; }
-        
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            background: var(--input);
+            border: none;
+            border-radius: 24px;
+            color: var(--text);
+        }
+        .input-area button {
+            background: var(--accent);
+            border: none;
+            padding: 0 24px;
+            border-radius: 24px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* ПРАВАЯ ПАНЕЛЬ */
         .right-panel {
             width: 280px;
             background: var(--sidebar);
@@ -265,9 +345,15 @@
             overflow-y: auto;
             padding: 16px;
         }
-        .profile-card { text-align: center; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+        .profile-card {
+            text-align: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
         .profile-avatar {
-            width: 72px; height: 72px;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
             background: var(--gradient);
             margin: 0 auto 12px;
@@ -278,25 +364,82 @@
             overflow: hidden;
             cursor: pointer;
         }
-        .stats { display: flex; justify-content: space-around; margin: 16px 0; text-align: center; }
+        .profile-name { font-weight: 600; font-size: 16px; text-align: center; }
+        .profile-bio { font-size: 12px; color: var(--text-sec); text-align: center; margin-top: 4px; }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 16px 0;
+            text-align: center;
+        }
         .stat-value { font-size: 20px; font-weight: 600; }
         .stat-label { font-size: 11px; color: var(--text-sec); }
-        .section-title { font-size: 11px; text-transform: uppercase; color: var(--text-sec); margin: 16px 0 8px 0; }
-        .add-friend-area { background: var(--input); border-radius: 12px; padding: 12px; margin-bottom: 16px; }
-        .add-friend-input { display: flex; gap: 8px; }
-        .add-friend-input input { flex: 1; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
-        .add-friend-input button { background: var(--accent); border: none; padding: 8px 16px; border-radius: 8px; color: white; cursor: pointer; }
-        .friend-item, .request-item, .search-item { background: var(--input); border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .setting-btn { background: var(--input); border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; margin-bottom: 8px; font-size: 13px; transition: all 0.2s; }
-        .setting-btn:hover { background: var(--hover); transform: translateX(4px); }
-        
+
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-sec);
+            margin: 16px 0 8px 0;
+        }
+        .add-friend-area {
+            background: var(--input);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        .add-friend-input {
+            display: flex;
+            gap: 8px;
+        }
+        .add-friend-input input {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+        }
+        .add-friend-input button {
+            background: var(--accent);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        .friend-item, .request-item, .search-item {
+            background: var(--input);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .setting-btn {
+            background: var(--input);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 8px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .setting-btn:hover {
+            background: var(--hover);
+            transform: translateX(4px);
+        }
+
         .modal {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -309,17 +452,26 @@
             max-width: 450px;
             padding: 24px;
         }
+        .modal-content input, .modal-content textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+        }
         .hidden { display: none; }
         .error { color: var(--danger); }
         .success { color: var(--success); }
         .text-muted { color: var(--text-sec); }
         .mt-2 { margin-top: 8px; }
-        
+
         @media (max-width: 900px) {
             .auth-wrapper { flex-direction: column; }
             .auth-brand { display: none; }
             .auth-forms { width: 100%; }
-            .app-container { flex-direction: column; height: auto; }
+            .main-container { flex-direction: column; height: auto; }
             .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
             .right-panel { display: none; }
         }
@@ -373,7 +525,7 @@
 
     <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="mainApp" class="hidden">
-        <div class="app-container">
+        <div class="main-container">
             <!-- ЛЕВАЯ ПАНЕЛЬ -->
             <div class="sidebar">
                 <div class="user-info">
@@ -381,7 +533,7 @@
                     <div class="user-details">
                         <h3><span id="sideName"></span><span id="sidePlusBadge" class="plus-badge hidden">💎</span></h3>
                         <p id="sideTag"></p>
-                        <p id="sideCreated" style="font-size:10px;"></p>
+                        <small id="sideCreated"></small>
                     </div>
                 </div>
                 <div class="nav-menu">
@@ -389,24 +541,25 @@
                     <div class="nav-item" data-view="friends">👥 Друзья</div>
                     <div class="nav-item" data-view="groups">👥 Группы</div>
                 </div>
-                <div style="flex:1;"></div>
-                <div class="nav-item" id="themeDarkBtn">🌙 Тёмная</div>
-                <div class="nav-item" id="themeLightBtn">☀️ Светлая</div>
-                <div class="nav-item" id="logoutBtn">🚪 Выйти</div>
-                <div class="nav-item" id="plusBtn" style="background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a1a2e;">💎 SWILTS+</div>
-                <div class="nav-item" id="secretBtn" onclick="window.open('https://xn--d1ah4a.com/login','_blank')">🔐 SECRET</div>
+                <div class="bottom-menu">
+                    <div class="bottom-item" id="themeDarkBtn">🌙 Тёмная</div>
+                    <div class="bottom-item" id="themeLightBtn">☀️ Светлая</div>
+                    <div class="bottom-item" id="logoutBtn">🚪 Выйти</div>
+                    <div class="bottom-item" id="plusBtn" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a2e;">💎 SWILTS+</div>
+                    <div class="bottom-item" id="secretBtn" onclick="window.open('https://xn--d1ah4a.com/login', '_blank')">🔐 SECRET</div>
+                </div>
             </div>
 
             <!-- ЦЕНТРАЛЬНЫЙ ЧАТ -->
             <div class="chat-main">
                 <div class="chat-header">
-                    <div class="avatar" id="chatAvatar" style="width:40px;height:40px;">👤</div>
+                    <div class="chat-avatar" id="chatAvatar">👤</div>
                     <div><strong id="chatName">Выберите чат</strong></div>
                 </div>
                 <div class="messages" id="messages">
-                    <div class="text-muted" style="text-align:center; margin-top:40px;">👈 Выберите чат</div>
+                    <div class="text-muted" style="text-align: center; margin-top: 40px;">👈 Выберите чат</div>
                 </div>
-                <div class="input-area" id="inputArea" style="display:none;">
+                <div class="input-area" id="inputArea" style="display: none;">
                     <input type="text" id="messageInput" placeholder="Сообщение...">
                     <button id="sendBtn">Отправить</button>
                 </div>
@@ -424,29 +577,29 @@
                     <div><div class="stat-value" id="requestsCount">0</div><div class="stat-label">запросов</div></div>
                     <div><div class="stat-value" id="groupsCount">0</div><div class="stat-label">групп</div></div>
                 </div>
-                
+
                 <div class="setting-btn" id="editProfileBtn">🎨 Редактировать профиль</div>
                 <div class="setting-btn" id="changePassBtn">🔐 Сменить пароль</div>
-                
+
                 <div class="add-friend-area">
-                    <h4 style="margin-bottom:8px;">➕ Добавить друга</h4>
+                    <h4 style="margin-bottom: 8px;">➕ Добавить друга</h4>
                     <div class="add-friend-input">
                         <input type="text" id="searchUserInput" placeholder="Никнейм">
                         <button id="searchUserBtn">Найти</button>
                     </div>
                     <div id="searchResults" class="mt-2"></div>
                 </div>
-                
+
                 <div id="requestsContainer"></div>
-                
+
                 <div class="section-title">💬 Группы</div>
-                <button class="setting-btn" id="createGroupBtn" style="background:var(--accent); color:white;">➕ Создать группу</button>
+                <button class="setting-btn" id="createGroupBtn" style="background: var(--accent); color: white;">➕ Создать группу</button>
                 <div id="groupInvitesList"></div>
-                
+
                 <div id="adminPanel" class="hidden">
                     <div class="section-title">👑 АДМИН</div>
-                    <div class="setting-btn" id="trollBtn" style="background:var(--danger);">🎭 ТРОЛЬ</div>
-                    <input type="text" id="trollName" placeholder="Никнейм" class="mt-2" style="width:100%; padding:8px; background:var(--input); border:none; border-radius:8px; color:var(--text);">
+                    <div class="setting-btn" id="trollBtn" style="background: var(--danger);">🎭 ТРОЛЬ</div>
+                    <input type="text" id="trollName" placeholder="Никнейм" class="mt-2" style="width: 100%; padding: 8px; background: var(--input); border: none; border-radius: 8px; color: var(--text);">
                     <div class="setting-btn" id="allUsersBtn">👥 Все пользователи</div>
                     <div id="usersList" class="hidden mt-2"></div>
                 </div>
@@ -464,9 +617,9 @@ let captchaValue = 0;
 let userIP = '';
 let currentView = 'chats';
 
-fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>userIP=d.ip);
+fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => userIP = d.ip);
 
-// КАПЧА
+// ============ КАПЧА ============
 async function loadCaptcha() {
     const res = await fetch('/captcha');
     const data = await res.json();
@@ -475,7 +628,7 @@ async function loadCaptcha() {
 }
 loadCaptcha();
 
-// ТЕМА
+// ============ ТЕМА ============
 function setTheme(theme) {
     if (theme === 'light') {
         document.body.classList.remove('dark');
@@ -488,13 +641,15 @@ function setTheme(theme) {
     }
 }
 setTheme(localStorage.getItem('theme') || 'dark');
-document.getElementById('themeDarkBtn')?.addEventListener('click', () => setTheme('dark'));
-document.getElementById('themeLightBtn')?.addEventListener('click', () => setTheme('light'));
+document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
+document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
-// WEBSOCKET
+// ============ WEBSOCKET ============
 function initSocket() {
     socket = io();
-    socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
+    socket.on('connect', () => {
+        if (currentUser) socket.emit('register', currentUser.id);
+    });
     socket.on('private-message', (data) => {
         if (currentChat?.type === 'friend' && currentChat?.id === data.from) {
             appendMessage(data.msg, false, data.time, data.fromName, data.fromAvatar);
@@ -620,8 +775,10 @@ async function sendMessage() {
     document.getElementById('messageInput').value = '';
 }
 
-document.getElementById('sendBtn')?.addEventListener('click', sendMessage);
-document.getElementById('messageInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+document.getElementById('sendBtn').onclick = sendMessage;
+document.getElementById('messageInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
 
 // ============ ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ============
 async function openUserProfile(userId) {
@@ -696,7 +853,7 @@ window.declineRequest = async (reqId) => {
 };
 
 // ============ ПОИСК ============
-document.getElementById('searchUserBtn')?.addEventListener('click', async () => {
+document.getElementById('searchUserBtn').onclick = async () => {
     const query = document.getElementById('searchUserInput').value;
     if (!query) return;
     const res = await fetch('/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: query }) });
@@ -718,7 +875,7 @@ document.getElementById('searchUserBtn')?.addEventListener('click', async () => 
     } else {
         container.innerHTML = '<div class="error">❌ Не найден</div>';
     }
-});
+};
 
 window.addFriend = async (userId) => {
     if (userId === currentUser.id) { alert('Нельзя добавить себя'); return; }
@@ -752,7 +909,7 @@ async function loadGroups() {
     }
 }
 
-document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
+document.getElementById('createGroupBtn').onclick = async () => {
     const name = prompt('Название группы:');
     if (!name) return;
     const friendsRes = await fetch('/friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
@@ -809,7 +966,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
         }
     };
     document.getElementById('closeGroupModal').onclick = () => modal.remove();
-});
+};
 
 async function loadGroupInvites() {
     const res = await fetch('/group/invites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
@@ -866,13 +1023,13 @@ function openEditProfile() {
     modal.className = 'modal';
     modal.innerHTML = `<div class="modal-content">
         <h3 style="margin-bottom:16px;">Редактировать профиль</h3>
-        <label>Аватар (до 1MB, jpg/png/gif)</label>
-        <input type="file" id="avatarFile" accept="image/*" style="margin-bottom:16px; background:var(--input); border:none; padding:8px; border-radius:8px; color:var(--text);">
-        ${currentUser.hasPlus ? `<label>Баннер (только для SWILTS+, jpg/png/gif)</label><input type="file" id="bannerFile" accept="image/*" style="margin-bottom:16px; background:var(--input); border:none; padding:8px; border-radius:8px; color:var(--text);">` : '<p class="text-muted" style="margin-bottom:16px;">💎 Баннер доступен только с SWILTS+</p>'}
+        <label>Аватар (до 1MB)</label>
+        <input type="file" id="avatarFile" accept="image/*">
+        ${currentUser.hasPlus ? `<label>Баннер (только для SWILTS+)</label><input type="file" id="bannerFile" accept="image/*">` : '<p class="text-muted">💎 Баннер доступен только с SWILTS+</p>'}
         <label>О себе</label>
-        <textarea id="editBio" rows="3" style="width:100%; padding:12px; background:var(--input); border:none; border-radius:10px; color:var(--text); margin-bottom:16px;">${currentUser.bio || ''}</textarea>
-        <button id="saveProfileBtn">Сохранить</button>
-        <button id="closeProfileBtn" style="background:var(--hover); margin-top:8px;">Закрыть</button>
+        <textarea id="editBio" rows="3">${currentUser.bio || ''}</textarea>
+        <button id="saveProfileBtn" style="background:var(--accent); color:white; border:none; padding:10px; border-radius:10px; cursor:pointer; width:100%;">Сохранить</button>
+        <button id="closeProfileBtn" style="background:var(--hover); margin-top:8px; width:100%; padding:10px; border:none; border-radius:10px; cursor:pointer;">Закрыть</button>
         <div id="profileMsg" class="mt-2"></div>
     </div>`;
     document.body.appendChild(modal);
@@ -911,11 +1068,11 @@ function openChangePassword() {
     modal.className = 'modal';
     modal.innerHTML = `<div class="modal-content">
         <h3 style="margin-bottom:16px;">Смена пароля</h3>
-        <input type="password" id="oldPass" placeholder="Старый пароль" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:none; border-radius:10px; color:var(--text);">
-        <input type="password" id="newPass" placeholder="Новый пароль" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:none; border-radius:10px; color:var(--text);">
-        <input type="password" id="confirmPass" placeholder="Подтвердите" style="width:100%; padding:12px; margin-bottom:12px; background:var(--input); border:none; border-radius:10px; color:var(--text);">
-        <button id="savePassBtn">Сменить</button>
-        <button id="closePassBtn" style="background:var(--hover); margin-top:8px;">Закрыть</button>
+        <input type="password" id="oldPass" placeholder="Старый пароль">
+        <input type="password" id="newPass" placeholder="Новый пароль">
+        <input type="password" id="confirmPass" placeholder="Подтвердите">
+        <button id="savePassBtn" style="background:var(--accent); color:white; border:none; padding:10px; border-radius:10px; cursor:pointer; width:100%;">Сменить</button>
+        <button id="closePassBtn" style="background:var(--hover); margin-top:8px; width:100%; padding:10px; border:none; border-radius:10px; cursor:pointer;">Закрыть</button>
         <div id="passMsg" class="mt-2"></div>
     </div>`;
     document.body.appendChild(modal);
@@ -923,18 +1080,25 @@ function openChangePassword() {
         const oldPass = document.getElementById('oldPass').value;
         const newPass = document.getElementById('newPass').value;
         const confirmPass = document.getElementById('confirmPass').value;
-        if (newPass !== confirmPass) { document.getElementById('passMsg').innerHTML = '<span class="error">❌ Пароли не совпадают</span>'; return; }
+        if (newPass !== confirmPass) {
+            document.getElementById('passMsg').innerHTML = '<span class="error">❌ Пароли не совпадают</span>';
+            return;
+        }
         const res = await fetch('/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass }) });
         const data = await res.json();
-        if (data.success) { document.getElementById('passMsg').innerHTML = '<span class="success">✅ Пароль изменён</span>'; setTimeout(() => modal.remove(), 1500); }
-        else { document.getElementById('passMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>'; }
+        if (data.success) {
+            document.getElementById('passMsg').innerHTML = '<span class="success">✅ Пароль изменён</span>';
+            setTimeout(() => modal.remove(), 1500);
+        } else {
+            document.getElementById('passMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>';
+        }
     };
     document.getElementById('closePassBtn').onclick = () => modal.remove();
 }
 
-document.getElementById('editProfileBtn')?.addEventListener('click', openEditProfile);
-document.getElementById('changePassBtn')?.addEventListener('click', openChangePassword);
-document.getElementById('plusBtn')?.addEventListener('click', () => window.open('/plus.html', '_blank'));
+document.getElementById('editProfileBtn').onclick = openEditProfile;
+document.getElementById('changePassBtn').onclick = openChangePassword;
+document.getElementById('plusBtn').onclick = () => window.open('/plus.html', '_blank');
 
 // ============ АДМИН ============
 async function loadAdmin() {
@@ -968,12 +1132,12 @@ window.unbanUser = async (id) => {
     await fetch('/unban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id }) });
     loadAllUsers();
 };
-document.getElementById('allUsersBtn')?.addEventListener('click', () => {
+document.getElementById('allUsersBtn').onclick = () => {
     const list = document.getElementById('usersList');
     if (list.classList.contains('hidden')) loadAllUsers();
     else list.classList.add('hidden');
-});
-document.getElementById('trollBtn')?.addEventListener('click', async () => {
+};
+document.getElementById('trollBtn').onclick = async () => {
     const name = document.getElementById('trollName').value;
     if (!name) return;
     const res = await fetch('/troll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
@@ -984,7 +1148,7 @@ document.getElementById('trollBtn')?.addEventListener('click', async () => {
     } else {
         alert('Ошибка');
     }
-});
+};
 
 // ============ АВТОРИЗАЦИЯ ============
 async function checkSession() {
@@ -1075,9 +1239,9 @@ document.querySelectorAll('.nav-item[data-view]').forEach(item => {
     });
 });
 
-document.getElementById('doLogin')?.addEventListener('click', login);
-document.getElementById('doRegister')?.addEventListener('click', register);
-document.getElementById('logoutBtn')?.addEventListener('click', async () => { await fetch('/logout', { method: 'POST' }); location.reload(); });
+document.getElementById('doLogin').onclick = login;
+document.getElementById('doRegister').onclick = register;
+document.getElementById('logoutBtn').onclick = async () => { await fetch('/logout', { method: 'POST' }); location.reload(); };
 
 function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
