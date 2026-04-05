@@ -85,7 +85,7 @@
         .btn-plus { background: var(--plus); color: #1a1a2e; font-weight: bold; }
         .btn-secondary:hover, .btn-plus:hover { transform: scale(1.02); }
 
-        input {
+        input, select, textarea {
             width: 100%;
             padding: 12px 16px;
             background: var(--bg-input);
@@ -94,7 +94,7 @@
             color: var(--text-primary);
             font-size: 14px;
         }
-        input:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(88,101,242,0.2);
@@ -200,63 +200,77 @@
             letter-spacing: 1px;
         }
 
-        /* ЦЕНТРАЛЬНАЯ ПАНЕЛЬ */
+        /* ЦЕНТРАЛЬНАЯ ПАНЕЛЬ (ЧАТ С ДРУГОМ) */
         .center-panel {
             flex: 1;
             background: var(--bg-card);
             border-radius: 24px;
-            padding: 24px;
             border: 1px solid var(--border);
-        }
-        .center-header { margin-bottom: 24px; }
-        .center-header h2 { font-size: 20px; font-weight: 600; }
-
-        .add-friend-section {
-            background: var(--bg-input);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 24px;
-        }
-        .add-friend-section h3 { font-size: 14px; margin-bottom: 12px; }
-        .add-friend-input { display: flex; gap: 10px; }
-        .add-friend-input input { flex: 1; }
-
-        .active-contacts {
-            background: var(--bg-input);
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-        }
-        .active-contacts h3 { font-size: 14px; margin-bottom: 12px; text-align: left; }
-        .active-contacts .empty { color: var(--text-secondary); font-size: 13px; padding: 20px; }
-
-        .friends-list { margin-top: 16px; }
-        .friend-item {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .friend-item:hover { background: var(--bg-hover); }
-        .friend-avatar-small {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
+            flex-direction: column;
             overflow: hidden;
         }
-        .friend-info { flex: 1; }
-        .friend-name { font-weight: 600; font-size: 14px; }
-        .friend-status { font-size: 11px; color: var(--text-secondary); }
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        .chat-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--bg-primary);
+            min-height: 400px;
+        }
+        .message {
+            max-width: 75%;
+            padding: 10px 16px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            font-size: 14px;
+            animation: slideInLeft 0.2s;
+        }
+        .message-own {
+            align-self: flex-end;
+            background: var(--accent);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message-other {
+            align-self: flex-start;
+            background: var(--bg-input);
+            border-bottom-left-radius: 4px;
+        }
+        .message-time {
+            font-size: 10px;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+        .message strong {
+            font-size: 12px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .input-area {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+        }
+        .input-area input {
+            flex: 1;
+            margin: 0;
+        }
 
-        /* ПРАВАЯ ПАНЕЛЬ */
+        /* ПРАВАЯ ПАНЕЛЬ (НАСТРОЙКИ) */
         .right-panel {
             width: 260px;
             background: var(--bg-card);
@@ -328,7 +342,7 @@
         .auth-card input { margin-bottom: 16px; }
         .auth-card button { margin-top: 8px; }
 
-        /* МОДАЛКА РЕДАКТИРОВАНИЯ ПРОФИЛЯ */
+        /* МОДАЛКИ */
         .modal {
             position: fixed;
             top: 0;
@@ -363,6 +377,41 @@
             color: var(--text-primary);
         }
         .modal-content button { margin-right: 10px; }
+
+        /* ПОИСК ДРУЗЕЙ */
+        .add-friend-section {
+            background: var(--bg-input);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .add-friend-section h3 { font-size: 14px; margin-bottom: 12px; }
+        .add-friend-input { display: flex; gap: 10px; }
+        .add-friend-input input { flex: 1; }
+
+        .friend-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            background: var(--bg-input);
+            margin-bottom: 8px;
+        }
+        .friend-list-item:hover { background: var(--bg-hover); }
+        .friend-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            overflow: hidden;
+        }
 
         .hidden { display: none; }
         .error { color: var(--danger); }
@@ -440,13 +489,29 @@
                 <div id="privateChatsList"></div>
             </div>
 
-            <!-- ЦЕНТРАЛЬНАЯ ПАНЕЛЬ -->
+            <!-- ЦЕНТРАЛЬНАЯ ПАНЕЛЬ (ЧАТ) -->
             <div class="center-panel">
-                <div class="center-header">
-                    <h2>Найти или начать беседу</h2>
+                <div class="chat-header">
+                    <h2 id="chatTitle">Выберите друга для чата</h2>
+                </div>
+                <div id="messages" class="messages">
+                    <div class="text-center text-muted" style="margin-top:40px;">👈 Выберите друга из списка</div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="Сообщение...">
+                    <button class="btn btn-primary" id="sendMsgBtn">📤 Отправить</button>
+                </div>
+            </div>
+
+            <!-- ПРАВАЯ ПАНЕЛЬ -->
+            <div class="right-panel">
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileAvatar">👤</div>
+                    <div class="profile-name" id="profileName"></div>
+                    <div class="profile-bio" id="profileBio"></div>
                 </div>
 
-                <!-- ДОБАВИТЬ В ДРУЗЬЯ -->
+                <!-- ПОИСК ДРУЗЕЙ -->
                 <div class="add-friend-section">
                     <h3>Добавить в друзья</h3>
                     <div class="add-friend-input">
@@ -456,26 +521,13 @@
                     <div id="searchResult" class="mt-2"></div>
                 </div>
 
-                <!-- АКТИВНЫЕ КОНТАКТЫ -->
-                <div class="active-contacts">
-                    <h3>Активные контакты</h3>
-                    <div id="activeFriendsList">
-                        <div class="empty">Пока что тут тихо...<br>Если ваш друг начнёт чем-то заниматься — вы увидите это здесь!</div>
-                    </div>
-                    <div class="empty" style="margin-top:12px;">Сейчас никого из ваших друзей нет в сети. Зайдите позже!</div>
-                </div>
+                <!-- ВХОДЯЩИЕ ЗАПРОСЫ -->
+                <div id="requestsList" style="margin-bottom:16px;"></div>
 
                 <!-- СПИСОК ДРУЗЕЙ -->
-                <div id="friendsList" class="friends-list"></div>
-            </div>
+                <div id="friendsList"></div>
 
-            <!-- ПРАВАЯ ПАНЕЛЬ (НАСТРОЙКИ ПРОФИЛЯ) -->
-            <div class="right-panel">
-                <div class="profile-card">
-                    <div class="profile-avatar" id="profileAvatar">👤</div>
-                    <div class="profile-name" id="profileName"></div>
-                    <div class="profile-bio" id="profileBio"></div>
-                </div>
+                <!-- НАСТРОЙКИ -->
                 <div class="settings-btn" id="editProfileBtn">🎨 Редактировать профиль</div>
                 <div class="settings-btn" id="changePasswordBtn">🔐 Сменить пароль</div>
 
@@ -495,6 +547,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 let currentUser = null;
+let currentFriendId = null;
 let socket = null;
 let userIP = '';
 
@@ -533,9 +586,26 @@ function initSocket() {
     socket = io();
     socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
     socket.on('private-message', (data) => {
-        showNotification(data.fromName, data.msg);
+        if (currentFriendId === data.from) {
+            appendMessage(data.msg, false, data.time, data.fromName);
+        } else {
+            showNotification(data.fromName, data.msg);
+        }
         loadFriends();
     });
+}
+
+function appendMessage(msg, isOwn, time, username) {
+    const container = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = `message ${isOwn ? 'message-own' : 'message-other'}`;
+    if (!isOwn && username) {
+        div.innerHTML = `<strong>${escapeHtml(username)}</strong>${escapeHtml(msg)}<div class="message-time">${new Date(time).toLocaleTimeString()}</div>`;
+    } else {
+        div.innerHTML = `${escapeHtml(msg)}<div class="message-time">${new Date(time).toLocaleTimeString()}</div>`;
+    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
 
 function showNotification(sender, msg) {
@@ -553,6 +623,58 @@ function showNotification(sender, msg) {
     setTimeout(() => notif.remove(), 3000);
 }
 
+// ============ ЧАТ С ДРУГОМ ============
+async function selectFriend(friendId, friendName) {
+    currentFriendId = friendId;
+    document.getElementById('chatTitle').innerHTML = `Чат с ${friendName}`;
+    await loadMessages();
+}
+
+async function loadMessages() {
+    if (!currentFriendId) return;
+    const res = await fetch('/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ u1: currentUser.id, u2: currentFriendId })
+    });
+    const data = await res.json();
+    const container = document.getElementById('messages');
+    container.innerHTML = '';
+    if (data.messages) {
+        data.messages.forEach(m => {
+            const isOwn = m.from_user_id === currentUser.id;
+            const div = document.createElement('div');
+            div.className = `message ${isOwn ? 'message-own' : 'message-other'}`;
+            if (!isOwn) {
+                div.innerHTML = `<strong>${m.from_username || 'Собеседник'}</strong>${escapeHtml(m.message)}<div class="message-time">${new Date(m.timestamp).toLocaleTimeString()}</div>`;
+            } else {
+                div.innerHTML = `${escapeHtml(m.message)}<div class="message-time">${new Date(m.timestamp).toLocaleTimeString()}</div>`;
+            }
+            container.appendChild(div);
+        });
+    }
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendMessage() {
+    const msg = document.getElementById('messageInput').value;
+    if (!msg || !currentFriendId) return;
+    appendMessage(msg, true, new Date());
+    socket.emit('private-message', { from: currentUser.id, to: currentFriendId, msg, fromName: currentUser.username });
+    document.getElementById('messageInput').value = '';
+    // Сохраняем в БД
+    await fetch('/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: currentFriendId, message: msg })
+    });
+}
+
+document.getElementById('sendMsgBtn').onclick = sendMessage;
+document.getElementById('messageInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+
 // ============ ДРУЗЬЯ ============
 async function loadFriends() {
     const res = await fetch('/friends', {
@@ -562,19 +684,21 @@ async function loadFriends() {
     });
     const data = await res.json();
     const container = document.getElementById('friendsList');
-    container.innerHTML = '<h3 style="margin-bottom:12px; font-size:14px;">Все друзья</h3>';
-    if (data.friends) {
+    container.innerHTML = '<div style="font-size:13px; margin-bottom:12px; color:var(--text-secondary);">Мои друзья</div>';
+    if (data.friends && data.friends.length > 0) {
         data.friends.forEach(f => {
             const div = document.createElement('div');
-            div.className = 'friend-item';
-            div.onclick = () => alert(`Чат с ${f.username} будет доступен позже`);
+            div.className = 'friend-list-item';
+            div.onclick = () => selectFriend(f.id, f.username);
             div.innerHTML = `<div class="friend-avatar-small">${f.avatar ? `<img src="${f.avatar}">` : f.username[0]}</div>
-                            <div class="friend-info">
+                            <div>
                                 <div class="friend-name">${f.username}</div>
                                 <div class="friend-status">#${f.tag}</div>
                             </div>`;
             container.appendChild(div);
         });
+    } else {
+        container.innerHTML += '<div class="text-muted text-center" style="padding:20px;">У вас пока нет друзей</div>';
     }
 }
 
@@ -585,20 +709,20 @@ async function loadRequests() {
         body: JSON.stringify({ userId: currentUser.id })
     });
     const data = await res.json();
-    const searchResult = document.getElementById('searchResult');
+    const container = document.getElementById('requestsList');
+    container.innerHTML = '';
     if (data.requests && data.requests.length > 0) {
-        searchResult.innerHTML = '';
+        container.innerHTML = '<div style="font-size:13px; margin-bottom:8px; color:var(--text-secondary);">Входящие запросы</div>';
         data.requests.forEach(req => {
             const div = document.createElement('div');
-            div.className = 'friend-item';
-            div.style.background = 'var(--bg-input)';
-            div.style.marginBottom = '8px';
+            div.className = 'friend-list-item';
+            div.style.justifyContent = 'space-between';
             div.innerHTML = `<span>👤 ${req.username}#${req.tag}</span>
                             <div>
                                 <button class="btn btn-success" style="padding:4px 10px;" onclick="acceptRequest(${req.id}, ${req.user_id})">✅</button>
                                 <button class="btn btn-danger" style="padding:4px 10px;" onclick="declineRequest(${req.id})">❌</button>
                             </div>`;
-            searchResult.appendChild(div);
+            container.appendChild(div);
         });
     }
 }
@@ -643,9 +767,8 @@ document.getElementById('searchBtn').onclick = async () => {
     if (data.users && data.users.length) {
         data.users.forEach(u => {
             const div = document.createElement('div');
-            div.className = 'friend-item';
-            div.style.background = 'var(--bg-input)';
-            div.style.marginBottom = '8px';
+            div.className = 'friend-list-item';
+            div.style.justifyContent = 'space-between';
             div.innerHTML = `<span>${u.username}#${u.tag}</span>
                             <button class="btn btn-success" style="padding:4px 10px;" onclick="addFriend(${u.id})">➕</button>`;
             container.appendChild(div);
@@ -681,8 +804,8 @@ function openEditProfile() {
     modal.innerHTML = `
         <div class="modal-content">
             <h3>🎨 Редактировать профиль</h3>
-            <label>Аватар (ссылка или эмодзи)</label>
-            <input type="text" id="editAvatar" placeholder="🔗 Ссылка на изображение" value="${currentUser.avatar || ''}">
+            <label>Аватар (ссылка на изображение)</label>
+            <input type="text" id="editAvatar" placeholder="https://example.com/avatar.png" value="${currentUser.avatar || ''}">
             <label>О себе</label>
             <textarea id="editBio" rows="3" placeholder="Расскажите о себе...">${currentUser.bio || ''}</textarea>
             <label>Цвет ника (HEX)</label>
@@ -899,6 +1022,10 @@ document.getElementById('serversMenuItem').onclick = () => alert('Сервера
 document.getElementById('friendsMenuItem').onclick = () => location.reload();
 
 checkSession();
+
+function escapeHtml(str) {
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+}
 </script>
 </body>
 </html>
