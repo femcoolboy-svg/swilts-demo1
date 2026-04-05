@@ -11,13 +11,13 @@ const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, { cors: { origin: '*' } });
 
 // ============ НАСТРОЙКА ЗАГРУЗКИ ФАЙЛОВ ============
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = './uploads';
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         cb(null, dir);
     },
     filename: (req, file, cb) => {
@@ -34,11 +34,10 @@ const upload = multer({
     }
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '1d' }));
 
-// ============ СЕССИИ ============
 app.use(session({
     store: new SQLiteStore({ db: 'sessions.db', table: 'sessions' }),
     secret: 'swilts_key_2025',
@@ -51,7 +50,6 @@ const db = new sqlite3.Database('swilts.db');
 
 // ============ СОЗДАНИЕ ТАБЛИЦ ============
 db.serialize(() => {
-    // Таблица пользователей
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -75,7 +73,6 @@ db.serialize(() => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Подписки
     db.run(`CREATE TABLE IF NOT EXISTS subscriptions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER UNIQUE,
@@ -84,7 +81,6 @@ db.serialize(() => {
         auto_renew INTEGER DEFAULT 0
     )`);
 
-    // Друзья
     db.run(`CREATE TABLE IF NOT EXISTS friend_requests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         from_user_id INTEGER,
@@ -97,7 +93,6 @@ db.serialize(() => {
         user2_id INTEGER
     )`);
 
-    // Группы
     db.run(`CREATE TABLE IF NOT EXISTS group_chats (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -128,7 +123,6 @@ db.serialize(() => {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Личные сообщения
     db.run(`CREATE TABLE IF NOT EXISTS private_messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         from_user_id INTEGER,
@@ -137,7 +131,6 @@ db.serialize(() => {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Транзакции для подписки
     db.run(`CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
@@ -147,7 +140,6 @@ db.serialize(() => {
         payment_id TEXT
     )`);
 
-    // Создатель prisanok
     const ip = '62.140.249.69';
     bcrypt.hash('qazzaq32qaz', 10, (err, hash) => {
         if (!err) {
@@ -245,10 +237,8 @@ app.post('/register', (req, res) => {
     
     db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, existing) => {
         if (existing) return res.json({ success: false, error: 'Ник уже занят' });
-        
         db.get(`SELECT id FROM users WHERE email = ?`, [email], (err, existingEmail) => {
             if (existingEmail) return res.json({ success: false, error: 'Email уже используется' });
-            
             db.get(`SELECT tag FROM users ORDER BY CAST(tag AS INTEGER) DESC LIMIT 1`, (err, row) => {
                 const nextTag = String((row ? parseInt(row.tag) + 1 : 1)).padStart(5, '0');
                 bcrypt.hash(password, 10, (err, hash) => {
@@ -311,12 +301,10 @@ app.post('/login', (req, res) => {
     });
 });
 
-// ============ СЕССИЯ ============
 app.get('/session', (req, res) => {
     if (req.session.user) {
         db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
-            const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-            req.session.user.hasPlus = hasPlus;
+            req.session.user.hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
             req.session.user.plus_expires_at = sub?.expires_at;
             res.json({ success: true, user: req.session.user });
         });
@@ -330,16 +318,7 @@ app.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ ПРОФИЛЬ И ЗАГРУЗКИ ============
-app.post('/update-profile', (req, res) => {
-    const { avatar, bio } = req.body;
-    if (!req.session.user) return res.json({ success: false });
-    db.run(`UPDATE users SET avatar = ?, bio = ? WHERE id = ?`, [avatar || '', bio || '', req.session.user.id]);
-    if (avatar) req.session.user.avatar = avatar;
-    if (bio) req.session.user.bio = bio;
-    res.json({ success: true });
-});
-
+// ============ ЗАГРУЗКИ (АВАТАРКИ, БАННЕРЫ) ============
 app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
     if (!req.file) return res.json({ success: false, error: 'Файл не загружен' });
     const avatarUrl = `/uploads/${req.file.filename}`;
@@ -407,6 +386,16 @@ app.post('/upload-video-banner', upload.single('banner'), (req, res) => {
     });
 });
 
+app.post('/update-profile', (req, res) => {
+    const { avatar, bio } = req.body;
+    if (!req.session.user) return res.json({ success: false });
+    if (avatar) db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [avatar, req.session.user.id]);
+    if (bio) db.run(`UPDATE users SET bio = ? WHERE id = ?`, [bio, req.session.user.id]);
+    if (avatar) req.session.user.avatar = avatar;
+    if (bio) req.session.user.bio = bio;
+    res.json({ success: true });
+});
+
 app.post('/change-password', (req, res) => {
     const { oldPassword, newPassword } = req.body;
     if (!req.session.user) return res.json({ success: false });
@@ -423,7 +412,7 @@ app.post('/change-password', (req, res) => {
     });
 });
 
-// ============ ПОЛУЧИТЬ ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ============
+// ============ ПОЛУЧИТЬ ПРОФИЛЬ ============
 app.get('/user/:userId', (req, res) => {
     const userId = req.params.userId;
     db.get(`SELECT id, username, tag, avatar, banner, bio, created_at FROM users WHERE id = ? AND banned = 0`, [userId], (err, user) => {
@@ -566,7 +555,7 @@ app.post('/search', (req, res) => {
     });
 });
 
-// ============ ПОДПИСКА SWILTS+ ============
+// ============ ПОДПИСКА ============
 app.get('/plus/status', (req, res) => {
     if (!req.session.user) return res.json({ success: false });
     db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
@@ -618,7 +607,6 @@ app.post('/troll', (req, res) => {
     });
 });
 
-// ============ ЗАПУСК ============
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`\n🚀 SWILTS запущен на http://localhost:${PORT}`);
