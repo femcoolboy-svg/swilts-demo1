@@ -50,6 +50,7 @@ app.use(session({
 const db = new sqlite3.Database('swilts.db');
 
 db.serialize(() => {
+    // Таблица пользователей
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -73,6 +74,7 @@ db.serialize(() => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Таблица подписок
     db.run(`CREATE TABLE IF NOT EXISTS subscriptions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER UNIQUE,
@@ -81,6 +83,66 @@ db.serialize(() => {
         auto_renew INTEGER DEFAULT 0
     )`);
 
+    // ============ НОВЫЕ ТАБЛИЦЫ ДЛЯ СЕРВЕРОВ ============
+    // Сервера
+    db.run(`CREATE TABLE IF NOT EXISTS servers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        icon TEXT DEFAULT '',
+        banner TEXT DEFAULT '',
+        description TEXT DEFAULT '',
+        owner_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Участники серверов
+    db.run(`CREATE TABLE IF NOT EXISTS server_members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        server_id INTEGER,
+        user_id INTEGER,
+        role TEXT DEFAULT 'member',
+        joined_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Категории каналов
+    db.run(`CREATE TABLE IF NOT EXISTS server_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        server_id INTEGER,
+        name TEXT,
+        position INTEGER DEFAULT 0
+    )`);
+
+    // Каналы (текстовые и голосовые)
+    db.run(`CREATE TABLE IF NOT EXISTS server_channels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        server_id INTEGER,
+        category_id INTEGER,
+        name TEXT,
+        type TEXT DEFAULT 'text', -- 'text' or 'voice'
+        position INTEGER DEFAULT 0
+    )`);
+
+    // Сообщения в текстовых каналах
+    db.run(`CREATE TABLE IF NOT EXISTS server_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_id INTEGER,
+        user_id INTEGER,
+        message TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Приглашения в сервер
+    db.run(`CREATE TABLE IF NOT EXISTS server_invites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        server_id INTEGER,
+        code TEXT UNIQUE,
+        max_uses INTEGER DEFAULT 0,
+        uses INTEGER DEFAULT 0,
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Старые таблицы
     db.run(`CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
@@ -137,6 +199,7 @@ db.serialize(() => {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Создатель prisanok
     const ip = '62.140.249.69';
     bcrypt.hash('qazzaq32qaz', 10, (err, hash) => {
         if (!err) {
@@ -157,6 +220,30 @@ io.on('connection', (socket) => {
         socket.userId = userId;
     });
     
+    // Сообщения в серверных каналах
+    socket.on('server-message', (data) => {
+        db.run(`INSERT INTO server_messages (channel_id, user_id, message) VALUES (?, ?, ?)`,
+            [data.channelId, data.userId, data.message]);
+        
+        // Отправляем сообщение всем участникам канала
+        db.all(`SELECT user_id FROM server_members WHERE server_id = ?`, [data.serverId], (err, members) => {
+            members.forEach(m => {
+                const target = onlineUsers.get(m.user_id);
+                if (target && m.user_id !== data.userId) {
+                    io.to(target).emit('server-message', {
+                        channelId: data.channelId,
+                        serverId: data.serverId,
+                        userId: data.userId,
+                        username: data.username,
+                        message: data.message,
+                        time: new Date()
+                    });
+                }
+            });
+        });
+    });
+    
+    // Приватные сообщения
     socket.on('private-message', (data) => {
         db.run(`INSERT INTO private_messages (from_user_id, to_user_id, message) VALUES (?, ?, ?)`,
             [data.from, data.to, data.msg]);
@@ -164,6 +251,7 @@ io.on('connection', (socket) => {
         if (target) io.to(target).emit('private-message', { from: data.from, msg: data.msg, time: new Date(), fromName: data.fromName });
     });
     
+    // Групповые сообщения
     socket.on('group-message', (data) => {
         db.run(`INSERT INTO group_messages (group_id, from_user_id, message) VALUES (?, ?, ?)`,
             [data.group, data.from, data.msg]);
@@ -175,6 +263,7 @@ io.on('connection', (socket) => {
         });
     });
     
+    // Звонки
     socket.on('call', (data) => {
         const target = onlineUsers.get(data.to);
         if (target) io.to(target).emit('call', { from: socket.userId, fromName: data.fromName, offer: data.offer });
@@ -207,43 +296,37 @@ app.get('/captcha', (req, res) => {
     res.json({ captcha: num });
 });
 
-// ============ ПРОВЕРКА EMAIL (НАСТОЯЩИЙ) ============
+// ============ ПРОВЕРКА EMAIL ============
 function isValidEmail(email) {
-    // Регулярное выражение для проверки email
     const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
     return emailRegex.test(email);
 }
 
-// ============ РЕГИСТРАЦИЯ С ПРОВЕРКОЙ EMAIL ============
+// ============ РЕГИСТРАЦИЯ ============
 app.post('/register', (req, res) => {
     const { username, email, password, captcha, ip } = req.body;
     if (!username || !email || !password || !captcha) {
         return res.json({ success: false, error: 'Заполните все поля' });
     }
     
-    // ПРОВЕРКА КАПЧИ
     if (parseInt(captcha) !== req.session.captcha) {
         return res.json({ success: false, error: 'Неверная капча' });
     }
     
-    // ============ ПРОВЕРКА EMAIL (ОБЯЗАТЕЛЬНО) ============
     if (!isValidEmail(email)) {
         return res.json({ success: false, error: 'Введите настоящий email (пример: name@domain.com)' });
     }
     
-    // Проверка на бан по нику
     db.get(`SELECT id FROM users WHERE username = ? AND banned = 1`, [username], (err, bannedUser) => {
         if (bannedUser) {
             return res.json({ success: false, error: 'Этот ник был забанен' });
         }
         
-        // Проверка уникальности ника
         db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, existing) => {
             if (existing) {
                 return res.json({ success: false, error: 'Ник уже занят' });
             }
             
-            // Проверка уникальности email
             db.get(`SELECT id FROM users WHERE email = ?`, [email], (err, existingEmail) => {
                 if (existingEmail) {
                     return res.json({ success: false, error: 'Email уже используется' });
@@ -279,7 +362,7 @@ app.post('/register', (req, res) => {
     });
 });
 
-// ============ ЛОГИН (БЕЗ ПРОВЕРКИ EMAIL) ============
+// ============ ЛОГИН ============
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.json({ success: false, error: 'Заполните поля' });
@@ -287,7 +370,6 @@ app.post('/login', (req, res) => {
     db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, user) => {
         if (!user) return res.json({ success: false, error: 'Неверный ник или пароль' });
         
-        // ПРОВЕРКА БАНА
         if (user.banned === 1) {
             return res.json({ success: false, error: `Ваш аккаунт забанен. Причина: ${user.ban_reason || 'Нарушение правил'}` });
         }
@@ -332,7 +414,146 @@ app.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ СМЕНА НИКА ============
+// ============ СЕРВЕРА (НОВАЯ ФУНКЦИЯ) ============
+
+// Создать сервер
+app.post('/server/create', (req, res) => {
+    const { name, icon, description } = req.body;
+    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
+    
+    db.run(`INSERT INTO servers (name, icon, description, owner_id) VALUES (?, ?, ?, ?)`,
+        [name, icon || '', description || '', req.session.user.id], function(err) {
+            if (err) return res.json({ success: false });
+            const serverId = this.lastID;
+            
+            // Добавляем создателя как владельца
+            db.run(`INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, 'owner')`, [serverId, req.session.user.id]);
+            
+            // Создаём стандартные каналы
+            db.run(`INSERT INTO server_categories (server_id, name, position) VALUES (?, 'Общие', 0)`, [serverId], function(err) {
+                const categoryId = this.lastID;
+                db.run(`INSERT INTO server_channels (server_id, category_id, name, type, position) VALUES (?, ?, 'общий', 'text', 0)`, [serverId, categoryId]);
+                db.run(`INSERT INTO server_channels (server_id, category_id, name, type, position) VALUES (?, ?, 'Голосовой', 'voice', 1)`, [serverId, categoryId]);
+            });
+            
+            res.json({ success: true, serverId });
+        });
+});
+
+// Получить сервера пользователя
+app.get('/servers', (req, res) => {
+    if (!req.session.user) return res.json({ success: false });
+    
+    db.all(`SELECT s.*, sm.role FROM servers s JOIN server_members sm ON s.id = sm.server_id WHERE sm.user_id = ?`, [req.session.user.id], (err, servers) => {
+        res.json({ servers: servers || [] });
+    });
+});
+
+// Получить информацию о сервере
+app.get('/server/:id', (req, res) => {
+    if (!req.session.user) return res.json({ success: false });
+    const serverId = req.params.id;
+    
+    db.get(`SELECT * FROM servers WHERE id = ?`, [serverId], (err, server) => {
+        if (!server) return res.json({ success: false });
+        
+        db.all(`SELECT * FROM server_categories WHERE server_id = ? ORDER BY position`, [serverId], (err, categories) => {
+            db.all(`SELECT * FROM server_channels WHERE server_id = ? ORDER BY position`, [serverId], (err, channels) => {
+                db.all(`SELECT u.id, u.username, u.tag, u.avatar, sm.role FROM server_members sm JOIN users u ON sm.user_id = u.id WHERE sm.server_id = ?`, [serverId], (err, members) => {
+                    res.json({ success: true, server, categories, channels, members });
+                });
+            });
+        });
+    });
+});
+
+// Присоединиться к серверу по коду приглашения
+app.post('/server/join', (req, res) => {
+    const { code } = req.body;
+    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
+    
+    db.get(`SELECT * FROM server_invites WHERE code = ?`, [code], (err, invite) => {
+        if (!invite) return res.json({ success: false, error: 'Недействительное приглашение' });
+        
+        db.get(`SELECT * FROM server_members WHERE server_id = ? AND user_id = ?`, [invite.server_id, req.session.user.id], (err, existing) => {
+            if (existing) return res.json({ success: false, error: 'Вы уже на сервере' });
+            
+            db.run(`INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, 'member')`, [invite.server_id, req.session.user.id]);
+            
+            if (invite.max_uses > 0) {
+                db.run(`UPDATE server_invites SET uses = uses + 1 WHERE id = ?`, [invite.id]);
+            }
+            
+            res.json({ success: true, serverId: invite.server_id });
+        });
+    });
+});
+
+// Создать приглашение в сервер
+app.post('/server/invite', (req, res) => {
+    const { serverId, maxUses } = req.body;
+    if (!req.session.user) return res.json({ success: false });
+    
+    const code = crypto.randomBytes(8).toString('hex');
+    db.run(`INSERT INTO server_invites (server_id, code, max_uses, created_by) VALUES (?, ?, ?, ?)`,
+        [serverId, code, maxUses || 0, req.session.user.id], function(err) {
+            if (err) return res.json({ success: false });
+            res.json({ success: true, code });
+        });
+});
+
+// Отправить сообщение в канал сервера
+app.post('/server/message', (req, res) => {
+    const { channelId, message } = req.body;
+    if (!req.session.user) return res.json({ success: false });
+    
+    db.get(`SELECT server_id FROM server_channels WHERE id = ?`, [channelId], (err, channel) => {
+        if (!channel) return res.json({ success: false });
+        
+        db.get(`SELECT * FROM server_members WHERE server_id = ? AND user_id = ?`, [channel.server_id, req.session.user.id], (err, member) => {
+            if (!member) return res.json({ success: false, error: 'Вы не участник сервера' });
+            
+            db.run(`INSERT INTO server_messages (channel_id, user_id, message) VALUES (?, ?, ?)`,
+                [channelId, req.session.user.id, message], function(err) {
+                    if (err) return res.json({ success: false });
+                    
+                    // Отправляем через WebSocket
+                    const msgData = {
+                        channelId,
+                        serverId: channel.server_id,
+                        userId: req.session.user.id,
+                        username: req.session.user.username,
+                        message,
+                        time: new Date()
+                    };
+                    
+                    db.all(`SELECT user_id FROM server_members WHERE server_id = ?`, [channel.server_id], (err, members) => {
+                        members.forEach(m => {
+                            const target = onlineUsers.get(m.user_id);
+                            if (target && m.user_id !== req.session.user.id) {
+                                io.to(target).emit('server-message', msgData);
+                            }
+                        });
+                    });
+                    
+                    res.json({ success: true });
+                });
+        });
+    });
+});
+
+// Получить сообщения канала
+app.get('/server/messages/:channelId', (req, res) => {
+    if (!req.session.user) return res.json({ success: false });
+    
+    db.all(`SELECT sm.*, u.username, u.avatar FROM server_messages sm JOIN users u ON sm.user_id = u.id WHERE sm.channel_id = ? ORDER BY sm.timestamp ASC LIMIT 100`, [req.params.channelId], (err, messages) => {
+        res.json({ messages: messages || [] });
+    });
+});
+
+// ============ ОСТАЛЬНЫЕ API (ДРУЗЬЯ, ГРУППЫ, ПРОФИЛЬ) ============
+
+// Смена ника
 app.post('/change-username', (req, res) => {
     const { newUsername } = req.body;
     if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
@@ -351,7 +572,7 @@ app.post('/change-username', (req, res) => {
     });
 });
 
-// ============ БАН ПОЛЬЗОВАТЕЛЯ (ТОЛЬКО ДЛЯ СОЗДАТЕЛЯ) ============
+// Бан
 app.post('/ban', (req, res) => {
     const { userId, reason } = req.body;
     if (req.session.user?.username !== 'prisanok') {
@@ -359,47 +580,40 @@ app.post('/ban', (req, res) => {
     }
     
     db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE id = ?`, [reason || 'Нарушение правил', userId], function(err) {
-        if (err) return res.json({ success: false, error: 'Ошибка базы данных' });
+        if (err) return res.json({ success: false });
         
-        // Удаляем все сообщения и дружбу с забаненным
         db.run(`DELETE FROM private_messages WHERE from_user_id = ? OR to_user_id = ?`, [userId, userId]);
         db.run(`DELETE FROM friend_requests WHERE from_user_id = ? OR to_user_id = ?`, [userId, userId]);
         db.run(`DELETE FROM friends WHERE user1_id = ? OR user2_id = ?`, [userId, userId]);
         
-        // Отправляем уведомление забаненному пользователю, если он онлайн
         const targetSocket = onlineUsers.get(parseInt(userId));
         if (targetSocket) {
             io.to(targetSocket).emit('account-banned', { reason: reason || 'Нарушение правил' });
         }
         
-        res.json({ success: true, message: 'Пользователь забанен' });
-    });
-});
-
-// ============ РАЗБАН ============
-app.post('/unban', (req, res) => {
-    const { userId } = req.body;
-    if (req.session.user?.username !== 'prisanok') {
-        return res.json({ success: false, error: 'Нет прав' });
-    }
-    
-    db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE id = ?`, [userId], function(err) {
-        if (err) return res.json({ success: false });
         res.json({ success: true });
     });
 });
 
-// ============ ПОЛУЧИТЬ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ ============
+app.post('/unban', (req, res) => {
+    const { userId } = req.body;
+    if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
+    
+    db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE id = ?`, [userId], function(err) {
+        res.json({ success: !err });
+    });
+});
+
 app.get('/all-users', (req, res) => {
     if (req.session.user?.username !== 'prisanok' && req.session.user?.role !== 'admin') {
-        return res.json({ success: false, error: 'Нет прав' });
+        return res.json({ success: false });
     }
     db.all(`SELECT id, username, tag, banned, ban_reason, role, created_at FROM users`, (err, users) => {
         res.json({ users: users || [] });
     });
 });
 
-// ============ ПОИСК ПОЛЬЗОВАТЕЛЕЙ ============
+// Поиск
 app.post('/search', (req, res) => {
     const { q } = req.body;
     if (q === 'prisanok0') {
@@ -410,7 +624,7 @@ app.post('/search', (req, res) => {
     });
 });
 
-// ============ ДРУЗЬЯ ============
+// Друзья
 app.post('/friend/add', (req, res) => {
     const { from, to } = req.body;
     if (from === to) return res.json({ success: false, error: 'Нельзя добавить себя' });
@@ -422,7 +636,7 @@ app.post('/friend/add', (req, res) => {
             if (req) return res.json({ success: false, error: 'Запрос уже отправлен' });
             
             db.run(`INSERT INTO friend_requests (from_user_id, to_user_id) VALUES (?, ?)`, [from, to]);
-            res.json({ success: true, message: 'Запрос отправлен' });
+            res.json({ success: true });
         });
     });
 });
@@ -461,7 +675,7 @@ app.post('/messages', (req, res) => {
     });
 });
 
-// ============ ГРУППЫ ============
+// Группы
 app.post('/group/create', (req, res) => {
     const { name, owner, members } = req.body;
     let max = 15;
@@ -524,7 +738,7 @@ app.post('/group/messages', (req, res) => {
     });
 });
 
-// ============ ПРОФИЛЬ И ЗАГРУЗКИ ============
+// Профиль и загрузки
 app.post('/avatar', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false });
     const url = `/uploads/${req.file.filename}`;
@@ -544,7 +758,7 @@ app.post('/avatar-gif', upload.single('file'), (req, res) => {
         const ext = path.extname(req.file.originalname).toLowerCase();
         if (ext !== '.gif') {
             fs.unlink(req.file.path, () => {});
-            return res.json({ success: false, error: 'Только GIF файлы' });
+            return res.json({ success: false, error: 'Только GIF' });
         }
         const url = `/uploads/${req.file.filename}`;
         db.run(`UPDATE users SET plus_animated_avatar = ? WHERE id = ?`, [url, req.session.user.id]);
@@ -606,9 +820,9 @@ app.post('/group-settings', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ SWILTS+ ============
+// SWILTS+
 app.post('/plus/create', (req, res) => {
-    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
+    if (!req.session.user) return res.json({ success: false });
     const { plan } = req.body;
     let amount = plan === 'month' ? 149 : (plan === 'year' ? 1290 : 4990);
     const paymentId = crypto.randomBytes(16).toString('hex');
@@ -617,14 +831,14 @@ app.post('/plus/create', (req, res) => {
         [req.session.user.id, amount, plan, paymentId]);
     
     const url = `https://yoomoney.ru/quickpay/confirm.xml?receiver=4100118589497198&quickpay-form=shop&targets=SWILTS+${plan}&sum=${amount}&paymentType=SB&label=${paymentId}&successURL=${encodeURIComponent('https://swilts-tzp4.onrender.com/plus/success')}`;
-    res.json({ success: true, url: url, paymentId: paymentId });
+    res.json({ success: true, url });
 });
 
 app.get('/plus/success', (req, res) => {
     res.send(`<!DOCTYPE html><html><head><title>Оплата</title><style>body{background:#0e0e10;color:white;text-align:center;padding:50px;font-family:sans-serif}</style></head><body><h1>💎 SWILTS+</h1><p>Оплата обрабатывается...</p><div id="status"></div><script>
         let id = new URLSearchParams(location.search).get('label');
         let attempts = 0;
-        function check(){ fetch('/plus/check?payment='+id).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById('status').innerHTML='<p style="color:#4caf50;">✅ Подписка активирована! <a href="/">Вернуться</a></p>'; } else if(attempts<30){ attempts++; setTimeout(check,2000); } else { document.getElementById('status').innerHTML='<p style="color:#ff6b6b;">❌ Ошибка. Свяжитесь с поддержкой.</p>'; } }).catch(()=>{ if(attempts<30){ attempts++; setTimeout(check,2000); } }); }
+        function check(){ fetch('/plus/check?payment='+id).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById('status').innerHTML='<p style="color:#4caf50;">✅ Подписка активирована! <a href="/">Вернуться</a></p>'; } else if(attempts<30){ attempts++; setTimeout(check,2000); } else { document.getElementById('status').innerHTML='<p style="color:#ff6b6b;">❌ Ошибка</p>'; } }).catch(()=>{ if(attempts<30){ attempts++; setTimeout(check,2000); } }); }
         setTimeout(check,3000);
     </script></body></html>`);
 });
@@ -662,7 +876,7 @@ app.post('/plus/settings', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ АДМИН ФУНКЦИИ ============
+// Админ функции
 app.post('/admin/give-plus', (req, res) => {
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
     const { userId } = req.body;
@@ -692,6 +906,6 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`\n🚀 SWILTS запущен на http://localhost:${PORT}`);
     console.log(`💎 SWILTS+ готов`);
+    console.log(`🏰 Система серверов (как Discord) активна`);
     console.log(`📧 Проверка email при регистрации включена`);
-    console.log(`🔨 Система банов работает`);
 });
