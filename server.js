@@ -8,7 +8,6 @@ const multer = require('multer');
 const http = require('http');
 const { Server } = require('socket.io');
 const fs = require('fs');
-const crypto = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
@@ -26,14 +25,7 @@ const storage = multer.diskStorage({
         cb(null, unique + path.extname(file.originalname));
     }
 });
-const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
-        cb(null, allowed.includes(file.mimetype));
-    }
-});
+const upload = multer({ storage: storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -41,7 +33,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(session({
     store: new SQLiteStore({ db: 'sessions.db', table: 'sessions' }),
-    secret: 'swilts_key_2025',
+    secret: 'swilts_key',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true }
@@ -49,8 +41,8 @@ app.use(session({
 
 const db = new sqlite3.Database('swilts.db');
 
+// СОЗДАНИЕ ТАБЛИЦ
 db.serialize(() => {
-    // Таблица пользователей
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -59,97 +51,13 @@ db.serialize(() => {
         tag TEXT UNIQUE,
         role TEXT DEFAULT 'user',
         avatar TEXT DEFAULT '',
-        banner TEXT DEFAULT '',
+        bio TEXT DEFAULT '',
         theme TEXT DEFAULT 'dark',
         status TEXT DEFAULT 'online',
-        bio TEXT DEFAULT '',
         banned INTEGER DEFAULT 0,
         ban_reason TEXT DEFAULT '',
         ip TEXT,
-        allow_group_invite INTEGER DEFAULT 1,
-        plus_color TEXT DEFAULT '',
-        plus_badge TEXT DEFAULT '',
-        plus_animated_avatar TEXT DEFAULT '',
-        plus_banner_video TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Таблица подписок
-    db.run(`CREATE TABLE IF NOT EXISTS subscriptions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER UNIQUE,
-        plan TEXT DEFAULT 'free',
-        expires_at DATETIME,
-        auto_renew INTEGER DEFAULT 0
-    )`);
-
-    // ============ НОВЫЕ ТАБЛИЦЫ ДЛЯ СЕРВЕРОВ ============
-    // Сервера
-    db.run(`CREATE TABLE IF NOT EXISTS servers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        icon TEXT DEFAULT '',
-        banner TEXT DEFAULT '',
-        description TEXT DEFAULT '',
-        owner_id INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Участники серверов
-    db.run(`CREATE TABLE IF NOT EXISTS server_members (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        server_id INTEGER,
-        user_id INTEGER,
-        role TEXT DEFAULT 'member',
-        joined_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Категории каналов
-    db.run(`CREATE TABLE IF NOT EXISTS server_categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        server_id INTEGER,
-        name TEXT,
-        position INTEGER DEFAULT 0
-    )`);
-
-    // Каналы (текстовые и голосовые)
-    db.run(`CREATE TABLE IF NOT EXISTS server_channels (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        server_id INTEGER,
-        category_id INTEGER,
-        name TEXT,
-        type TEXT DEFAULT 'text', -- 'text' or 'voice'
-        position INTEGER DEFAULT 0
-    )`);
-
-    // Сообщения в текстовых каналах
-    db.run(`CREATE TABLE IF NOT EXISTS server_messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        channel_id INTEGER,
-        user_id INTEGER,
-        message TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Приглашения в сервер
-    db.run(`CREATE TABLE IF NOT EXISTS server_invites (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        server_id INTEGER,
-        code TEXT UNIQUE,
-        max_uses INTEGER DEFAULT 0,
-        uses INTEGER DEFAULT 0,
-        created_by INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Старые таблицы
-    db.run(`CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        amount INTEGER,
-        plan TEXT,
-        status TEXT,
-        payment_id TEXT
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS friend_requests (
@@ -167,13 +75,16 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS group_chats (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
-        owner_id INTEGER
+        owner_id INTEGER,
+        avatar TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS group_members (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_id INTEGER,
-        user_id INTEGER
+        user_id INTEGER,
+        role TEXT DEFAULT 'member'
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS group_invites (
@@ -199,19 +110,17 @@ db.serialize(() => {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Создатель prisanok
-    const ip = '62.140.249.69';
+    // СОЗДАТЕЛЬ
     bcrypt.hash('qazzaq32qaz', 10, (err, hash) => {
         if (!err) {
-            db.run(`INSERT OR IGNORE INTO users (username, email, password_hash, tag, role, ip) VALUES (?, ?, ?, ?, 'swilt', ?)`,
-                ['prisanok', 'acik03846@gmail.com', hash, '00001', ip]);
-            db.run(`INSERT OR IGNORE INTO subscriptions (user_id, plan, expires_at) VALUES (1, 'plus_lifetime', datetime('now', '+100 years'))`);
-            console.log('✅ Создатель prisanok готов (SWILTS+ активен)');
+            db.run(`INSERT OR IGNORE INTO users (username, email, password_hash, tag, role) VALUES (?, ?, ?, ?, 'swilt')`,
+                ['prisanok', 'acik03846@gmail.com', hash, '00001']);
+            console.log('✅ Создатель prisanok готов');
         }
     });
 });
 
-// WebSocket
+// ============ WEBSOCKET ============
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -219,187 +128,104 @@ io.on('connection', (socket) => {
         onlineUsers.set(userId, socket.id);
         socket.userId = userId;
     });
-    
-    // Сообщения в серверных каналах
-    socket.on('server-message', (data) => {
-        db.run(`INSERT INTO server_messages (channel_id, user_id, message) VALUES (?, ?, ?)`,
-            [data.channelId, data.userId, data.message]);
-        
-        // Отправляем сообщение всем участникам канала
-        db.all(`SELECT user_id FROM server_members WHERE server_id = ?`, [data.serverId], (err, members) => {
+
+    socket.on('private-message', async (data) => {
+        const { from, to, msg, fromName } = data;
+        db.run(`INSERT INTO private_messages (from_user_id, to_user_id, message) VALUES (?, ?, ?)`, [from, to, msg]);
+        const targetSocket = onlineUsers.get(to);
+        if (targetSocket) {
+            io.to(targetSocket).emit('private-message', {
+                from: from,
+                fromName: fromName,
+                msg: msg,
+                time: new Date()
+            });
+        }
+    });
+
+    socket.on('group-message', async (data) => {
+        const { groupId, from, fromName, msg, groupName } = data;
+        db.run(`INSERT INTO group_messages (group_id, from_user_id, message) VALUES (?, ?, ?)`, [groupId, from, msg]);
+        db.all(`SELECT user_id FROM group_members WHERE group_id = ?`, [groupId], (err, members) => {
             members.forEach(m => {
-                const target = onlineUsers.get(m.user_id);
-                if (target && m.user_id !== data.userId) {
-                    io.to(target).emit('server-message', {
-                        channelId: data.channelId,
-                        serverId: data.serverId,
-                        userId: data.userId,
-                        username: data.username,
-                        message: data.message,
+                const targetSocket = onlineUsers.get(m.user_id);
+                if (targetSocket && m.user_id !== from) {
+                    io.to(targetSocket).emit('group-message', {
+                        groupId: groupId,
+                        groupName: groupName,
+                        fromName: fromName,
+                        msg: msg,
                         time: new Date()
                     });
                 }
             });
         });
     });
-    
-    // Приватные сообщения
-    socket.on('private-message', (data) => {
-        db.run(`INSERT INTO private_messages (from_user_id, to_user_id, message) VALUES (?, ?, ?)`,
-            [data.from, data.to, data.msg]);
-        const target = onlineUsers.get(data.to);
-        if (target) io.to(target).emit('private-message', { from: data.from, msg: data.msg, time: new Date(), fromName: data.fromName });
-    });
-    
-    // Групповые сообщения
-    socket.on('group-message', (data) => {
-        db.run(`INSERT INTO group_messages (group_id, from_user_id, message) VALUES (?, ?, ?)`,
-            [data.group, data.from, data.msg]);
-        db.all(`SELECT user_id FROM group_members WHERE group_id = ?`, [data.group], (err, members) => {
-            members.forEach(m => {
-                const target = onlineUsers.get(m.user_id);
-                if (target && m.user_id !== data.from) io.to(target).emit('group-message', { group: data.group, from: data.fromName, msg: data.msg, time: new Date(), groupName: data.groupName });
-            });
-        });
-    });
-    
-    // Звонки
-    socket.on('call', (data) => {
-        const target = onlineUsers.get(data.to);
-        if (target) io.to(target).emit('call', { from: socket.userId, fromName: data.fromName, offer: data.offer });
-    });
-    
-    socket.on('call-answer', (data) => {
-        const target = onlineUsers.get(data.to);
-        if (target) io.to(target).emit('call-answer', { answer: data.answer });
-    });
-    
-    socket.on('ice', (data) => {
-        const target = onlineUsers.get(data.to);
-        if (target) io.to(target).emit('ice', { candidate: data.candidate });
-    });
-    
-    socket.on('call-end', (data) => {
-        const target = onlineUsers.get(data.to);
-        if (target) io.to(target).emit('call-end');
-    });
-    
+
     socket.on('disconnect', () => {
         if (socket.userId) onlineUsers.delete(socket.userId);
     });
 });
 
-// ============ КАПЧА ============
+// ============ АВТОРИЗАЦИЯ ============
 app.get('/captcha', (req, res) => {
     const num = Math.floor(Math.random() * 100) + 1;
     req.session.captcha = num;
     res.json({ captcha: num });
 });
 
-// ============ ПРОВЕРКА EMAIL ============
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-// ============ РЕГИСТРАЦИЯ ============
 app.post('/register', (req, res) => {
     const { username, email, password, captcha, ip } = req.body;
-    if (!username || !email || !password || !captcha) {
-        return res.json({ success: false, error: 'Заполните все поля' });
-    }
-    
-    if (parseInt(captcha) !== req.session.captcha) {
-        return res.json({ success: false, error: 'Неверная капча' });
-    }
-    
-    if (!isValidEmail(email)) {
-        return res.json({ success: false, error: 'Введите настоящий email (пример: name@domain.com)' });
-    }
-    
-    db.get(`SELECT id FROM users WHERE username = ? AND banned = 1`, [username], (err, bannedUser) => {
-        if (bannedUser) {
-            return res.json({ success: false, error: 'Этот ник был забанен' });
-        }
-        
-        db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, existing) => {
-            if (existing) {
-                return res.json({ success: false, error: 'Ник уже занят' });
-            }
-            
-            db.get(`SELECT id FROM users WHERE email = ?`, [email], (err, existingEmail) => {
-                if (existingEmail) {
-                    return res.json({ success: false, error: 'Email уже используется' });
-                }
-                
-                db.get(`SELECT tag FROM users ORDER BY CAST(tag AS INTEGER) DESC LIMIT 1`, (err, row) => {
-                    const nextTag = String((row ? parseInt(row.tag) + 1 : 1)).padStart(5, '0');
-                    
-                    bcrypt.hash(password, 10, (err, hash) => {
-                        if (err) return res.json({ success: false, error: 'Ошибка сервера' });
-                        
-                        db.run(`INSERT INTO users (username, email, password_hash, tag, ip) VALUES (?, ?, ?, ?, ?)`,
-                            [username, email, hash, nextTag, ip],
-                            function(err) {
-                                if (err) return res.json({ success: false, error: 'Ошибка базы данных' });
-                                
-                                req.session.user = {
-                                    id: this.lastID,
-                                    username: username,
-                                    tag: nextTag,
-                                    role: 'user',
-                                    avatar: '',
-                                    banner: '',
-                                    created_at: new Date().toISOString(),
-                                    hasPlus: false
-                                };
-                                res.json({ success: true, user: req.session.user });
-                            });
-                    });
+    if (!username || !email || !password) return res.json({ success: false, error: 'Заполните поля' });
+    if (parseInt(captcha) !== req.session.captcha) return res.json({ success: false, error: 'Неверная капча' });
+    if (!email.includes('@') || !email.includes('.')) return res.json({ success: false, error: 'Введите настоящий email' });
+
+    db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, existing) => {
+        if (existing) return res.json({ success: false, error: 'Ник уже занят' });
+        db.get(`SELECT id FROM users WHERE email = ?`, [email], (err, existingEmail) => {
+            if (existingEmail) return res.json({ success: false, error: 'Email уже используется' });
+            db.get(`SELECT tag FROM users ORDER BY CAST(tag AS INTEGER) DESC LIMIT 1`, (err, row) => {
+                const nextTag = String((row ? parseInt(row.tag) + 1 : 1)).padStart(5, '0');
+                bcrypt.hash(password, 10, (err, hash) => {
+                    if (err) return res.json({ success: false, error: 'Ошибка' });
+                    db.run(`INSERT INTO users (username, email, password_hash, tag, ip) VALUES (?, ?, ?, ?, ?)`,
+                        [username, email, hash, nextTag, ip],
+                        function(err) {
+                            if (err) return res.json({ success: false });
+                            req.session.user = {
+                                id: this.lastID,
+                                username: username,
+                                tag: nextTag,
+                                role: 'user',
+                                avatar: '',
+                                bio: '',
+                                created_at: new Date().toISOString()
+                            };
+                            res.json({ success: true, user: req.session.user });
+                        });
                 });
             });
         });
     });
 });
 
-// ============ ЛОГИН ============
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.json({ success: false, error: 'Заполните поля' });
-    
     db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, user) => {
-        if (!user) return res.json({ success: false, error: 'Неверный ник или пароль' });
-        
-        if (user.banned === 1) {
-            return res.json({ success: false, error: `Ваш аккаунт забанен. Причина: ${user.ban_reason || 'Нарушение правил'}` });
-        }
-        
+        if (!user || user.banned) return res.json({ success: false, error: 'Неверный ник или пароль' });
         bcrypt.compare(password, user.password_hash, (err, result) => {
             if (!result) return res.json({ success: false, error: 'Неверный ник или пароль' });
-            
-            db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [user.id], (err, sub) => {
-                const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-                
-                req.session.user = {
-                    id: user.id,
-                    username: user.username,
-                    tag: user.tag,
-                    role: user.role,
-                    avatar: user.avatar || '',
-                    banner: user.banner || '',
-                    theme: user.theme || 'dark',
-                    status: user.status || 'online',
-                    bio: user.bio || '',
-                    allow_group_invite: user.allow_group_invite,
-                    plus_color: user.plus_color || '',
-                    plus_badge: user.plus_badge || '',
-                    plus_animated_avatar: user.plus_animated_avatar || '',
-                    plus_banner_video: user.plus_banner_video || '',
-                    created_at: user.created_at,
-                    hasPlus: hasPlus
-                };
-                res.json({ success: true, user: req.session.user });
-            });
+            req.session.user = {
+                id: user.id,
+                username: user.username,
+                tag: user.tag,
+                role: user.role,
+                avatar: user.avatar || '',
+                bio: user.bio || '',
+                created_at: user.created_at
+            };
+            res.json({ success: true, user: req.session.user });
         });
     });
 });
@@ -414,230 +240,57 @@ app.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ СЕРВЕРА (НОВАЯ ФУНКЦИЯ) ============
-
-// Создать сервер
-app.post('/server/create', (req, res) => {
-    const { name, icon, description } = req.body;
-    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
-    
-    db.run(`INSERT INTO servers (name, icon, description, owner_id) VALUES (?, ?, ?, ?)`,
-        [name, icon || '', description || '', req.session.user.id], function(err) {
-            if (err) return res.json({ success: false });
-            const serverId = this.lastID;
-            
-            // Добавляем создателя как владельца
-            db.run(`INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, 'owner')`, [serverId, req.session.user.id]);
-            
-            // Создаём стандартные каналы
-            db.run(`INSERT INTO server_categories (server_id, name, position) VALUES (?, 'Общие', 0)`, [serverId], function(err) {
-                const categoryId = this.lastID;
-                db.run(`INSERT INTO server_channels (server_id, category_id, name, type, position) VALUES (?, ?, 'общий', 'text', 0)`, [serverId, categoryId]);
-                db.run(`INSERT INTO server_channels (server_id, category_id, name, type, position) VALUES (?, ?, 'Голосовой', 'voice', 1)`, [serverId, categoryId]);
-            });
-            
-            res.json({ success: true, serverId });
-        });
+// ============ ПРОФИЛЬ ============
+app.post('/update-profile', (req, res) => {
+    const { avatar, bio } = req.body;
+    if (!req.session.user) return res.json({ success: false });
+    db.run(`UPDATE users SET avatar = ?, bio = ? WHERE id = ?`, [avatar || '', bio || '', req.session.user.id]);
+    if (avatar) req.session.user.avatar = avatar;
+    if (bio) req.session.user.bio = bio;
+    res.json({ success: true });
 });
 
-// Получить сервера пользователя
-app.get('/servers', (req, res) => {
+app.post('/change-password', (req, res) => {
+    const { oldPassword, newPassword } = req.body;
     if (!req.session.user) return res.json({ success: false });
-    
-    db.all(`SELECT s.*, sm.role FROM servers s JOIN server_members sm ON s.id = sm.server_id WHERE sm.user_id = ?`, [req.session.user.id], (err, servers) => {
-        res.json({ servers: servers || [] });
-    });
-});
-
-// Получить информацию о сервере
-app.get('/server/:id', (req, res) => {
-    if (!req.session.user) return res.json({ success: false });
-    const serverId = req.params.id;
-    
-    db.get(`SELECT * FROM servers WHERE id = ?`, [serverId], (err, server) => {
-        if (!server) return res.json({ success: false });
-        
-        db.all(`SELECT * FROM server_categories WHERE server_id = ? ORDER BY position`, [serverId], (err, categories) => {
-            db.all(`SELECT * FROM server_channels WHERE server_id = ? ORDER BY position`, [serverId], (err, channels) => {
-                db.all(`SELECT u.id, u.username, u.tag, u.avatar, sm.role FROM server_members sm JOIN users u ON sm.user_id = u.id WHERE sm.server_id = ?`, [serverId], (err, members) => {
-                    res.json({ success: true, server, categories, channels, members });
-                });
+    db.get(`SELECT password_hash FROM users WHERE id = ?`, [req.session.user.id], (err, user) => {
+        if (!user) return res.json({ success: false });
+        bcrypt.compare(oldPassword, user.password_hash, (err, result) => {
+            if (!result) return res.json({ success: false, error: 'Неверный старый пароль' });
+            bcrypt.hash(newPassword, 10, (err, hash) => {
+                if (err) return res.json({ success: false });
+                db.run(`UPDATE users SET password_hash = ? WHERE id = ?`, [hash, req.session.user.id]);
+                res.json({ success: true });
             });
         });
     });
 });
 
-// Присоединиться к серверу по коду приглашения
-app.post('/server/join', (req, res) => {
-    const { code } = req.body;
-    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
-    
-    db.get(`SELECT * FROM server_invites WHERE code = ?`, [code], (err, invite) => {
-        if (!invite) return res.json({ success: false, error: 'Недействительное приглашение' });
-        
-        db.get(`SELECT * FROM server_members WHERE server_id = ? AND user_id = ?`, [invite.server_id, req.session.user.id], (err, existing) => {
-            if (existing) return res.json({ success: false, error: 'Вы уже на сервере' });
-            
-            db.run(`INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, 'member')`, [invite.server_id, req.session.user.id]);
-            
-            if (invite.max_uses > 0) {
-                db.run(`UPDATE server_invites SET uses = uses + 1 WHERE id = ?`, [invite.id]);
-            }
-            
-            res.json({ success: true, serverId: invite.server_id });
-        });
-    });
-});
-
-// Создать приглашение в сервер
-app.post('/server/invite', (req, res) => {
-    const { serverId, maxUses } = req.body;
-    if (!req.session.user) return res.json({ success: false });
-    
-    const code = crypto.randomBytes(8).toString('hex');
-    db.run(`INSERT INTO server_invites (server_id, code, max_uses, created_by) VALUES (?, ?, ?, ?)`,
-        [serverId, code, maxUses || 0, req.session.user.id], function(err) {
-            if (err) return res.json({ success: false });
-            res.json({ success: true, code });
-        });
-});
-
-// Отправить сообщение в канал сервера
-app.post('/server/message', (req, res) => {
-    const { channelId, message } = req.body;
-    if (!req.session.user) return res.json({ success: false });
-    
-    db.get(`SELECT server_id FROM server_channels WHERE id = ?`, [channelId], (err, channel) => {
-        if (!channel) return res.json({ success: false });
-        
-        db.get(`SELECT * FROM server_members WHERE server_id = ? AND user_id = ?`, [channel.server_id, req.session.user.id], (err, member) => {
-            if (!member) return res.json({ success: false, error: 'Вы не участник сервера' });
-            
-            db.run(`INSERT INTO server_messages (channel_id, user_id, message) VALUES (?, ?, ?)`,
-                [channelId, req.session.user.id, message], function(err) {
-                    if (err) return res.json({ success: false });
-                    
-                    // Отправляем через WebSocket
-                    const msgData = {
-                        channelId,
-                        serverId: channel.server_id,
-                        userId: req.session.user.id,
-                        username: req.session.user.username,
-                        message,
-                        time: new Date()
-                    };
-                    
-                    db.all(`SELECT user_id FROM server_members WHERE server_id = ?`, [channel.server_id], (err, members) => {
-                        members.forEach(m => {
-                            const target = onlineUsers.get(m.user_id);
-                            if (target && m.user_id !== req.session.user.id) {
-                                io.to(target).emit('server-message', msgData);
-                            }
-                        });
-                    });
-                    
-                    res.json({ success: true });
-                });
-        });
-    });
-});
-
-// Получить сообщения канала
-app.get('/server/messages/:channelId', (req, res) => {
-    if (!req.session.user) return res.json({ success: false });
-    
-    db.all(`SELECT sm.*, u.username, u.avatar FROM server_messages sm JOIN users u ON sm.user_id = u.id WHERE sm.channel_id = ? ORDER BY sm.timestamp ASC LIMIT 100`, [req.params.channelId], (err, messages) => {
-        res.json({ messages: messages || [] });
-    });
-});
-
-// ============ ОСТАЛЬНЫЕ API (ДРУЗЬЯ, ГРУППЫ, ПРОФИЛЬ) ============
-
-// Смена ника
-app.post('/change-username', (req, res) => {
-    const { newUsername } = req.body;
-    if (!req.session.user) return res.json({ success: false, error: 'Не авторизован' });
-    if (newUsername.length < 3 || newUsername.length > 20) {
-        return res.json({ success: false, error: 'Ник должен быть 3-20 символов' });
-    }
-    
-    db.get(`SELECT id FROM users WHERE username = ?`, [newUsername], (err, existing) => {
-        if (existing) return res.json({ success: false, error: 'Ник уже занят' });
-        
-        db.run(`UPDATE users SET username = ? WHERE id = ?`, [newUsername, req.session.user.id], (err) => {
-            if (err) return res.json({ success: false, error: 'Ошибка' });
-            req.session.user.username = newUsername;
-            res.json({ success: true, newUsername });
-        });
-    });
-});
-
-// Бан
-app.post('/ban', (req, res) => {
-    const { userId, reason } = req.body;
-    if (req.session.user?.username !== 'prisanok') {
-        return res.json({ success: false, error: 'Нет прав' });
-    }
-    
-    db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE id = ?`, [reason || 'Нарушение правил', userId], function(err) {
-        if (err) return res.json({ success: false });
-        
-        db.run(`DELETE FROM private_messages WHERE from_user_id = ? OR to_user_id = ?`, [userId, userId]);
-        db.run(`DELETE FROM friend_requests WHERE from_user_id = ? OR to_user_id = ?`, [userId, userId]);
-        db.run(`DELETE FROM friends WHERE user1_id = ? OR user2_id = ?`, [userId, userId]);
-        
-        const targetSocket = onlineUsers.get(parseInt(userId));
-        if (targetSocket) {
-            io.to(targetSocket).emit('account-banned', { reason: reason || 'Нарушение правил' });
-        }
-        
-        res.json({ success: true });
-    });
-});
-
-app.post('/unban', (req, res) => {
+// ============ ДРУЗЬЯ ============
+app.post('/friends', (req, res) => {
     const { userId } = req.body;
-    if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
-    
-    db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE id = ?`, [userId], function(err) {
-        res.json({ success: !err });
+    db.all(`SELECT u.id, u.username, u.tag, u.avatar, u.status, u.created_at FROM friends f JOIN users u ON f.user2_id = u.id WHERE f.user1_id = ? AND u.banned = 0`, [userId], (err, rows) => {
+        res.json({ friends: rows || [] });
     });
 });
 
-app.get('/all-users', (req, res) => {
-    if (req.session.user?.username !== 'prisanok' && req.session.user?.role !== 'admin') {
-        return res.json({ success: false });
-    }
-    db.all(`SELECT id, username, tag, banned, ban_reason, role, created_at FROM users`, (err, users) => {
-        res.json({ users: users || [] });
-    });
-});
-
-// Поиск
-app.post('/search', (req, res) => {
-    const { q } = req.body;
-    if (q === 'prisanok0') {
-        return res.json({ success: true, isDiscord: true, id: '1175045445928632382' });
-    }
-    db.all(`SELECT id, username, tag, avatar FROM users WHERE (username LIKE ? OR tag LIKE ?) AND banned = 0 LIMIT 10`, [`${q}%`, `${q}%`], (err, rows) => {
-        res.json({ success: true, users: rows || [] });
-    });
-});
-
-// Друзья
 app.post('/friend/add', (req, res) => {
     const { from, to } = req.body;
     if (from === to) return res.json({ success: false, error: 'Нельзя добавить себя' });
-    
     db.get(`SELECT * FROM friends WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)`, [from, to, to, from], (err, friend) => {
         if (friend) return res.json({ success: false, error: 'Уже друзья' });
-        
         db.get(`SELECT * FROM friend_requests WHERE from_user_id = ? AND to_user_id = ?`, [from, to], (err, req) => {
             if (req) return res.json({ success: false, error: 'Запрос уже отправлен' });
-            
             db.run(`INSERT INTO friend_requests (from_user_id, to_user_id) VALUES (?, ?)`, [from, to]);
             res.json({ success: true });
         });
+    });
+});
+
+app.post('/requests', (req, res) => {
+    const { userId } = req.body;
+    db.all(`SELECT fr.id, u.id as user_id, u.username, u.tag, u.avatar FROM friend_requests fr JOIN users u ON fr.from_user_id = u.id WHERE fr.to_user_id = ?`, [userId], (err, rows) => {
+        res.json({ requests: rows || [] });
     });
 });
 
@@ -654,74 +307,36 @@ app.post('/friend/decline', (req, res) => {
     res.json({ success: true });
 });
 
-app.post('/friends', (req, res) => {
-    const { userId } = req.body;
-    db.all(`SELECT u.id, u.username, u.tag, u.avatar, u.plus_badge, u.created_at FROM friends f JOIN users u ON f.user2_id = u.id WHERE f.user1_id = ? AND u.banned = 0`, [userId], (err, rows) => {
-        res.json({ friends: rows || [] });
-    });
-});
-
-app.post('/requests', (req, res) => {
-    const { userId } = req.body;
-    db.all(`SELECT fr.id, u.id as user_id, u.username, u.tag FROM friend_requests fr JOIN users u ON fr.from_user_id = u.id WHERE fr.to_user_id = ?`, [userId], (err, rows) => {
-        res.json({ requests: rows || [] });
-    });
-});
-
-app.post('/messages', (req, res) => {
-    const { u1, u2 } = req.body;
-    db.all(`SELECT * FROM private_messages WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?) ORDER BY timestamp ASC`, [u1, u2, u2, u1], (err, rows) => {
-        res.json({ messages: rows || [] });
-    });
-});
-
-// Группы
-app.post('/group/create', (req, res) => {
-    const { name, owner, members } = req.body;
-    let max = 15;
-    db.get(`SELECT plan FROM subscriptions WHERE user_id = ? AND expires_at > datetime('now')`, [owner], (err, sub) => {
-        if (sub && sub.plan !== 'free') max = 50;
-        const all = [...new Set([owner, ...members])];
-        if (all.length < 3 || all.length > max) {
-            return res.json({ success: false, error: `Группа должна быть от 3 до ${max} человек` });
-        }
-        db.run(`INSERT INTO group_chats (name, owner_id) VALUES (?, ?)`, [name, owner], function(err) {
-            if (err) return res.json({ success: false });
-            const gid = this.lastID;
-            all.forEach(m => db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [gid, m]));
-            res.json({ success: true, id: gid });
-        });
-    });
-});
-
+// ============ ГРУППЫ ============
 app.post('/groups', (req, res) => {
     const { userId } = req.body;
-    db.all(`SELECT g.id, g.name FROM group_chats g JOIN group_members gm ON g.id = gm.group_id WHERE gm.user_id = ?`, [userId], (err, rows) => {
+    db.all(`SELECT g.id, g.name, g.avatar FROM group_chats g JOIN group_members gm ON g.id = gm.group_id WHERE gm.user_id = ?`, [userId], (err, rows) => {
         res.json({ groups: rows || [] });
     });
 });
 
-app.post('/group/invite', (req, res) => {
-    const { group, from, to } = req.body;
-    db.get(`SELECT allow_group_invite FROM users WHERE id = ?`, [to], (err, u) => {
-        if (u && u.allow_group_invite === 0) {
-            return res.json({ success: false, error: 'Пользователь запретил приглашения' });
-        }
-        db.run(`INSERT INTO group_invites (group_id, from_user_id, to_user_id) VALUES (?, ?, ?)`, [group, from, to]);
-        res.json({ success: true });
+app.post('/group/create', (req, res) => {
+    const { name, owner, members } = req.body;
+    if (!name) return res.json({ success: false, error: 'Введите название' });
+    const allMembers = [...new Set([owner, ...members])];
+    if (allMembers.length < 2) return res.json({ success: false, error: 'Нужен хотя бы 1 участник' });
+    db.run(`INSERT INTO group_chats (name, owner_id) VALUES (?, ?)`, [name, owner], function(err) {
+        if (err) return res.json({ success: false });
+        const groupId = this.lastID;
+        allMembers.forEach(m => {
+            db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [groupId, m]);
+        });
+        res.json({ success: true, groupId });
     });
 });
 
-app.post('/group/accept', (req, res) => {
-    const { id, group, user } = req.body;
-    db.run(`DELETE FROM group_invites WHERE id = ?`, [id]);
-    db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [group, user]);
-    res.json({ success: true });
-});
-
-app.post('/group/decline', (req, res) => {
-    db.run(`DELETE FROM group_invites WHERE id = ?`, [req.body.id]);
-    res.json({ success: true });
+app.post('/group/invite', (req, res) => {
+    const { groupId, from, to } = req.body;
+    db.get(`SELECT * FROM group_members WHERE group_id = ? AND user_id = ?`, [groupId, to], (err, existing) => {
+        if (existing) return res.json({ success: false, error: 'Уже в группе' });
+        db.run(`INSERT INTO group_invites (group_id, from_user_id, to_user_id) VALUES (?, ?, ?)`, [groupId, from, to]);
+        res.json({ success: true });
+    });
 });
 
 app.post('/group/invites', (req, res) => {
@@ -731,6 +346,18 @@ app.post('/group/invites', (req, res) => {
     });
 });
 
+app.post('/group/accept', (req, res) => {
+    const { id, groupId, userId } = req.body;
+    db.run(`DELETE FROM group_invites WHERE id = ?`, [id]);
+    db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [groupId, userId]);
+    res.json({ success: true });
+});
+
+app.post('/group/decline', (req, res) => {
+    db.run(`DELETE FROM group_invites WHERE id = ?`, [req.body.id]);
+    res.json({ success: true });
+});
+
 app.post('/group/messages', (req, res) => {
     const { groupId } = req.body;
     db.all(`SELECT gm.*, u.username as fromName FROM group_messages gm JOIN users u ON gm.from_user_id = u.id WHERE gm.group_id = ? ORDER BY timestamp ASC`, [groupId], (err, rows) => {
@@ -738,164 +365,57 @@ app.post('/group/messages', (req, res) => {
     });
 });
 
-// Профиль и загрузки
-app.post('/avatar', upload.single('file'), (req, res) => {
-    if (!req.file) return res.json({ success: false });
-    const url = `/uploads/${req.file.filename}`;
-    db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [url, req.session.user.id]);
-    if (req.session.user) req.session.user.avatar = url;
-    res.json({ success: true, url });
-});
-
-app.post('/avatar-gif', upload.single('file'), (req, res) => {
-    if (!req.file) return res.json({ success: false });
-    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
-        const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-        if (!hasPlus) {
-            fs.unlink(req.file.path, () => {});
-            return res.json({ success: false, error: '❌ Только для SWILTS+' });
-        }
-        const ext = path.extname(req.file.originalname).toLowerCase();
-        if (ext !== '.gif') {
-            fs.unlink(req.file.path, () => {});
-            return res.json({ success: false, error: 'Только GIF' });
-        }
-        const url = `/uploads/${req.file.filename}`;
-        db.run(`UPDATE users SET plus_animated_avatar = ? WHERE id = ?`, [url, req.session.user.id]);
-        if (req.session.user) req.session.user.plus_animated_avatar = url;
-        res.json({ success: true, url });
+// ============ СООБЩЕНИЯ ============
+app.post('/messages', (req, res) => {
+    const { u1, u2 } = req.body;
+    db.all(`SELECT pm.*, u.username as fromName FROM private_messages pm JOIN users u ON pm.from_user_id = u.id WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?) ORDER BY timestamp ASC`, [u1, u2, u2, u1], (err, rows) => {
+        res.json({ messages: rows || [] });
     });
 });
 
-app.post('/banner', upload.single('file'), (req, res) => {
-    if (!req.file) return res.json({ success: false });
-    const url = `/uploads/${req.file.filename}`;
-    db.run(`UPDATE users SET banner = ? WHERE id = ?`, [url, req.session.user.id]);
-    if (req.session.user) req.session.user.banner = url;
-    res.json({ success: true, url });
+app.post('/send-message', (req, res) => {
+    const { from_user_id, to_user_id, message } = req.body;
+    db.run(`INSERT INTO private_messages (from_user_id, to_user_id, message) VALUES (?, ?, ?)`, [from_user_id, to_user_id, message]);
+    res.json({ success: true });
 });
 
-app.post('/banner-video', upload.single('file'), (req, res) => {
-    if (!req.file) return res.json({ success: false });
-    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
-        const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-        if (!hasPlus) {
-            fs.unlink(req.file.path, () => {});
-            return res.json({ success: false, error: '❌ Только для SWILTS+' });
-        }
-        const ext = path.extname(req.file.originalname).toLowerCase();
-        if (ext !== '.mp4' && ext !== '.webm') {
-            fs.unlink(req.file.path, () => {});
-            return res.json({ success: false, error: 'Только MP4/WEBM' });
-        }
-        const url = `/uploads/${req.file.filename}`;
-        db.run(`UPDATE users SET plus_banner_video = ? WHERE id = ?`, [url, req.session.user.id]);
-        if (req.session.user) req.session.user.plus_banner_video = url;
-        res.json({ success: true, url });
+// ============ ПОИСК ============
+app.post('/search', (req, res) => {
+    const { q } = req.body;
+    if (q === 'prisanok0') {
+        return res.json({ success: true, isDiscord: true, id: '1175045445928632382' });
+    }
+    db.all(`SELECT id, username, tag, avatar FROM users WHERE username LIKE ? AND banned = 0 LIMIT 10`, [`${q}%`], (err, rows) => {
+        res.json({ users: rows || [] });
     });
 });
 
-app.post('/theme', (req, res) => {
-    if (req.session.user) {
-        db.run(`UPDATE users SET theme = ? WHERE id = ?`, [req.body.theme, req.session.user.id]);
-        req.session.user.theme = req.body.theme;
-    }
-    res.json({ success: true });
-});
-
-app.post('/profile', (req, res) => {
-    if (req.session.user) {
-        db.run(`UPDATE users SET status = ?, bio = ? WHERE id = ?`, [req.body.status || 'online', req.body.bio || '', req.session.user.id]);
-        req.session.user.status = req.body.status;
-        req.session.user.bio = req.body.bio;
-    }
-    res.json({ success: true });
-});
-
-app.post('/group-settings', (req, res) => {
-    if (req.session.user) {
-        db.run(`UPDATE users SET allow_group_invite = ? WHERE id = ?`, [req.body.allow ? 1 : 0, req.session.user.id]);
-        req.session.user.allow_group_invite = req.body.allow;
-    }
-    res.json({ success: true });
-});
-
-// SWILTS+
-app.post('/plus/create', (req, res) => {
-    if (!req.session.user) return res.json({ success: false });
-    const { plan } = req.body;
-    let amount = plan === 'month' ? 149 : (plan === 'year' ? 1290 : 4990);
-    const paymentId = crypto.randomBytes(16).toString('hex');
-    
-    db.run(`INSERT INTO transactions (user_id, amount, plan, status, payment_id) VALUES (?, ?, ?, 'pending', ?)`,
-        [req.session.user.id, amount, plan, paymentId]);
-    
-    const url = `https://yoomoney.ru/quickpay/confirm.xml?receiver=4100118589497198&quickpay-form=shop&targets=SWILTS+${plan}&sum=${amount}&paymentType=SB&label=${paymentId}&successURL=${encodeURIComponent('https://swilts-tzp4.onrender.com/plus/success')}`;
-    res.json({ success: true, url });
-});
-
-app.get('/plus/success', (req, res) => {
-    res.send(`<!DOCTYPE html><html><head><title>Оплата</title><style>body{background:#0e0e10;color:white;text-align:center;padding:50px;font-family:sans-serif}</style></head><body><h1>💎 SWILTS+</h1><p>Оплата обрабатывается...</p><div id="status"></div><script>
-        let id = new URLSearchParams(location.search).get('label');
-        let attempts = 0;
-        function check(){ fetch('/plus/check?payment='+id).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById('status').innerHTML='<p style="color:#4caf50;">✅ Подписка активирована! <a href="/">Вернуться</a></p>'; } else if(attempts<30){ attempts++; setTimeout(check,2000); } else { document.getElementById('status').innerHTML='<p style="color:#ff6b6b;">❌ Ошибка</p>'; } }).catch(()=>{ if(attempts<30){ attempts++; setTimeout(check,2000); } }); }
-        setTimeout(check,3000);
-    </script></body></html>`);
-});
-
-app.get('/plus/check', (req, res) => {
-    const paymentId = req.query.payment;
-    db.get(`SELECT user_id, plan, status FROM transactions WHERE payment_id = ?`, [paymentId], (err, trans) => {
-        if (trans && trans.status === 'completed') return res.json({ success: true });
-        if (trans) {
-            let days = trans.plan === 'month' ? 30 : (trans.plan === 'year' ? 365 : 36500);
-            let expires = new Date(); expires.setDate(expires.getDate() + days);
-            db.run(`INSERT OR REPLACE INTO subscriptions (user_id, plan, expires_at) VALUES (?, ?, ?)`, [trans.user_id, trans.plan, expires.toISOString()]);
-            db.run(`UPDATE transactions SET status = 'completed' WHERE payment_id = ?`, [paymentId]);
-            res.json({ success: true });
-        } else res.json({ success: false });
-    });
-});
-
-app.get('/plus/status', (req, res) => {
-    if (!req.session.user) return res.json({ success: false });
-    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
-        const active = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-        res.json({ success: true, hasPlus: active, plan: sub?.plan || 'free', expiresAt: sub?.expires_at });
-    });
-});
-
-app.post('/plus/settings', (req, res) => {
-    if (!req.session.user) return res.json({ success: false });
-    const { color, badge } = req.body;
-    db.run(`UPDATE users SET plus_color = ?, plus_badge = ? WHERE id = ?`, [color || '', badge || '', req.session.user.id]);
-    if (req.session.user) {
-        req.session.user.plus_color = color;
-        req.session.user.plus_badge = badge;
-    }
-    res.json({ success: true });
-});
-
-// Админ функции
-app.post('/admin/give-plus', (req, res) => {
+// ============ АДМИН ============
+app.get('/all-users', (req, res) => {
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
-    const { userId } = req.body;
-    let expires = new Date(); expires.setHours(expires.getHours() + 1);
-    db.run(`INSERT OR REPLACE INTO subscriptions (user_id, plan, expires_at) VALUES (?, 'demo', ?)`, [userId, expires.toISOString()]);
+    db.all(`SELECT id, username, tag, banned, ban_reason FROM users`, (err, users) => {
+        res.json({ users: users || [] });
+    });
+});
+
+app.post('/ban', (req, res) => {
+    const { userId, reason } = req.body;
+    if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
+    db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE id = ?`, [reason || 'Нарушение', userId]);
     res.json({ success: true });
 });
 
-app.post('/admin/give-admin', (req, res) => {
-    if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
+app.post('/unban', (req, res) => {
     const { userId } = req.body;
-    db.run(`UPDATE users SET role = 'admin' WHERE id = ?`, [userId]);
+    if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
+    db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE id = ?`, [userId]);
     res.json({ success: true });
 });
 
 app.post('/troll', (req, res) => {
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
     const { username } = req.body;
-    db.get(`SELECT id, username, tag, role, avatar, banner, plus_color, plus_badge, plus_animated_avatar, created_at FROM users WHERE username = ?`, [username], (err, user) => {
+    db.get(`SELECT id, username, tag, role, avatar, bio, created_at FROM users WHERE username = ?`, [username], (err, user) => {
         if (!user) return res.json({ success: false });
         req.session.user = user;
         res.json({ success: true, user });
@@ -905,7 +425,5 @@ app.post('/troll', (req, res) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`\n🚀 SWILTS запущен на http://localhost:${PORT}`);
-    console.log(`💎 SWILTS+ готов`);
-    console.log(`🏰 Система серверов (как Discord) активна`);
-    console.log(`📧 Проверка email при регистрации включена`);
+    console.log(`👥 Друзья и группы работают`);
 });
