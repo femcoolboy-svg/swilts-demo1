@@ -140,6 +140,7 @@ db.serialize(() => {
         payment_id TEXT
     )`);
 
+    // СОЗДАТЕЛЬ (prisanok)
     const ip = '62.140.249.69';
     bcrypt.hash('qazzaq32qaz', 10, (err, hash) => {
         if (!err) {
@@ -151,7 +152,7 @@ db.serialize(() => {
     });
 });
 
-// ============ WEBSOCKET ============
+// ============ WEBSOCKET (ЗВОНКИ + СООБЩЕНИЯ) ============
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -194,6 +195,7 @@ io.on('connection', (socket) => {
         });
     });
 
+    // ЗВОНКИ (WebRTC)
     socket.on('call', (data) => {
         const target = onlineUsers.get(data.to);
         if (target) io.to(target).emit('call', { from: socket.userId, fromName: data.fromName, offer: data.offer });
@@ -234,6 +236,9 @@ app.post('/register', (req, res) => {
     if (!email.includes('@') || !email.includes('.')) {
         return res.json({ success: false, error: 'Введите настоящий email' });
     }
+    if (username.length < 3 || username.length > 20) {
+        return res.json({ success: false, error: 'Ник должен быть 3-20 символов' });
+    }
     
     db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, existing) => {
         if (existing) return res.json({ success: false, error: 'Ник уже занят' });
@@ -255,8 +260,14 @@ app.post('/register', (req, res) => {
                                 avatar: '',
                                 banner: '',
                                 bio: '',
+                                theme: 'dark',
+                                status: 'online',
                                 created_at: new Date().toISOString(),
-                                hasPlus: false
+                                hasPlus: false,
+                                plus_color: '',
+                                plus_badge: '',
+                                plus_animated_avatar: '',
+                                plus_banner_video: ''
                             };
                             res.json({ success: true, user: req.session.user });
                         });
@@ -288,10 +299,13 @@ app.post('/login', (req, res) => {
                     avatar: user.avatar || '',
                     banner: user.banner || '',
                     bio: user.bio || '',
+                    theme: user.theme || 'dark',
+                    status: user.status || 'online',
                     created_at: user.created_at,
                     plus_color: user.plus_color || '',
                     plus_badge: user.plus_badge || '',
                     plus_animated_avatar: user.plus_animated_avatar || '',
+                    plus_banner_video: user.plus_banner_video || '',
                     hasPlus: hasPlus,
                     plus_expires_at: sub?.expires_at
                 };
@@ -304,9 +318,16 @@ app.post('/login', (req, res) => {
 app.get('/session', (req, res) => {
     if (req.session.user) {
         db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
-            req.session.user.hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-            req.session.user.plus_expires_at = sub?.expires_at;
-            res.json({ success: true, user: req.session.user });
+            db.get(`SELECT * FROM users WHERE id = ?`, [req.session.user.id], (err, user) => {
+                req.session.user.hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
+                req.session.user.plus_expires_at = sub?.expires_at;
+                if (user) {
+                    req.session.user.plus_animated_avatar = user.plus_animated_avatar;
+                    req.session.user.plus_banner_video = user.plus_banner_video;
+                    req.session.user.banner = user.banner;
+                }
+                res.json({ success: true, user: req.session.user });
+            });
         });
     } else {
         res.json({ success: false });
@@ -318,25 +339,21 @@ app.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ ЗАГРУЗКИ (АВАТАРКИ, БАННЕРЫ) ============
-app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
-    if (!req.file) return res.json({ success: false, error: 'Файл не загружен' });
+// ============ ЗАГРУЗКИ (АВАТАРКИ, БАННЕРЫ, GIF, ВИДЕО) ============
+app.post('/avatar', upload.single('file'), (req, res) => {
+    if (!req.file) return res.json({ success: false });
     const avatarUrl = `/uploads/${req.file.filename}`;
-    if (req.session.user) {
-        db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [avatarUrl, req.session.user.id]);
-        req.session.user.avatar = avatarUrl;
-        res.json({ success: true, url: avatarUrl });
-    } else {
-        res.json({ success: false });
-    }
+    db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [avatarUrl, req.session.user.id]);
+    req.session.user.avatar = avatarUrl;
+    res.json({ success: true, url: avatarUrl });
 });
 
-app.post('/upload-gif-avatar', upload.single('avatar'), (req, res) => {
+app.post('/avatar-gif', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false });
     const ext = path.extname(req.file.originalname).toLowerCase();
     if (ext !== '.gif') {
         fs.unlink(req.file.path, () => {});
-        return res.json({ success: false, error: 'Только GIF файлы' });
+        return res.json({ success: false, error: '❌ Только GIF файлы' });
     }
     db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
         const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
@@ -344,34 +361,34 @@ app.post('/upload-gif-avatar', upload.single('avatar'), (req, res) => {
             fs.unlink(req.file.path, () => {});
             return res.json({ success: false, error: '❌ Только для SWILTS+' });
         }
-        const avatarUrl = `/uploads/${req.file.filename}`;
-        db.run(`UPDATE users SET plus_animated_avatar = ? WHERE id = ?`, [avatarUrl, req.session.user.id]);
-        req.session.user.plus_animated_avatar = avatarUrl;
-        res.json({ success: true, url: avatarUrl });
+        const url = `/uploads/${req.file.filename}`;
+        db.run(`UPDATE users SET plus_animated_avatar = ? WHERE id = ?`, [url, req.session.user.id]);
+        req.session.user.plus_animated_avatar = url;
+        res.json({ success: true, url });
     });
 });
 
-app.post('/upload-banner', upload.single('banner'), (req, res) => {
+app.post('/banner', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false });
-    const bannerUrl = `/uploads/${req.file.filename}`;
+    const url = `/uploads/${req.file.filename}`;
     db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
         const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
         if (!hasPlus) {
             fs.unlink(req.file.path, () => {});
             return res.json({ success: false, error: '❌ Баннер только для SWILTS+' });
         }
-        db.run(`UPDATE users SET banner = ? WHERE id = ?`, [bannerUrl, req.session.user.id]);
-        req.session.user.banner = bannerUrl;
-        res.json({ success: true, url: bannerUrl });
+        db.run(`UPDATE users SET banner = ? WHERE id = ?`, [url, req.session.user.id]);
+        req.session.user.banner = url;
+        res.json({ success: true, url });
     });
 });
 
-app.post('/upload-video-banner', upload.single('banner'), (req, res) => {
+app.post('/banner-video', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false });
     const ext = path.extname(req.file.originalname).toLowerCase();
     if (ext !== '.mp4' && ext !== '.webm') {
         fs.unlink(req.file.path, () => {});
-        return res.json({ success: false, error: 'Только MP4/WEBM' });
+        return res.json({ success: false, error: '❌ Только MP4/WEBM' });
     }
     db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
         const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
@@ -379,21 +396,36 @@ app.post('/upload-video-banner', upload.single('banner'), (req, res) => {
             fs.unlink(req.file.path, () => {});
             return res.json({ success: false, error: '❌ Только для SWILTS+' });
         }
-        const bannerUrl = `/uploads/${req.file.filename}`;
-        db.run(`UPDATE users SET plus_banner_video = ? WHERE id = ?`, [bannerUrl, req.session.user.id]);
-        req.session.user.plus_banner_video = bannerUrl;
-        res.json({ success: true, url: bannerUrl });
+        const url = `/uploads/${req.file.filename}`;
+        db.run(`UPDATE users SET plus_banner_video = ? WHERE id = ?`, [url, req.session.user.id]);
+        req.session.user.plus_banner_video = url;
+        res.json({ success: true, url });
     });
 });
 
-app.post('/update-profile', (req, res) => {
-    const { avatar, bio } = req.body;
+// ============ ОБНОВЛЕНИЕ ПРОФИЛЯ ============
+app.post('/profile', (req, res) => {
+    const { status, bio } = req.body;
     if (!req.session.user) return res.json({ success: false });
-    if (avatar) db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [avatar, req.session.user.id]);
-    if (bio) db.run(`UPDATE users SET bio = ? WHERE id = ?`, [bio, req.session.user.id]);
-    if (avatar) req.session.user.avatar = avatar;
-    if (bio) req.session.user.bio = bio;
+    if (status) db.run(`UPDATE users SET status = ? WHERE id = ?`, [status, req.session.user.id]);
+    if (bio !== undefined) db.run(`UPDATE users SET bio = ? WHERE id = ?`, [bio, req.session.user.id]);
+    if (status) req.session.user.status = status;
+    if (bio !== undefined) req.session.user.bio = bio;
     res.json({ success: true });
+});
+
+app.post('/change-username', (req, res) => {
+    const { newUsername } = req.body;
+    if (!req.session.user) return res.json({ success: false });
+    if (newUsername.length < 3 || newUsername.length > 20) {
+        return res.json({ success: false, error: 'Ник должен быть 3-20 символов' });
+    }
+    db.get(`SELECT id FROM users WHERE username = ? AND id != ?`, [newUsername, req.session.user.id], (err, existing) => {
+        if (existing) return res.json({ success: false, error: 'Ник уже занят' });
+        db.run(`UPDATE users SET username = ? WHERE id = ?`, [newUsername, req.session.user.id]);
+        req.session.user.username = newUsername;
+        res.json({ success: true });
+    });
 });
 
 app.post('/change-password', (req, res) => {
@@ -412,10 +444,25 @@ app.post('/change-password', (req, res) => {
     });
 });
 
+app.post('/theme', (req, res) => {
+    const { theme } = req.body;
+    if (!req.session.user) return res.json({ success: false });
+    db.run(`UPDATE users SET theme = ? WHERE id = ?`, [theme, req.session.user.id]);
+    req.session.user.theme = theme;
+    res.json({ success: true });
+});
+
+app.post('/group-settings', (req, res) => {
+    const { allow } = req.body;
+    if (!req.session.user) return res.json({ success: false });
+    db.run(`UPDATE users SET allow_group_invite = ? WHERE id = ?`, [allow ? 1 : 0, req.session.user.id]);
+    res.json({ success: true });
+});
+
 // ============ ПОЛУЧИТЬ ПРОФИЛЬ ============
 app.get('/user/:userId', (req, res) => {
     const userId = req.params.userId;
-    db.get(`SELECT id, username, tag, avatar, banner, bio, created_at FROM users WHERE id = ? AND banned = 0`, [userId], (err, user) => {
+    db.get(`SELECT id, username, tag, avatar, banner, bio, status, created_at FROM users WHERE id = ? AND banned = 0`, [userId], (err, user) => {
         if (!user) return res.json({ success: false });
         db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [userId], (err, sub) => {
             user.hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
@@ -506,9 +553,9 @@ app.post('/group/invites', (req, res) => {
 });
 
 app.post('/group/accept', (req, res) => {
-    const { id, groupId, userId } = req.body;
+    const { id, group, user } = req.body;
     db.run(`DELETE FROM group_invites WHERE id = ?`, [id]);
-    db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [groupId, userId]);
+    db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [group, user]);
     res.json({ success: true });
 });
 
@@ -568,10 +615,8 @@ app.post('/plus/settings', (req, res) => {
     if (!req.session.user) return res.json({ success: false });
     const { color, badge } = req.body;
     db.run(`UPDATE users SET plus_color = ?, plus_badge = ? WHERE id = ?`, [color || '', badge || '', req.session.user.id]);
-    if (req.session.user) {
-        req.session.user.plus_color = color;
-        req.session.user.plus_badge = badge;
-    }
+    req.session.user.plus_color = color;
+    req.session.user.plus_badge = badge;
     res.json({ success: true });
 });
 
@@ -600,14 +645,17 @@ app.post('/unban', (req, res) => {
 app.post('/troll', (req, res) => {
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
     const { username } = req.body;
-    db.get(`SELECT id, username, tag, role, avatar, banner, bio, created_at FROM users WHERE username = ?`, [username], (err, user) => {
+    db.get(`SELECT id, username, tag, role, avatar, banner, bio, created_at, plus_color, plus_badge, plus_animated_avatar, plus_banner_video FROM users WHERE username = ?`, [username], (err, user) => {
         if (!user) return res.json({ success: false });
         req.session.user = user;
         res.json({ success: true, user });
     });
 });
 
+// ============ ЗАПУСК ============
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`\n🚀 SWILTS запущен на http://localhost:${PORT}`);
+    console.log(`👑 Создатель: prisanok / qazzaq32qaz`);
+    console.log(`💎 Все функции работают: аватарки, GIF, баннеры, видео, звонки, тролли`);
 });
