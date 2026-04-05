@@ -63,11 +63,6 @@
             50% { transform: scale(1.05); }
         }
         
-        @keyframes glow {
-            0% { box-shadow: 0 0 5px var(--accent); }
-            100% { box-shadow: 0 0 20px var(--accent); }
-        }
-        
         .greeting-modal {
             position: fixed;
             top: 50%;
@@ -206,6 +201,7 @@
         .friend-info { flex: 1; margin-left: 12px; }
         .friend-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
         .friend-tag { font-size: 11px; color: var(--text-secondary); }
+        .friend-created { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
         .plus-icon { font-size: 12px; background: var(--plus); border-radius: 50%; padding: 2px 4px; }
         
         .chat-area { display: flex; flex-direction: column; height: 550px; }
@@ -342,7 +338,6 @@
             display: flex; align-items: center; justify-content: space-between;
             padding: 10px; margin: 5px 0; background: var(--bg-primary); border-radius: 12px;
         }
-        .color-preview { width: 30px; height: 30px; border-radius: 50%; margin-left: 10px; }
         
         .hidden { display: none; }
         .error { color: var(--danger); }
@@ -391,6 +386,7 @@
                 <div>
                     <div class="user-name" id="userName" style="color: var(--user-color, inherit);"></div>
                     <div class="user-tag" id="userTag"></div>
+                    <div class="friend-created" id="userCreated"></div>
                 </div>
                 <div id="plusBadge" class="plus-badge hidden">💎</div>
             </div>
@@ -409,7 +405,7 @@
                 <div class="card">
                     <div class="panel-title">🔍 ПОИСК ДРУЗЕЙ</div>
                     <div class="search-area">
-                        <input type="text" id="searchInput" placeholder="Введите начало ника...">
+                        <input type="text" id="searchInput" placeholder="Введите ник или тег...">
                         <button class="btn btn-primary" id="searchBtn">Найти</button>
                     </div>
                     <div id="searchResults" class="search-results-list"></div>
@@ -553,10 +549,10 @@ setTheme(localStorage.getItem('theme') || 'dark');
 document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
 document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
-// SWILTS+ кнопка
+// SWILTS+
 document.getElementById('plusBtn').onclick = () => { window.open('/plus.html', '_blank'); };
+
 document.getElementById('plusSettingsBtn').onclick = async () => {
-    // Проверяем статус подписки
     const res = await fetch('/plus/status');
     const data = await res.json();
     if (!data.hasPlus) {
@@ -570,10 +566,10 @@ document.getElementById('plusSettingsBtn').onclick = async () => {
     modal.innerHTML = `
         <div class="modal-content">
             <h3>💎 Настройки SWILTS+</h3>
-            <label>Цвет ника (RGB/HEX)</label>
+            <label>Цвет ника</label>
             <input type="color" id="plusColor" value="${currentUser.plus_color || '#5865f2'}">
             <div style="display:flex; gap:10px; margin:10px 0;">
-                <div style="flex:1;">Выберите значок:</div>
+                <div style="flex:1;">Значок:</div>
                 <select id="plusBadgeSelect">
                     <option value="👑" ${currentUser.plus_badge === '👑' ? 'selected' : ''}>👑 Корона</option>
                     <option value="💎" ${currentUser.plus_badge === '💎' ? 'selected' : ''}>💎 Бриллиант</option>
@@ -597,14 +593,12 @@ document.getElementById('plusSettingsBtn').onclick = async () => {
         const color = document.getElementById('plusColor').value;
         const badge = document.getElementById('plusBadgeSelect').value;
         
-        // Сохраняем настройки
         await fetch('/plus/update-settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ plus_color: color, plus_badge: badge })
         });
         
-        // Загрузка анимированного аватара
         const avatarFile = document.getElementById('animatedAvatar').files[0];
         if (avatarFile) {
             const fd = new FormData();
@@ -614,7 +608,6 @@ document.getElementById('plusSettingsBtn').onclick = async () => {
             if (!uploadData.success) alert('Ошибка загрузки аватара: ' + (uploadData.error || 'неизвестно'));
         }
         
-        // Загрузка видео-баннера
         const bannerFile = document.getElementById('videoBanner').files[0];
         if (bannerFile) {
             const fd = new FormData();
@@ -734,7 +727,7 @@ function showNotification(sender, message) {
     setTimeout(() => notif.remove(), 3000);
 }
 
-// ПОИСК ПО НАЧАЛУ НИКА
+// ПОИСК ПО НИКУ ИЛИ ТЕГУ
 document.getElementById('searchBtn').onclick = async () => {
     const query = document.getElementById('searchInput').value;
     if (!query) return;
@@ -750,7 +743,7 @@ document.getElementById('searchBtn').onclick = async () => {
         data.users.forEach(user => {
             const div = document.createElement('div');
             div.className = 'search-result-item';
-            div.innerHTML = `<div class="friend-info"><div class="friend-name">${user.username}#${user.tag}</div></div><button class="btn btn-success" style="padding:5px 10px;" onclick="sendFriendRequest(${user.id})">➕ Добавить</button>`;
+            div.innerHTML = `<div class="friend-info"><div class="friend-name">${user.username}#${user.tag}</div><div class="friend-tag">Тег: ${user.tag}</div></div><button class="btn btn-success" style="padding:5px 10px;" onclick="sendFriendRequest(${user.id})">➕ Добавить</button>`;
             container.appendChild(div);
         });
     } else {
@@ -765,8 +758,12 @@ async function sendFriendRequest(userId) {
     }
     const addRes = await fetch('/add-friend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: userId }) });
     const addData = await addRes.json();
-    document.getElementById('searchResults').innerHTML = '<span class="success">✅ ' + addData.message + '</span>';
-    loadRequests();
+    if (addData.success) {
+        document.getElementById('searchResults').innerHTML = '<span class="success">✅ ' + addData.message + '</span>';
+        loadRequests();
+    } else {
+        alert('❌ ' + addData.error);
+    }
 }
 
 // Загрузка данных
@@ -783,7 +780,8 @@ async function loadFriends() {
         div.className = 'friend-item';
         div.onclick = () => { currentChatType = 'private'; currentChatId = f.id; document.getElementById('chatType').value = 'private'; switchChat(); };
         let avatarHtml = (f.avatar && f.avatar !== '') ? `<img src="${f.avatar}">` : f.username[0].toUpperCase();
-        div.innerHTML = `<div class="friend-avatar">${avatarHtml}</div><div class="friend-info"><div class="friend-name">${f.username}${f.plus_badge ? `<span class="plus-icon">${f.plus_badge}</span>` : ''}<div class="friend-tag">#${f.tag}</div></div></div>`;
+        const createdDate = f.created_at ? new Date(f.created_at).toLocaleDateString() : 'неизвестно';
+        div.innerHTML = `<div class="friend-avatar">${avatarHtml}</div><div class="friend-info"><div class="friend-name">${f.username}${f.plus_badge ? `<span class="plus-icon">${f.plus_badge}</span>` : ''}<div class="friend-tag">#${f.tag}</div><div class="friend-created">📅 ${createdDate}</div></div></div>`;
         container.appendChild(div);
         const opt = document.createElement('option'); opt.value = f.id; opt.text = `${f.username}#${f.tag}`;
         select.appendChild(opt);
@@ -1029,15 +1027,17 @@ async function updateProfileDisplay() {
     document.getElementById('userName').innerText = currentUser.username;
     document.getElementById('userTag').innerText = '#' + currentUser.tag;
     document.getElementById('profileName').innerText = currentUser.username + '#' + currentUser.tag;
+    if (currentUser.created_at) {
+        const createdDate = new Date(currentUser.created_at).toLocaleDateString();
+        document.getElementById('userCreated').innerHTML = `📅 ${createdDate}`;
+    }
     
-    // Применяем цвет ника из SWILTS+
     if (currentUser.plus_color) {
         document.documentElement.style.setProperty('--user-color', currentUser.plus_color);
         document.getElementById('userName').style.color = currentUser.plus_color;
         document.getElementById('profileName').style.color = currentUser.plus_color;
     }
     
-    // Показываем бейдж SWILTS+
     if (currentUser.hasPlus) {
         document.getElementById('plusBadge').classList.remove('hidden');
         document.getElementById('profilePlusBadge').classList.remove('hidden');
@@ -1047,25 +1047,28 @@ async function updateProfileDisplay() {
         }
     }
     
-    if (currentUser.avatar && currentUser.avatar !== '') {
-        if (currentUser.hasPlus && currentUser.plus_animated_avatar) {
-            document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.plus_animated_avatar}">`;
-            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.plus_animated_avatar}">`;
-        } else {
-            document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
-            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
-        }
+    if (currentUser.plus_animated_avatar && currentUser.plus_animated_avatar !== '') {
+        document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.plus_animated_avatar}">`;
+        document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.plus_animated_avatar}">`;
+    } else if (currentUser.avatar && currentUser.avatar !== '') {
+        document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
+        document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
     }
-    if (currentUser.banner && currentUser.banner !== '') {
+    
+    if (currentUser.plus_banner_video && currentUser.plus_banner_video !== '') {
+        document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.plus_banner_video})`;
+        document.getElementById('profileBanner').style.backgroundSize = 'cover';
+    } else if (currentUser.banner && currentUser.banner !== '') {
         document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.banner})`;
     }
     if (currentUser.bio) document.getElementById('profileBio').innerText = currentUser.bio;
 }
+
 document.getElementById('editAvatarBtn').onclick = () => {
-    const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+    const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*,image/gif';
     input.onchange = async (e) => {
         const file = e.target.files[0];
-        if (file.size > 2 * 1024 * 1024) { alert('Файл больше 2MB'); return; }
+        if (file.size > 10 * 1024 * 1024) { alert('Файл больше 10MB'); return; }
         const fd = new FormData(); fd.append('avatar', file);
         const res = await fetch('/upload-avatar', { method: 'POST', body: fd });
         const data = await res.json();
@@ -1074,7 +1077,20 @@ document.getElementById('editAvatarBtn').onclick = () => {
     };
     input.click();
 };
-document.getElementById('editBannerBtn').onclick = () => alert('Загрузка баннера будет добавлена позже');
+
+document.getElementById('editBannerBtn').onclick = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*,video/mp4,video/webm';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        const fd = new FormData(); fd.append('banner', file);
+        const res = await fetch('/upload-banner', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) location.reload();
+        else alert('Ошибка загрузки');
+    };
+    input.click();
+};
+
 document.getElementById('changeUsernameBtn').onclick = async () => {
     const newName = prompt('Новый никнейм (3-20 символов):');
     if (!newName) return;
@@ -1083,6 +1099,7 @@ document.getElementById('changeUsernameBtn').onclick = async () => {
     if (data.success) location.reload();
     else alert('❌ ' + data.error);
 };
+
 document.getElementById('editStatusBtn').onclick = async () => {
     const status = prompt('Статус:\n1 - В сети\n2 - Не активен\n3 - Не беспокоить', '1');
     let statusText = 'online';
