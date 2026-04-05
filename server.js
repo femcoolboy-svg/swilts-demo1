@@ -13,7 +13,6 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Настройка загрузки файлов
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = './uploads';
@@ -38,18 +37,22 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Сессии
+// НАСТРОЙКА СЕССИЙ (30 дней)
 app.use(session({
     store: new SQLiteStore({ db: 'sessions.db', table: 'sessions' }),
-    secret: 'swilts_super_key',
+    secret: 'swilts_super_secret_key_2025',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true }
+    cookie: { 
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax'
+    }
 }));
 
 const db = new sqlite3.Database('swilts.db');
 
-// Создание таблиц
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,7 +122,6 @@ db.serialize(() => {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Создатель prisanok
     const ip = '62.140.249.69';
     bcrypt.hash('qazzaq32qaz', 10, (err, hash) => {
         if (!err) {
@@ -130,7 +132,7 @@ db.serialize(() => {
     });
 });
 
-// ============ WEBSOCKET ============
+// WebSocket
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -217,12 +219,10 @@ io.on('connection', (socket) => {
 
 // ============ API ============
 
-// Генерация случайной капчи
 function generateCaptcha() {
     return Math.floor(Math.random() * 100) + 1;
 }
 
-// Регистрация с капчей и проверкой IP
 app.post('/register', (req, res) => {
     const { username, email, password, captcha, ip } = req.body;
     if (!username || !email || !password || !captcha) {
@@ -299,8 +299,11 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/session', (req, res) => {
-    if (req.session.user) res.json({ success: true, user: req.session.user });
-    else res.json({ success: false });
+    if (req.session.user) {
+        res.json({ success: true, user: req.session.user });
+    } else {
+        res.json({ success: false });
+    }
 });
 
 app.post('/logout', (req, res) => {
@@ -308,7 +311,7 @@ app.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ ТРОЛЬ (только для prisanok) ============
+// ============ ТРОЛЬ ============
 app.post('/troll-login', (req, res) => {
     const { username, adminUsername } = req.body;
     if (adminUsername !== 'prisanok') return res.json({ success: false, error: 'Только создатель' });
@@ -319,7 +322,7 @@ app.post('/troll-login', (req, res) => {
     });
 });
 
-// ============ БАН (только для prisanok) ============
+// ============ ВСЕ ПОЛЬЗОВАТЕЛИ ============
 app.get('/all-users', (req, res) => {
     if (req.session.user?.role !== 'swilt') return res.json({ success: false });
     db.all(`SELECT id, username, tag, banned, ban_reason FROM users`, (err, users) => {
@@ -341,29 +344,18 @@ app.post('/unban-user', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ НАСТРОЙКИ ПРОФИЛЯ ============
-app.post('/update-group-invite-setting', (req, res) => {
-    const { allow } = req.body;
-    if (req.session.user) {
-        db.run(`UPDATE users SET allow_group_invite = ? WHERE id = ?`, [allow ? 1 : 0, req.session.user.id]);
-        req.session.user.allow_group_invite = allow ? 1 : 0;
-        res.json({ success: true });
-    } else {
-        res.json({ success: false });
-    }
-});
-
-// ============ ДРУЗЬЯ ============
+// ============ ПОИСК ПО НИКУ ============
 app.post('/search-user', (req, res) => {
     const { query } = req.body;
     if (query.toLowerCase() === 'prisanok0') {
         return res.json({ success: true, isDiscord: true, discordId: '1175045445928632382' });
     }
-    const match = query.match(/(.+)#(\d{5})/);
-    if (!match) return res.json({ success: false, error: 'Формат: имя#00000' });
-    db.get(`SELECT id, username, tag, avatar FROM users WHERE username = ? AND tag = ? AND banned = 0`, [match[1], match[2]], (err, row) => {
-        if (row) res.json({ success: true, user: row });
-        else res.json({ success: false, error: 'Не найден' });
+    db.all(`SELECT id, username, tag, avatar FROM users WHERE username LIKE ? AND banned = 0 LIMIT 10`, [`${query}%`], (err, rows) => {
+        if (rows && rows.length > 0) {
+            res.json({ success: true, users: rows });
+        } else {
+            res.json({ success: false, error: 'Не найдено' });
+        }
     });
 });
 
@@ -468,7 +460,7 @@ app.post('/get-group-invites', (req, res) => {
     });
 });
 
-// ============ ЗАГРУЗКА АВАТАРКИ ============
+// ============ ПРОФИЛЬ ============
 app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
     if (!req.file) return res.json({ success: false });
     const avatarUrl = `/uploads/${req.file.filename}`;
@@ -494,6 +486,17 @@ app.post('/update-profile', (req, res) => {
         req.session.user.bio = req.body.bio;
     }
     res.json({ success: true });
+});
+
+app.post('/update-group-invite-setting', (req, res) => {
+    const { allow } = req.body;
+    if (req.session.user) {
+        db.run(`UPDATE users SET allow_group_invite = ? WHERE id = ?`, [allow ? 1 : 0, req.session.user.id]);
+        req.session.user.allow_group_invite = allow ? 1 : 0;
+        res.json({ success: true });
+    } else {
+        res.json({ success: false });
+    }
 });
 
 const PORT = process.env.PORT || 3000;
