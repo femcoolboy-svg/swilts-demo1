@@ -44,11 +44,9 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes glow { 0% { box-shadow: 0 0 5px var(--accent); } 100% { box-shadow: 0 0 20px var(--accent); } }
         
         .app { display: flex; height: 100vh; width: 100%; }
         
-        /* ЛЕВАЯ ПАНЕЛЬ СЕРВЕРОВ */
         .servers-sidebar {
             width: 72px;
             background: var(--card);
@@ -71,11 +69,10 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .server-icon:hover { border-radius: 16px; transform: scale(1.05); background: var(--accent-hover, #4752c4); }
+        .server-icon:hover { border-radius: 16px; transform: scale(1.05); }
         .server-icon.active { border-radius: 16px; background: var(--gradient); box-shadow: 0 0 0 3px var(--accent); }
         .server-divider { width: 32px; height: 2px; background: var(--border); margin: 4px 0; }
         
-        /* ПАНЕЛЬ ЧАТОВ */
         .chats-sidebar {
             width: 280px;
             background: var(--card);
@@ -114,6 +111,18 @@
             justify-content: center;
             font-size: 10px;
             margin-left: 6px;
+            cursor: help;
+        }
+        .plus-tooltip {
+            position: absolute;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         .search-box { padding: 12px; border-bottom: 1px solid var(--border); }
         .search-box input {
@@ -152,7 +161,6 @@
         .chat-name { font-weight: 500; font-size: 14px; }
         .chat-last-msg { font-size: 11px; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* ЦЕНТРАЛЬНЫЙ ЧАТ */
         .chat-area {
             flex: 1;
             display: flex;
@@ -185,15 +193,47 @@
             gap: 12px;
         }
         .message {
-            max-width: 70%;
-            padding: 10px 16px;
-            border-radius: 20px;
-            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 80%;
             animation: slideIn 0.2s;
         }
-        .message-own { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 4px; }
-        .message-other { align-self: flex-start; background: var(--input); border-bottom-left-radius: 4px; }
-        .message-name { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+        .message-own {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .message-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .message-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .message-bubble {
+            background: var(--input);
+            padding: 10px 16px;
+            border-radius: 20px;
+            max-width: 100%;
+        }
+        .message-own .message-bubble {
+            background: var(--accent);
+            color: white;
+        }
+        .message-name {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
         .message-time { font-size: 10px; margin-top: 4px; opacity: 0.7; }
         .input-area {
             display: flex;
@@ -210,11 +250,8 @@
             border-radius: 10px;
             color: white;
             cursor: pointer;
-            transition: all 0.2s;
         }
-        .input-area button:hover { transform: scale(1.02); filter: brightness(1.05); }
         
-        /* ПРАВАЯ ПАНЕЛЬ */
         .right-panel {
             width: 280px;
             background: var(--card);
@@ -242,14 +279,43 @@
             overflow: hidden;
             cursor: pointer;
         }
-        .profile-name { font-weight: 600; font-size: 16px; }
+        .profile-name { font-weight: 600; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .profile-bio { font-size: 12px; color: var(--text-sec); margin-top: 4px; }
         .section-title {
             font-size: 11px;
             text-transform: uppercase;
             color: var(--text-sec);
             margin: 16px 0 8px 0;
-            letter-spacing: 0.5px;
+        }
+        .add-friend-area {
+            background: var(--input);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        .add-friend-area h4 {
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .add-friend-input {
+            display: flex;
+            gap: 8px;
+        }
+        .add-friend-input input {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+        }
+        .add-friend-input button {
+            background: var(--accent);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
         }
         .friend-item, .request-item, .search-item, .user-item {
             background: var(--input);
@@ -261,7 +327,6 @@
             align-items: center;
             transition: all 0.2s;
         }
-        .friend-item:hover, .request-item:hover { background: var(--hover); transform: translateX(2px); }
         .setting-btn {
             background: var(--input);
             border-radius: 12px;
@@ -276,11 +341,9 @@
         .hidden { display: none; }
         .error { color: var(--danger); }
         .success { color: var(--success); }
-        .text-center { text-align: center; }
         .text-muted { color: var(--text-sec); }
         .mt-2 { margin-top: 8px; }
         
-        /* АВТОРИЗАЦИЯ */
         .auth-container {
             display: flex;
             align-items: center;
@@ -313,11 +376,6 @@
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 16px;
             color: white;
-            font-size: 15px;
-        }
-        .auth-card input:focus {
-            outline: none;
-            border-color: var(--accent);
         }
         .auth-card button {
             width: 100%;
@@ -328,13 +386,8 @@
             color: white;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
         }
-        .auth-card button:hover { transform: scale(1.02); }
-        .auth-card .secondary {
-            background: rgba(255,255,255,0.1);
-            margin-top: 12px;
-        }
+        .auth-card .secondary { background: rgba(255,255,255,0.1); margin-top: 12px; }
         .captcha-block {
             background: rgba(0,0,0,0.3);
             border-radius: 16px;
@@ -342,12 +395,7 @@
             text-align: center;
             margin-bottom: 16px;
         }
-        .captcha-number {
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 4px;
-            margin-bottom: 8px;
-        }
+        .captcha-number { font-size: 28px; font-weight: bold; letter-spacing: 4px; margin-bottom: 8px; }
         
         @media (max-width: 900px) {
             .servers-sidebar { display: none; }
@@ -358,7 +406,7 @@
     </style>
 </head>
 <body class="dark">
-<!-- ЭКРАН АВТОРИЗАЦИИ -->
+<!-- АВТОРИЗАЦИЯ -->
 <div id="authScreen" class="auth-container">
     <div class="auth-card">
         <h1>🔷 SWILTS</h1>
@@ -387,7 +435,6 @@
 <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
 <div id="mainApp" style="display:none;">
     <div class="app">
-        <!-- ЛЕВАЯ ПАНЕЛЬ СЕРВЕРОВ -->
         <div class="servers-sidebar">
             <div class="server-icon active">🏠</div>
             <div class="server-divider"></div>
@@ -395,25 +442,19 @@
             <div class="server-icon">💬</div>
         </div>
         
-        <!-- ПАНЕЛЬ ЧАТОВ -->
         <div class="chats-sidebar">
             <div class="user-header">
                 <div class="user-avatar" id="sideAvatar">👤</div>
                 <div class="user-info">
-                    <h3><span id="sideName"></span><span id="sidePlusBadge" class="plus-badge hidden">💎</span></h3>
+                    <h3><span id="sideName"></span><span id="sidePlusBadge" class="plus-badge hidden" data-tooltip="">💎</span></h3>
                     <p id="sideTag"></p>
                     <p id="sideCreated" style="font-size:10px;"></p>
                 </div>
             </div>
-            <div class="search-box">
-                <input type="text" id="searchChatInput" placeholder="Поиск...">
-            </div>
-            <div class="chats-list" id="chatsList">
-                <div class="text-muted" style="text-align:center; padding:20px;">Загрузка...</div>
-            </div>
+            <div class="search-box"><input type="text" id="searchChatInput" placeholder="Поиск..."></div>
+            <div class="chats-list" id="chatsList"><div class="text-muted" style="text-align:center; padding:20px;">Загрузка...</div></div>
         </div>
         
-        <!-- ЦЕНТРАЛЬНЫЙ ЧАТ -->
         <div class="chat-area">
             <div class="chat-header">
                 <div class="chat-header-avatar" id="chatAvatar">👤</div>
@@ -428,7 +469,6 @@
             </div>
         </div>
         
-        <!-- ПРАВАЯ ПАНЕЛЬ -->
         <div class="right-panel">
             <div class="profile-card">
                 <div class="profile-avatar" id="profAvatar">👤</div>
@@ -439,12 +479,15 @@
             <div class="setting-btn" id="changePassBtn">🔐 Сменить пароль</div>
             <div class="setting-btn" id="plusBtn" style="background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a1a2e;">💎 SWILTS+</div>
             
-            <div class="section-title">➕ Добавить друга</div>
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="searchUserInput" placeholder="Никнейм">
-                <button id="searchUserBtn" style="background:var(--accent); border:none; padding:0 12px; border-radius:10px; color:white; cursor:pointer;">Найти</button>
+            <!-- КРАСИВОЕ ДОБАВЛЕНИЕ В ДРУЗЬЯ -->
+            <div class="add-friend-area">
+                <h4>➕ Добавить друга</h4>
+                <div class="add-friend-input">
+                    <input type="text" id="searchUserInput" placeholder="Никнейм (например prisanok)">
+                    <button id="searchUserBtn">Найти</button>
+                </div>
+                <div id="searchResults" class="mt-2"></div>
             </div>
-            <div id="searchResults" class="mt-2"></div>
             
             <div id="requestsContainer"></div>
             
@@ -469,12 +512,21 @@ let currentUser = null;
 let currentChat = null;
 let socket = null;
 let captchaValue = 0;
-
-// IP для регистрации
 let userIP = '';
 fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>userIP=d.ip);
 
-// ============ КАПЧА ============
+// Тултип для подписки
+function showTooltip(e, text) {
+    let tooltip = document.createElement('div');
+    tooltip.className = 'plus-tooltip';
+    tooltip.innerText = text;
+    tooltip.style.position = 'absolute';
+    tooltip.style.top = (e.pageY - 30) + 'px';
+    tooltip.style.left = (e.pageX + 10) + 'px';
+    document.body.appendChild(tooltip);
+    setTimeout(() => tooltip.remove(), 2000);
+}
+
 async function loadCaptcha() {
     const res = await fetch('/captcha');
     const data = await res.json();
@@ -483,7 +535,6 @@ async function loadCaptcha() {
 }
 loadCaptcha();
 
-// ============ ТЕМА ============
 function setTheme(theme) {
     if (theme === 'light') {
         document.body.classList.remove('dark');
@@ -497,15 +548,12 @@ function setTheme(theme) {
 }
 setTheme(localStorage.getItem('theme') || 'dark');
 
-// ============ WEBSOCKET ============
 function initSocket() {
     socket = io();
-    socket.on('connect', () => {
-        if (currentUser) socket.emit('register', currentUser.id);
-    });
+    socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
     socket.on('private-message', (data) => {
         if (currentChat?.type === 'friend' && currentChat?.id === data.from) {
-            appendMessage(data.msg, false, data.time, data.fromName);
+            appendMessage(data.msg, false, data.time, data.fromName, data.fromAvatar);
         } else {
             showNotification(data.fromName, data.msg);
         }
@@ -513,7 +561,7 @@ function initSocket() {
     });
     socket.on('group-message', (data) => {
         if (currentChat?.type === 'group' && currentChat?.id === data.groupId) {
-            appendMessage(data.msg, false, data.time, data.fromName);
+            appendMessage(data.msg, false, data.time, data.fromName, null);
         } else {
             showNotification(data.groupName, data.msg);
         }
@@ -521,15 +569,19 @@ function initSocket() {
     });
 }
 
-function appendMessage(msg, isOwn, time, username) {
+function appendMessage(msg, isOwn, time, username, avatar) {
     const container = document.getElementById('messages');
     const div = document.createElement('div');
-    div.className = `message ${isOwn ? 'message-own' : 'message-other'}`;
-    if (!isOwn && username) {
-        div.innerHTML = `<div class="message-name">${escapeHtml(username)}</div>${escapeHtml(msg)}<div class="message-time">${new Date(time).toLocaleTimeString()}</div>`;
-    } else {
-        div.innerHTML = `${escapeHtml(msg)}<div class="message-time">${new Date(time).toLocaleTimeString()}</div>`;
+    div.className = `message ${isOwn ? 'message-own' : ''}`;
+    let avatarHtml = '';
+    if (!isOwn) {
+        if (avatar) {
+            avatarHtml = `<div class="message-avatar"><img src="${avatar}"></div>`;
+        } else {
+            avatarHtml = `<div class="message-avatar">${username ? username[0] : '?'}</div>`;
+        }
     }
+    div.innerHTML = avatarHtml + `<div class="message-bubble"><div class="message-name">${!isOwn ? (username || '') : ''}</div>${escapeHtml(msg)}<div class="message-time">${new Date(time).toLocaleTimeString()}</div></div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
@@ -549,7 +601,6 @@ function showNotification(sender, msg) {
     setTimeout(() => notif.remove(), 3000);
 }
 
-// ============ ЧАТЫ ============
 async function loadChats() {
     const friendsRes = await fetch('/friends', {
         method: 'POST',
@@ -563,7 +614,6 @@ async function loadChats() {
         body: JSON.stringify({ userId: currentUser.id })
     });
     const groupsData = await groupsRes.json();
-    
     const container = document.getElementById('chatsList');
     container.innerHTML = '';
     if (friendsData.friends) {
@@ -616,12 +666,14 @@ async function loadMessages() {
         data.messages.forEach(m => {
             const isOwn = m.from_user_id === currentUser.id;
             const div = document.createElement('div');
-            div.className = `message ${isOwn ? 'message-own' : 'message-other'}`;
-            if (!isOwn && m.fromName) {
-                div.innerHTML = `<div class="message-name">${escapeHtml(m.fromName)}</div>${escapeHtml(m.message)}<div class="message-time">${new Date(m.timestamp).toLocaleTimeString()}</div>`;
-            } else {
-                div.innerHTML = `${escapeHtml(m.message)}<div class="message-time">${new Date(m.timestamp).toLocaleTimeString()}</div>`;
+            div.className = `message ${isOwn ? 'message-own' : ''}`;
+            let avatarHtml = '';
+            if (!isOwn && m.fromAvatar) {
+                avatarHtml = `<div class="message-avatar"><img src="${m.fromAvatar}"></div>`;
+            } else if (!isOwn && m.fromName) {
+                avatarHtml = `<div class="message-avatar">${m.fromName[0]}</div>`;
             }
+            div.innerHTML = avatarHtml + `<div class="message-bubble"><div class="message-name">${!isOwn ? (m.fromName || '') : ''}</div>${escapeHtml(m.message)}<div class="message-time">${new Date(m.timestamp).toLocaleTimeString()}</div></div>`;
             container.appendChild(div);
         });
     }
@@ -632,12 +684,13 @@ async function sendMessage() {
     const msg = document.getElementById('messageInput').value;
     if (!msg || !currentChat) return;
     if (currentChat.type === 'friend') {
-        appendMessage(msg, true, new Date());
+        appendMessage(msg, true, new Date(), null, null);
         socket.emit('private-message', {
             from: currentUser.id,
             to: currentChat.id,
             msg: msg,
-            fromName: currentUser.username
+            fromName: currentUser.username,
+            fromAvatar: currentUser.avatar
         });
         await fetch('/send-message', {
             method: 'POST',
@@ -645,7 +698,7 @@ async function sendMessage() {
             body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: currentChat.id, message: msg })
         });
     } else {
-        appendMessage(msg, true, new Date());
+        appendMessage(msg, true, new Date(), null, null);
         socket.emit('group-message', {
             groupId: currentChat.id,
             from: currentUser.id,
@@ -665,7 +718,6 @@ async function sendMessage() {
 document.getElementById('sendBtn')?.addEventListener('click', sendMessage);
 document.getElementById('messageInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-// ============ ДРУЗЬЯ ============
 async function loadRequests() {
     const res = await fetch('/requests', {
         method: 'POST',
@@ -707,7 +759,6 @@ window.declineRequest = async (reqId) => {
     loadRequests();
 };
 
-// ============ ПОИСК ============
 document.getElementById('searchUserBtn')?.addEventListener('click', async () => {
     const query = document.getElementById('searchUserInput').value;
     if (!query) return;
@@ -752,7 +803,6 @@ window.addFriend = async (userId) => {
     }
 };
 
-// ============ ГРУППЫ ============
 document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
     const name = prompt('Название группы:');
     if (!name) return;
@@ -764,7 +814,6 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     const friendsData = await friendsRes.json();
     const friends = friendsData.friends || [];
     if (friends.length === 0) { alert('Нужны друзья для создания группы'); return; }
-    
     const modal = document.createElement('div');
     modal.style.position = 'fixed';
     modal.style.top = '0';
@@ -783,7 +832,6 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
                         <button id="closeGroupModal" style="background:var(--hover); border:none; padding:12px; border-radius:12px; margin-top:8px; width:100%; cursor:pointer;">Отмена</button>
                        </div>`;
     document.body.appendChild(modal);
-    
     const container = document.getElementById('groupMembersSelect');
     const selected = [];
     friends.forEach(f => {
@@ -804,7 +852,6 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
         };
         container.appendChild(div);
     });
-    
     document.getElementById('confirmGroupBtn').onclick = async () => {
         const res = await fetch('/group/create', {
             method: 'POST',
@@ -859,7 +906,6 @@ window.declineGroupInvite = async (invId) => {
     loadGroupInvites();
 };
 
-// ============ ПРОФИЛЬ ============
 function updateProfileDisplay() {
     document.getElementById('sideName').innerText = currentUser.username;
     document.getElementById('sideTag').innerText = '#' + currentUser.tag;
@@ -869,7 +915,11 @@ function updateProfileDisplay() {
         document.getElementById('sideCreated').innerHTML = `📅 ${new Date(currentUser.created_at).toLocaleDateString()}`;
     }
     if (currentUser.hasPlus) {
-        document.getElementById('sidePlusBadge').classList.remove('hidden');
+        const badge = document.getElementById('sidePlusBadge');
+        badge.classList.remove('hidden');
+        const expires = currentUser.plus_expires_at ? new Date(currentUser.plus_expires_at).toLocaleDateString() : 'навсегда';
+        badge.setAttribute('data-tooltip', `💎 SWILTS+ активна до ${expires}`);
+        badge.onmouseenter = (e) => showTooltip(e, `💎 SWILTS+ активна до ${expires}`);
     }
     if (currentUser.avatar) {
         document.getElementById('sideAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
@@ -965,7 +1015,6 @@ document.getElementById('editProfileBtn')?.addEventListener('click', openEditPro
 document.getElementById('changePassBtn')?.addEventListener('click', openChangePassword);
 document.getElementById('plusBtn')?.addEventListener('click', () => window.open('/plus.html', '_blank'));
 
-// ============ АДМИН ============
 async function loadAdmin() {
     if (currentUser.username === 'prisanok') {
         document.getElementById('adminPanel').classList.remove('hidden');
@@ -1032,7 +1081,6 @@ document.getElementById('trollBtn')?.addEventListener('click', async () => {
     }
 });
 
-// ============ АВТОРИЗАЦИЯ ============
 async function checkSession() {
     const res = await fetch('/session');
     const data = await res.json();
@@ -1078,13 +1126,11 @@ async function register() {
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
     const captcha = document.getElementById('regCaptcha').value;
-    
     if (parseInt(captcha) !== captchaValue) {
         document.getElementById('regMsg').innerHTML = '<span class="error">❌ Неверная капча</span>';
         loadCaptcha();
         return;
     }
-    
     const res = await fetch('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
