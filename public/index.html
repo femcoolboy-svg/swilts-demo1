@@ -1487,7 +1487,7 @@
         document.getElementById('closePlus').onclick = () => modal.remove();
     };
 
-    // ============ АВТОРИЗАЦИЯ (ГЛАВНОЕ - КНОПКИ РАБОТАЮТ) ============
+    // ============ АВТОРИЗАЦИЯ (КНОПКИ РАБОТАЮТ) ============
     async function checkSession() {
         const res = await fetch('/session');
         const data = await res.json();
