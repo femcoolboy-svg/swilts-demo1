@@ -1,309 +1,913 @@
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
-const path = require('path');
-const session = require('express-session');
-const SQLiteStore = require('connect-sqlite3')(session);
-const multer = require('multer');
-const http = require('http');
-const { Server } = require('socket.io');
-const fs = require('fs');
-
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
-
-// ЗАГРУЗКА ФАЙЛОВ
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dir = './uploads';
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + Math.random().toString(36).substr(2) + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } });
-
-app.use(express.json());
-app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
-
-app.use(session({
-    store: new SQLiteStore({ db: 'sessions.db' }),
-    secret: 'swilts_secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
-}));
-
-const db = new sqlite3.Database('swilts.db');
-
-// ТАБЛИЦЫ
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password_hash TEXT,
-        tag TEXT UNIQUE,
-        avatar TEXT DEFAULT '',
-        banned INTEGER DEFAULT 0,
-        online INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-    
-    db.run(`CREATE TABLE IF NOT EXISTS friends (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        friend_id INTEGER
-    )`);
-    
-    db.run(`CREATE TABLE IF NOT EXISTS friend_requests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        from_id INTEGER,
-        to_id INTEGER
-    )`);
-    
-    db.run(`CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        from_id INTEGER,
-        to_id INTEGER,
-        text TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-    
-    // СОЗДАТЕЛЬ
-    bcrypt.hash('qazzaq32qaz', 10, (err, hash) => {
-        if (!err) {
-            db.run(`INSERT OR IGNORE INTO users (username, password_hash, tag) VALUES (?, ?, ?)`, 
-                ['prisanok', hash, '00001']);
-        }
-    });
-});
-
-// ============ ОНЛАЙН ПОЛЬЗОВАТЕЛИ ============
-const onlineUsers = new Map();
-
-io.on('connection', (socket) => {
-    socket.on('user_online', (userId) => {
-        onlineUsers.set(userId, socket.id);
-        db.run(`UPDATE users SET online = 1 WHERE id = ?`, [userId]);
-        io.emit('user_status', { userId, online: true });
-    });
-    
-    socket.on('send_message', (data) => {
-        const messageId = Date.now() + '-' + Math.random();
-        db.run(`INSERT INTO messages (id, from_id, to_id, text, timestamp) VALUES (?, ?, ?, ?, ?)`,
-            [messageId, data.from, data.to, data.text, new Date().toISOString()]);
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWILTS — Мессенджер</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        const targetSocket = onlineUsers.get(data.to);
-        if (targetSocket) {
-            io.to(targetSocket).emit('new_message', {
-                id: messageId,
-                from: data.from,
-                fromName: data.fromName,
-                text: data.text,
-                time: new Date()
-            });
+        :root {
+            --bg: #0D1117;
+            --card: #161B22;
+            --hover: #21262D;
+            --input: #0D1117;
+            --text: #E6EDF3;
+            --text-sec: #8B949E;
+            --border: #30363D;
+            --accent: #6C63FF;
+            --danger: #F85149;
+            --success: #3FB950;
+            --shadow: 0 8px 24px rgba(0,0,0,0.4);
         }
-        io.to(socket.id).emit('message_sent', { id: messageId });
-    });
-    
-    socket.on('typing', (data) => {
-        const target = onlineUsers.get(data.to);
-        if (target) {
-            io.to(target).emit('user_typing', { from: data.from, name: data.name });
-        }
-    });
-    
-    socket.on('typing_stop', (data) => {
-        const target = onlineUsers.get(data.to);
-        if (target) {
-            io.to(target).emit('user_typing_stop', { from: data.from });
-        }
-    });
-    
-    socket.on('disconnect', () => {
-        let disconnectedUserId = null;
-        for (let [id, sid] of onlineUsers.entries()) {
-            if (sid === socket.id) {
-                disconnectedUserId = id;
-                onlineUsers.delete(id);
-                break;
-            }
-        }
-        if (disconnectedUserId) {
-            db.run(`UPDATE users SET online = 0 WHERE id = ?`, [disconnectedUserId]);
-            io.emit('user_status', { userId: disconnectedUserId, online: false });
-        }
-    });
-});
-
-// ============ АВТОРИЗАЦИЯ ============
-app.post('/register', (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) return res.json({ error: 'Заполните поля' });
-    if (password.length < 6) return res.json({ error: 'Пароль минимум 6 символов' });
-    
-    db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, row) => {
-        if (row) return res.json({ error: 'Ник занят' });
         
-        db.get(`SELECT tag FROM users ORDER BY CAST(tag AS INTEGER) DESC LIMIT 1`, (err, row) => {
-            const nextTag = String((row ? parseInt(row.tag) + 1 : 1)).padStart(5, '0');
-            bcrypt.hash(password, 10, (err, hash) => {
-                db.run(`INSERT INTO users (username, password_hash, tag) VALUES (?, ?, ?)`,
-                    [username, hash, nextTag], function(err) {
-                        if (err) return res.json({ error: 'Ошибка' });
-                        req.session.userId = this.lastID;
-                        req.session.username = username;
-                        res.json({ success: true, userId: this.lastID, username, tag: nextTag });
-                    });
-            });
-        });
-    });
-});
-
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, user) => {
-        if (!user) return res.json({ error: 'Неверный логин или пароль' });
-        if (user.banned) return res.json({ error: `Аккаунт забанен` });
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui;
+            height: 100vh;
+            overflow: hidden;
+        }
         
-        bcrypt.compare(password, user.password_hash, (err, result) => {
-            if (!result) return res.json({ error: 'Неверный логин или пароль' });
-            req.session.userId = user.id;
-            req.session.username = user.username;
-            res.json({ success: true, userId: user.id, username: user.username, tag: user.tag, avatar: user.avatar });
-        });
-    });
-});
-
-app.get('/me', (req, res) => {
-    if (!req.session.userId) return res.json({ error: 'Не авторизован' });
-    db.get(`SELECT id, username, tag, avatar FROM users WHERE id = ?`, [req.session.userId], (err, user) => {
-        res.json(user);
-    });
-});
-
-app.post('/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ success: true });
-});
-
-// ============ АВАТАР ============
-app.post('/avatar', upload.single('avatar'), (req, res) => {
-    if (!req.file) return res.json({ error: 'Нет файла' });
-    const url = `/uploads/${req.file.filename}`;
-    db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [url, req.session.userId]);
-    res.json({ success: true, url });
-});
-
-// ============ ДРУЗЬЯ ============
-app.get('/friends', (req, res) => {
-    if (!req.session.userId) return res.json([]);
-    db.all(`SELECT u.id, u.username, u.tag, u.avatar, u.online FROM friends f 
-            JOIN users u ON f.friend_id = u.id 
-            WHERE f.user_id = ?`, [req.session.userId], (err, rows) => {
-        res.json(rows || []);
-    });
-});
-
-app.get('/requests', (req, res) => {
-    if (!req.session.userId) return res.json([]);
-    db.all(`SELECT fr.id, u.id as user_id, u.username, u.tag FROM friend_requests fr 
-            JOIN users u ON fr.from_id = u.id 
-            WHERE fr.to_id = ?`, [req.session.userId], (err, rows) => {
-        res.json(rows || []);
-    });
-});
-
-app.post('/friend/add', (req, res) => {
-    const { toId } = req.body;
-    if (req.session.userId === toId) return res.json({ error: 'Нельзя добавить себя' });
+        /* АВТОРИЗАЦИЯ */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, #0a0e1a, #0f1729);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .auth-card {
+            background: var(--card);
+            border-radius: 32px;
+            padding: 40px;
+            width: 400px;
+            box-shadow: var(--shadow);
+        }
+        .auth-card h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #6C63FF, #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            background: var(--input);
+            padding: 4px;
+            border-radius: 60px;
+        }
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 60px;
+            cursor: pointer;
+            color: var(--text-sec);
+        }
+        .auth-tab.active {
+            background: var(--accent);
+            color: white;
+        }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .auth-form input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 16px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text);
+        }
+        .auth-form button {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .error-msg {
+            color: var(--danger);
+            text-align: center;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+        
+        /* ОСНОВНОЙ ИНТЕРФЕЙС */
+        .main-screen {
+            display: none;
+            height: 100vh;
+        }
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* САЙДБАР */
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            overflow: hidden;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .search-box {
+            display: flex;
+            gap: 8px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 10px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            color: var(--text);
+        }
+        .search-box button {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--hover);
+            border: none;
+            cursor: pointer;
+        }
+        .friends-list, .requests-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        .friend-item, .request-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .friend-item:hover, .request-item:hover {
+            background: var(--hover);
+        }
+        .friend-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .friend-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+            margin-left: 6px;
+        }
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-sec);
+            margin-bottom: 12px;
+        }
+        
+        /* ЧАТ */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            max-width: 60%;
+            padding: 10px 16px;
+            border-radius: 20px;
+        }
+        .message-own {
+            align-self: flex-end;
+            background: var(--accent);
+            color: white;
+        }
+        .message-other {
+            align-self: flex-start;
+            background: var(--card);
+        }
+        .message-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        .typing-indicator {
+            padding: 8px 20px;
+            color: var(--text-sec);
+            font-size: 12px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-sec);
+            animation: typing 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        .input-area {
+            padding: 16px 20px;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            color: var(--text);
+        }
+        .input-area button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+        }
+        
+        /* ПРОФИЛЬ */
+        .profile-panel {
+            width: 280px;
+            background: var(--card);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            overflow: hidden;
+        }
+        .profile-name {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px;
+            background: var(--hover);
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        .menu-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--hover);
+            border: none;
+            border-radius: 16px;
+            color: var(--text);
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .menu-btn:hover {
+            background: var(--accent);
+        }
+        
+        .hidden { display: none; }
+        .flex { display: flex; align-items: center; gap: 12px; }
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 8px; }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card);
+            border-left: 4px solid var(--success);
+            padding: 12px 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- АВТОРИЗАЦИЯ -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-card">
+            <h1>🔷 SWILTS</h1>
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">🔑 Вход</div>
+                <div class="auth-tab" data-tab="register">📝 Регистрация</div>
+            </div>
+            <div id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" placeholder="Никнейм">
+                <input type="password" id="loginPassword" placeholder="Пароль">
+                <button id="loginBtn">Войти</button>
+                <div id="loginError" class="error-msg"></div>
+            </div>
+            <div id="registerForm" class="auth-form">
+                <input type="text" id="regUsername" placeholder="Никнейм (3-20)">
+                <input type="password" id="regPassword" placeholder="Пароль (мин. 6)">
+                <button id="registerBtn">Зарегистрироваться</button>
+                <div id="regError" class="error-msg"></div>
+            </div>
+        </div>
+    </div>
     
-    db.get(`SELECT id FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`,
-        [req.session.userId, toId, toId, req.session.userId], (err, row) => {
-        if (row) return res.json({ error: 'Уже друзья' });
-        
-        db.get(`SELECT id FROM friend_requests WHERE from_id = ? AND to_id = ?`, [req.session.userId, toId], (err, row) => {
-            if (row) return res.json({ error: 'Запрос уже отправлен' });
+    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
+    <div id="mainScreen" class="main-screen">
+        <div class="app">
+            <!-- ЛЕВАЯ ПАНЕЛЬ -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-info">
+                        <div class="avatar" id="myAvatar">👤</div>
+                        <div>
+                            <strong id="myName"></strong>
+                            <div class="text-sec" id="myTag"></div>
+                        </div>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Поиск...">
+                        <button id="searchBtn">🔍</button>
+                    </div>
+                    <div id="searchResults" class="friends-list hidden"></div>
+                </div>
+                
+                <div class="section-title" style="padding: 0 16px;">📨 ЗАПРОСЫ</div>
+                <div id="requestsList" class="friends-list"></div>
+                
+                <div class="section-title" style="padding: 0 16px;">👥 ДРУЗЬЯ</div>
+                <div id="friendsList" class="friends-list"></div>
+                
+                <!-- АДМИН ПАНЕЛЬ -->
+                <div id="adminPanel" class="hidden" style="padding: 16px; border-top: 1px solid var(--border);">
+                    <div class="section-title">👑 АДМИН</div>
+                    <input type="text" id="adminTrollName" placeholder="Никнейм для входа" class="menu-btn" style="margin-bottom: 8px;">
+                    <button id="adminTrollBtn" class="menu-btn">🎭 ТРОЛЛЬ</button>
+                    <input type="text" id="adminBanName" placeholder="Никнейм для бана" class="menu-btn" style="margin-bottom: 8px;">
+                    <button id="adminBanBtn" class="menu-btn">🔨 БАН</button>
+                    <input type="text" id="adminUnbanName" placeholder="Никнейм для разбана" class="menu-btn" style="margin-bottom: 8px;">
+                    <button id="adminUnbanBtn" class="menu-btn">🔓 РАЗБАН</button>
+                    <button id="adminUsersBtn" class="menu-btn">👥 ВСЕ ПОЛЬЗОВАТЕЛИ</button>
+                    <div id="adminUsersList" class="hidden mt-2"></div>
+                </div>
+            </div>
             
-            db.run(`INSERT INTO friend_requests (from_id, to_id) VALUES (?, ?)`, [req.session.userId, toId]);
-            res.json({ success: true });
+            <!-- ЦЕНТР - ЧАТ -->
+            <div class="chat-area">
+                <div class="chat-header" id="chatHeader">
+                    <div class="avatar" id="chatAvatar" style="width:40px;height:40px;">👤</div>
+                    <div>
+                        <strong id="chatName">Выберите чат</strong>
+                        <div class="text-sec" id="chatStatus"></div>
+                    </div>
+                </div>
+                <div id="messages" class="messages">
+                    <div class="text-center text-sec" style="margin-top: 40px;">👈 Выберите чат</div>
+                </div>
+                <div id="typingIndicator" class="typing-indicator hidden">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <span>печатает...</span>
+                </div>
+                <div class="input-area" id="inputArea" style="display: none;">
+                    <input type="text" id="messageInput" placeholder="Сообщение...">
+                    <button id="sendBtn">📤</button>
+                </div>
+            </div>
+            
+            <!-- ПРАВАЯ ПАНЕЛЬ -->
+            <div class="profile-panel">
+                <div class="profile-avatar" id="profileAvatar">👤</div>
+                <div class="profile-name">
+                    <strong id="profileName"></strong>
+                    <div class="text-sec" id="profileTag"></div>
+                </div>
+                <div class="profile-stats">
+                    <div><div id="friendsCount">0</div><small>друзей</small></div>
+                    <div><div id="requestsCount">0</div><small>запросов</small></div>
+                </div>
+                <button id="editAvatarBtn" class="menu-btn">📷 Сменить аватар</button>
+                <button id="logoutBtn" class="menu-btn">🚪 Выйти</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    let currentUser = null;
+    let currentChat = null;
+    let socket = null;
+    let typingTimeout = null;
+    let lastTypingTime = 0;
+    let isSending = false;
+    let receivedMessages = new Set();
+    
+    // ============ ТОСТ ============
+    function showToast(msg, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.borderLeftColor = type === 'error' ? 'var(--danger)' : 'var(--success)';
+        toast.innerHTML = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // ============ АВТОРИЗАЦИЯ ============
+    async function login() {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        
+        if (!username || !password) {
+            errorDiv.innerText = '❌ Заполните поля';
+            return;
+        }
+        
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            currentUser = { id: data.userId, username: data.username, tag: data.tag, avatar: data.avatar };
+            showMain();
+        } else {
+            errorDiv.innerText = '❌ ' + data.error;
+        }
+    }
+    
+    async function register() {
+        const username = document.getElementById('regUsername').value;
+        const password = document.getElementById('regPassword').value;
+        const errorDiv = document.getElementById('regError');
+        
+        if (!username || !password) {
+            errorDiv.innerText = '❌ Заполните поля';
+            return;
+        }
+        if (password.length < 6) {
+            errorDiv.innerText = '❌ Пароль минимум 6 символов';
+            return;
+        }
+        
+        const res = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            currentUser = { id: data.userId, username: data.username, tag: data.tag };
+            showMain();
+        } else {
+            errorDiv.innerText = '❌ ' + data.error;
+        }
+    }
+    
+    async function checkSession() {
+        const res = await fetch('/me');
+        const data = await res.json();
+        if (data && !data.error) {
+            currentUser = data;
+            showMain();
+        }
+    }
+    
+    // ============ ОСНОВНОЙ ИНТЕРФЕЙС ============
+    function showMain() {
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('mainScreen').style.display = 'block';
+        
+        document.getElementById('myName').innerText = currentUser.username;
+        document.getElementById('myTag').innerText = '#' + currentUser.tag;
+        document.getElementById('profileName').innerHTML = currentUser.username;
+        document.getElementById('profileTag').innerHTML = '#' + currentUser.tag;
+        
+        if (currentUser.avatar) {
+            document.getElementById('myAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
+            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
+        }
+        
+        if (currentUser.username === 'prisanok') {
+            document.getElementById('adminPanel').classList.remove('hidden');
+        }
+        
+        initSocket();
+        loadFriends();
+        loadRequests();
+    }
+    
+    // ============ WEBSOCKET ============
+    function initSocket() {
+        if (socket) return;
+        socket = io();
+        
+        socket.emit('user_online', currentUser.id);
+        
+        socket.on('new_message', (data) => {
+            const msgKey = `${data.id}`;
+            if (receivedMessages.has(msgKey)) return;
+            receivedMessages.add(msgKey);
+            setTimeout(() => receivedMessages.delete(msgKey), 2000);
+            
+            if (currentChat && currentChat.id === data.from) {
+                addMessageToChat(data.text, false, data.time);
+            }
+            loadFriends();
+        });
+        
+        socket.on('user_typing', (data) => {
+            if (currentChat && currentChat.id === data.from) {
+                const typingDiv = document.getElementById('typingIndicator');
+                typingDiv.classList.remove('hidden');
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    typingDiv.classList.add('hidden');
+                }, 2000);
+            }
+        });
+        
+        socket.on('user_typing_stop', () => {
+            document.getElementById('typingIndicator').classList.add('hidden');
+        });
+        
+        socket.on('user_status', (data) => {
+            loadFriends();
+        });
+    }
+    
+    function sendTyping() {
+        if (!currentChat || !socket) return;
+        const now = Date.now();
+        if (now - lastTypingTime > 1500) {
+            lastTypingTime = now;
+            socket.emit('typing', { to: currentChat.id, name: currentUser.username });
+            setTimeout(() => {
+                socket.emit('typing_stop', { to: currentChat.id });
+            }, 2000);
+        }
+    }
+    
+    // ============ ДРУЗЬЯ ============
+    async function loadFriends() {
+        const res = await fetch('/friends');
+        const friends = await res.json();
+        document.getElementById('friendsCount').innerText = friends.length;
+        
+        const container = document.getElementById('friendsList');
+        container.innerHTML = '';
+        friends.forEach(friend => {
+            const div = document.createElement('div');
+            div.className = 'friend-item';
+            div.onclick = () => selectChat(friend.id, friend.username, friend.avatar);
+            div.innerHTML = `
+                <div class="friend-info">
+                    <div class="friend-avatar">${friend.avatar ? `<img src="${friend.avatar}">` : friend.username[0]}</div>
+                    <div>
+                        <strong>${escapeHtml(friend.username)}</strong>
+                        ${friend.online ? '<span class="online-dot"></span>' : ''}
+                        <div class="text-sec">#${friend.tag}</div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+    
+    async function loadRequests() {
+        const res = await fetch('/requests');
+        const requests = await res.json();
+        document.getElementById('requestsCount').innerText = requests.length;
+        
+        const container = document.getElementById('requestsList');
+        container.innerHTML = '';
+        requests.forEach(req => {
+            const div = document.createElement('div');
+            div.className = 'request-item';
+            div.innerHTML = `
+                <div class="friend-info">
+                    <div class="friend-avatar">${req.username[0]}</div>
+                    <div>
+                        <strong>${escapeHtml(req.username)}</strong>
+                        <div class="text-sec">#${req.tag}</div>
+                    </div>
+                </div>
+                <div class="flex">
+                    <button onclick="acceptRequest(${req.id}, ${req.user_id})" style="background:var(--success); border:none; border-radius:50%; width:32px; height:32px; cursor:pointer;">✅</button>
+                    <button onclick="declineRequest(${req.id})" style="background:var(--danger); border:none; border-radius:50%; width:32px; height:32px; cursor:pointer;">❌</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+    
+    window.acceptRequest = async (requestId, fromId) => {
+        await fetch('/friend/accept', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId, fromId })
+        });
+        loadFriends();
+        loadRequests();
+        showToast('✅ Друг добавлен');
+    };
+    
+    window.declineRequest = async (requestId) => {
+        await fetch('/friend/decline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId })
+        });
+        loadRequests();
+    };
+    
+    // ============ ЧАТ ============
+    async function selectChat(id, name, avatar) {
+        currentChat = { id, name, avatar };
+        document.getElementById('chatName').innerHTML = escapeHtml(name);
+        document.getElementById('chatAvatar').innerHTML = avatar ? `<img src="${avatar}">` : '👤';
+        document.getElementById('chatStatus').innerHTML = 'В сети';
+        document.getElementById('inputArea').style.display = 'flex';
+        
+        const res = await fetch(`/messages/${id}`);
+        const messages = await res.json();
+        const container = document.getElementById('messages');
+        container.innerHTML = '';
+        messages.forEach(msg => {
+            const isOwn = msg.from_id === currentUser.id;
+            addMessageToDOM(msg.text, isOwn, msg.timestamp);
+        });
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    function addMessageToChat(text, isOwn, time) {
+        addMessageToDOM(text, isOwn, time);
+        const container = document.getElementById('messages');
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    function addMessageToDOM(text, isOwn, time) {
+        const container = document.getElementById('messages');
+        const div = document.createElement('div');
+        div.className = `message ${isOwn ? 'message-own' : 'message-other'}`;
+        div.innerHTML = `${escapeHtml(text)}<div class="message-time">${new Date(time).toLocaleTimeString()}</div>`;
+        container.appendChild(div);
+    }
+    
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        if (!text || !currentChat || isSending) return;
+        
+        isSending = true;
+        addMessageToChat(text, true, new Date());
+        input.value = '';
+        
+        socket.emit('send_message', {
+            from: currentUser.id,
+            to: currentChat.id,
+            text: text,
+            fromName: currentUser.username
+        });
+        
+        setTimeout(() => { isSending = false; }, 500);
+    }
+    
+    // ============ ПОИСК ============
+    document.getElementById('searchBtn').onclick = async () => {
+        const query = document.getElementById('searchInput').value;
+        if (!query) return;
+        
+        const res = await fetch('/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+        });
+        const users = await res.json();
+        
+        const container = document.getElementById('searchResults');
+        container.innerHTML = '';
+        users.forEach(user => {
+            const div = document.createElement('div');
+            div.className = 'friend-item';
+            div.innerHTML = `
+                <div class="friend-info">
+                    <div class="friend-avatar">${user.username[0]}</div>
+                    <div>
+                        <strong>${escapeHtml(user.username)}</strong>
+                        <div class="text-sec">#${user.tag}</div>
+                    </div>
+                </div>
+                <button onclick="addFriend(${user.id})" style="background:var(--success); border:none; border-radius:30px; padding:6px 12px; cursor:pointer;">➕</button>
+            `;
+            container.appendChild(div);
+        });
+        container.classList.remove('hidden');
+    };
+    
+    window.addFriend = async (toId) => {
+        const res = await fetch('/friend/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ toId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Запрос отправлен');
+            document.getElementById('searchResults').classList.add('hidden');
+        } else {
+            showToast('❌ ' + data.error, 'error');
+        }
+    };
+    
+    // ============ АВАТАР ============
+    document.getElementById('editAvatarBtn').onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            const fd = new FormData();
+            fd.append('avatar', file);
+            const res = await fetch('/avatar', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                showToast('❌ Ошибка загрузки', 'error');
+            }
+        };
+        input.click();
+    };
+    
+    // ============ АДМИН ============
+    document.getElementById('adminTrollBtn').onclick = async () => {
+        const username = document.getElementById('adminTrollName').value;
+        if (!username) return;
+        const res = await fetch('/admin/troll', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        if (data.success) {
+            location.reload();
+        } else {
+            showToast('❌ ' + data.error, 'error');
+        }
+    };
+    
+    document.getElementById('adminBanBtn').onclick = async () => {
+        const username = document.getElementById('adminBanName').value;
+        if (!username) return;
+        if (!confirm(`Забанить ${username}?`)) return;
+        await fetch('/admin/ban', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        showToast(`✅ ${username} забанен`);
+        document.getElementById('adminBanName').value = '';
+    };
+    
+    document.getElementById('adminUnbanBtn').onclick = async () => {
+        const username = document.getElementById('adminUnbanName').value;
+        if (!username) return;
+        if (!confirm(`Разбанить ${username}?`)) return;
+        await fetch('/admin/unban', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        showToast(`✅ ${username} разбанен`);
+        document.getElementById('adminUnbanName').value = '';
+    };
+    
+    document.getElementById('adminUsersBtn').onclick = async () => {
+        const res = await fetch('/admin/users');
+        const users = await res.json();
+        const container = document.getElementById('adminUsersList');
+        container.innerHTML = '';
+        users.forEach(u => {
+            const div = document.createElement('div');
+            div.className = 'friend-item';
+            div.innerHTML = `${escapeHtml(u.username)}#${u.tag} ${u.banned ? '🔴 ЗАБАНЕН' : '🟢 АКТИВЕН'}`;
+            container.appendChild(div);
+        });
+        container.classList.toggle('hidden');
+    };
+    
+    // ============ ОБРАБОТЧИКИ ============
+    document.getElementById('loginBtn').onclick = login;
+    document.getElementById('registerBtn').onclick = register;
+    document.getElementById('logoutBtn').onclick = async () => {
+        await fetch('/logout', { method: 'POST' });
+        location.reload();
+    };
+    document.getElementById('sendBtn').onclick = sendMessage;
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+    document.getElementById('messageInput').addEventListener('input', sendTyping);
+    
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            document.getElementById(tab.dataset.tab + 'Form').classList.add('active');
         });
     });
-});
-
-app.post('/friend/accept', (req, res) => {
-    const { requestId, fromId } = req.body;
-    db.run(`DELETE FROM friend_requests WHERE id = ?`, [requestId]);
-    db.run(`INSERT INTO friends (user_id, friend_id) VALUES (?, ?)`, [req.session.userId, fromId]);
-    db.run(`INSERT INTO friends (user_id, friend_id) VALUES (?, ?)`, [fromId, req.session.userId]);
-    res.json({ success: true });
-});
-
-app.post('/friend/decline', (req, res) => {
-    const { requestId } = req.body;
-    db.run(`DELETE FROM friend_requests WHERE id = ?`, [requestId]);
-    res.json({ success: true });
-});
-
-// ============ СООБЩЕНИЯ ============
-app.get('/messages/:friendId', (req, res) => {
-    if (!req.session.userId) return res.json([]);
-    const friendId = req.params.friendId;
-    db.all(`SELECT m.*, u.username as fromName FROM messages m 
-            JOIN users u ON m.from_id = u.id 
-            WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) 
-            ORDER BY timestamp ASC`,
-        [req.session.userId, friendId, friendId, req.session.userId], (err, rows) => {
-        res.json(rows || []);
-    });
-});
-
-// ============ ПОИСК ============
-app.post('/search', (req, res) => {
-    const { query } = req.body;
-    if (!query) return res.json([]);
-    db.all(`SELECT id, username, tag, avatar FROM users WHERE username LIKE ? AND id != ? LIMIT 10`,
-        [`${query}%`, req.session.userId], (err, rows) => {
-        res.json(rows || []);
-    });
-});
-
-// ============ АДМИН ============
-app.get('/admin/users', (req, res) => {
-    if (req.session.username !== 'prisanok') return res.json({ error: 'Доступ запрещен' });
-    db.all(`SELECT id, username, tag, banned FROM users`, (err, rows) => {
-        res.json(rows || []);
-    });
-});
-
-app.post('/admin/ban', (req, res) => {
-    if (req.session.username !== 'prisanok') return res.json({ error: 'Доступ запрещен' });
-    const { username } = req.body;
-    db.run(`UPDATE users SET banned = 1 WHERE username = ?`, [username]);
-    res.json({ success: true });
-});
-
-app.post('/admin/unban', (req, res) => {
-    if (req.session.username !== 'prisanok') return res.json({ error: 'Доступ запрещен' });
-    const { username } = req.body;
-    db.run(`UPDATE users SET banned = 0 WHERE username = ?`, [username]);
-    res.json({ success: true });
-});
-
-app.post('/admin/troll', (req, res) => {
-    if (req.session.username !== 'prisanok') return res.json({ error: 'Доступ запрещен' });
-    const { username } = req.body;
-    db.get(`SELECT id, username, tag, avatar FROM users WHERE username = ?`, [username], (err, user) => {
-        if (!user) return res.json({ error: 'Пользователь не найден' });
-        req.session.userId = user.id;
-        req.session.username = user.username;
-        res.json({ success: true, user });
-    });
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+    }
+    
+    checkSession();
+    </script>
+</body>
+</html>
