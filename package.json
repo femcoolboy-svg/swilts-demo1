@@ -1,7 +1,7 @@
 {
   "name": "swilts",
-  "version": "2.0.0",
-  "description": "Discord-like messenger",
+  "version": "3.0.0",
+  "description": "SWILTS Messenger",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
