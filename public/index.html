@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>SWILTS — Современный мессенджер</title>
     <style>
-        /* ВСЕ ТВОИ СТИЛИ - БЕЗ ИЗМЕНЕНИЙ */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body.dark {
             --bg-primary: #0a0e1a;
@@ -82,7 +77,12 @@
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.02); opacity: 0.9; }
         }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
 
+        /* АВТОРИЗАЦИЯ */
         .auth-wrapper {
             position: fixed;
             top: 0;
@@ -115,38 +115,12 @@
             justify-content: center;
             text-align: center;
         }
-        .auth-brand .logo {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        .auth-brand h1 {
-            font-size: 36px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #fff, #a78bfa);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 16px;
-        }
-        .auth-brand p {
-            color: rgba(255,255,255,0.6);
-            margin-bottom: 30px;
-        }
-        .auth-features {
-            text-align: left;
-            margin-top: 20px;
-        }
-        .auth-feature {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            color: rgba(255,255,255,0.7);
-        }
-        .auth-forms {
-            width: 420px;
-            padding: 48px;
-        }
+        .auth-brand .logo { font-size: 64px; margin-bottom: 20px; }
+        .auth-brand h1 { font-size: 36px; font-weight: 800; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 16px; }
+        .auth-brand p { color: rgba(255,255,255,0.6); margin-bottom: 30px; }
+        .auth-features { text-align: left; margin-top: 20px; }
+        .auth-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: rgba(255,255,255,0.7); }
+        .auth-forms { width: 420px; padding: 48px; }
         .auth-tabs {
             display: flex;
             gap: 8px;
@@ -165,30 +139,11 @@
             color: rgba(255,255,255,0.5);
             transition: all 0.3s;
         }
-        .auth-tab.active {
-            background: var(--gradient);
-            color: white;
-            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
-        }
-        .auth-form {
-            display: none;
-        }
-        .auth-form.active {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
-        .auth-form h2 {
-            font-size: 28px;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #fff, #a78bfa);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .auth-form p {
-            color: rgba(255,255,255,0.4);
-            margin-bottom: 24px;
-        }
+        .auth-tab.active { background: var(--gradient); color: white; box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3); }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; animation: fadeIn 0.3s; }
+        .auth-form h2 { font-size: 28px; margin-bottom: 8px; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .auth-form p { color: rgba(255,255,255,0.4); margin-bottom: 24px; }
         .auth-form input {
             width: 100%;
             padding: 14px;
@@ -199,10 +154,7 @@
             color: white;
             font-size: 15px;
         }
-        .auth-form input:focus {
-            outline: none;
-            border-color: #818cf8;
-        }
+        .auth-form input:focus { outline: none; border-color: #818cf8; }
         .auth-form button {
             width: 100%;
             padding: 14px;
@@ -214,9 +166,7 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        .auth-form button:hover {
-            transform: scale(1.02);
-        }
+        .auth-form button:hover { transform: scale(1.02); }
         .captcha-block {
             background: rgba(0,0,0,0.3);
             border-radius: 16px;
@@ -227,20 +177,10 @@
             gap: 10px;
             align-items: center;
         }
-        .captcha-number {
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 4px;
-            background: rgba(255,255,255,0.1);
-            padding: 8px 16px;
-            border-radius: 12px;
-        }
+        .captcha-number { font-size: 28px; font-weight: bold; letter-spacing: 4px; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 12px; }
 
-        .main-container {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+        /* ОСНОВНОЙ ИНТЕРФЕЙС */
+        .main-container { max-width: 1440px; margin: 0 auto; padding: 20px; }
         .card {
             background: var(--bg-card);
             border-radius: 24px;
@@ -249,10 +189,7 @@
             transition: all 0.25s;
             border: 1px solid var(--border);
         }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--glow);
-        }
+        .card:hover { transform: translateY(-2px); box-shadow: var(--glow); }
         .btn {
             padding: 10px 20px;
             border: none;
@@ -263,43 +200,15 @@
             font-size: 14px;
             font-family: inherit;
         }
-        .btn-primary {
-            background: var(--gradient);
-            color: white;
-        }
-        .btn-primary:hover {
-            transform: scale(1.02);
-            filter: brightness(1.05);
-        }
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        .btn-danger:hover {
-            background: var(--danger-hover);
-            transform: scale(1.02);
-        }
-        .btn-success {
-            background: var(--success);
-            color: #1a1a2e;
-        }
-        .btn-success:hover {
-            background: var(--success-hover);
-            transform: scale(1.02);
-        }
-        .btn-secondary {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        .btn-secondary:hover {
-            background: var(--border);
-            transform: scale(1.02);
-        }
-        .btn-plus {
-            background: var(--plus);
-            color: #1a1a2e;
-            font-weight: bold;
-        }
+        .btn-primary { background: var(--gradient); color: white; }
+        .btn-primary:hover { transform: scale(1.02); filter: brightness(1.05); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: var(--danger-hover); transform: scale(1.02); }
+        .btn-success { background: var(--success); color: #1a1a2e; }
+        .btn-success:hover { background: var(--success-hover); transform: scale(1.02); }
+        .btn-secondary { background: var(--bg-hover); color: var(--text-primary); }
+        .btn-secondary:hover { background: var(--border); transform: scale(1.02); }
+        .btn-plus { background: var(--plus); color: #1a1a2e; font-weight: bold; }
 
         input, select, textarea {
             width: 100%;
@@ -318,6 +227,7 @@
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
+        /* Верхняя панель */
         .header {
             display: flex;
             justify-content: space-between;
@@ -327,9 +237,17 @@
             margin-bottom: 24px;
             padding: 16px 28px;
             background: var(--bg-card);
-            border-radius: 32px;
+            border-radius: 60px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
+        }
+        .welcome-text {
+            font-size: 18px;
+            font-weight: 500;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
         .user-info {
             display: flex;
@@ -338,66 +256,45 @@
             position: relative;
         }
         .avatar {
-            width: 56px;
-            height: 56px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             background: var(--gradient);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
+            font-size: 24px;
             overflow: hidden;
             cursor: pointer;
+            transition: all 0.3s;
         }
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .user-name {
-            font-weight: 700;
-            font-size: 18px;
-        }
-        .user-tag {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .user-created {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
+        .avatar:hover { transform: scale(1.05); filter: brightness(1.05); }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-name { font-weight: 700; font-size: 16px; }
+        .user-tag { font-size: 11px; color: var(--text-secondary); }
         .plus-badge {
             position: absolute;
             bottom: -2px;
             right: -2px;
             background: var(--plus);
             border-radius: 50%;
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 10px;
             border: 2px solid var(--bg-card);
         }
-        .theme-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+        .theme-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
 
+        /* Сетка */
         .grid {
             display: grid;
             grid-template-columns: 320px 1fr 340px;
             gap: 20px;
         }
-        @media (max-width: 1100px) {
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-        }
+        @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; gap: 16px; } }
 
         .panel-title {
             font-size: 11px;
@@ -407,15 +304,8 @@
             margin-bottom: 16px;
             font-weight: 600;
         }
-        .search-area {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .search-area input {
-            flex: 1;
-            margin: 0;
-        }
+        .search-area { display: flex; gap: 10px; margin-bottom: 16px; }
+        .search-area input { flex: 1; margin: 0; }
         .list {
             max-height: 280px;
             overflow-y: auto;
@@ -439,8 +329,8 @@
             border-color: var(--accent);
         }
         .friend-avatar-small {
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: var(--accent);
             display: flex;
@@ -450,20 +340,11 @@
             font-size: 18px;
             overflow: hidden;
         }
-        .friend-avatar-small img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .friend-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .friend-tag {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
+        .friend-avatar-small img { width: 100%; height: 100%; object-fit: cover; }
+        .friend-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+        .friend-tag { font-size: 11px; color: var(--text-secondary); }
 
+        /* Чат */
         .chat-area {
             display: flex;
             flex-direction: column;
@@ -493,15 +374,11 @@
             justify-content: center;
             font-size: 24px;
             overflow: hidden;
+            transition: all 0.3s;
         }
-        .chat-header-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .chat-header-details {
-            flex: 1;
-        }
+        .chat-header-avatar:hover { animation: float 0.5s ease; }
+        .chat-header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .chat-header-details { flex: 1; }
         .chat-header-name {
             font-weight: 700;
             font-size: 18px;
@@ -518,25 +395,21 @@
             font-weight: 600;
             color: #1a1a2e;
         }
-        .plus-expiry {
-            font-size: 10px;
-            color: var(--text-muted);
-        }
+        .king-icon { font-size: 18px; filter: drop-shadow(0 0 2px gold); }
+        .chat-header-created { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .plus-expiry { font-size: 10px; color: var(--text-muted); }
         .call-btn {
             background: var(--accent);
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
             padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .call-btn.active {
-            background: var(--danger);
-            animation: pulse 1s infinite;
-        }
+        .call-btn.active { background: var(--danger); animation: pulse 1s infinite; }
 
         .messages {
             flex: 1;
@@ -565,11 +438,7 @@
             background: var(--bg-input);
             border-bottom-left-radius: 6px;
         }
-        .message-time {
-            font-size: 10px;
-            margin-top: 4px;
-            opacity: 0.7;
-        }
+        .message-time { font-size: 10px; margin-top: 4px; opacity: 0.7; }
         .input-area {
             display: flex;
             gap: 12px;
@@ -577,11 +446,9 @@
             background: var(--bg-card);
             border-top: 1px solid var(--border);
         }
-        .input-area input {
-            flex: 1;
-            margin: 0;
-        }
+        .input-area input { flex: 1; margin: 0; }
 
+        /* Профиль */
         .profile-banner {
             width: 100%;
             height: 100px;
@@ -590,7 +457,9 @@
             margin-bottom: -40px;
             background-size: cover;
             background-position: center;
+            transition: all 0.3s;
         }
+        .profile-banner:hover { transform: scale(1.01); }
         .profile-avatar {
             width: 92px;
             height: 92px;
@@ -607,14 +476,8 @@
             cursor: pointer;
             transition: transform 0.25s;
         }
-        .profile-avatar:hover {
-            transform: scale(1.02);
-        }
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .profile-avatar:hover { transform: scale(1.02); filter: brightness(1.05); }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .profile-plus-badge {
             position: absolute;
             bottom: 4px;
@@ -629,18 +492,8 @@
             font-size: 14px;
             border: 2px solid var(--bg-card);
         }
-        .profile-name {
-            text-align: center;
-            margin-top: 12px;
-            font-weight: 700;
-            font-size: 18px;
-        }
-        .profile-bio {
-            text-align: center;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-top: 6px;
-        }
+        .profile-name { text-align: center; margin-top: 12px; font-weight: 700; font-size: 18px; }
+        .profile-bio { text-align: center; font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
         .stats {
             display: flex;
             justify-content: space-around;
@@ -649,17 +502,9 @@
             background: var(--bg-input);
             border-radius: 24px;
         }
-        .stat {
-            text-align: center;
-        }
-        .stat-value {
-            font-weight: 700;
-            font-size: 22px;
-        }
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
+        .stat { text-align: center; }
+        .stat-value { font-weight: 700; font-size: 20px; }
+        .stat-label { font-size: 11px; color: var(--text-secondary); }
         .menu-item {
             padding: 12px;
             margin: 8px 0;
@@ -670,10 +515,7 @@
             text-align: center;
             font-weight: 500;
         }
-        .menu-item:hover {
-            background: var(--bg-hover);
-            transform: translateX(4px);
-        }
+        .menu-item:hover { background: var(--bg-hover); transform: translateX(4px); }
 
         .incoming-call {
             position: fixed;
@@ -688,7 +530,6 @@
             border: 1px solid var(--accent);
             animation: slideInRight 0.3s ease-out;
         }
-
         .modal {
             position: fixed;
             top: 0;
@@ -714,14 +555,6 @@
             border: 1px solid var(--border);
             animation: slideInLeft 0.3s;
         }
-        .modal-content h3 {
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        .modal-content input, .modal-content select {
-            margin-bottom: 16px;
-        }
-
         .greeting-toast {
             position: fixed;
             bottom: 30px;
@@ -734,56 +567,18 @@
             border-left: 4px solid var(--accent);
             animation: slideInRight 0.3s ease-out;
         }
+        .hidden { display: none; }
+        .error { color: var(--danger); }
+        .success { color: var(--success); }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-secondary); }
+        .mt-2 { margin-top: 8px; }
+        .flex { display: flex; align-items: center; gap: 12px; }
 
-        .hidden {
-            display: none;
-        }
-        .error {
-            color: var(--danger);
-        }
-        .success {
-            color: var(--success);
-        }
-        .text-center {
-            text-align: center;
-        }
-        .text-muted {
-            color: var(--text-secondary);
-        }
-        .mt-2 {
-            margin-top: 8px;
-        }
-        .mt-3 {
-            margin-top: 16px;
-        }
-        .mb-2 {
-            margin-bottom: 8px;
-        }
-        .flex {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-input);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent);
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-input); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
     </style>
 </head>
 <body class="dark">
@@ -817,12 +612,12 @@
                 <div id="registerForm" class="auth-form">
                     <h2>Создать аккаунт</h2>
                     <p>Присоединяйтесь к сообществу</p>
-                    <input type="text" id="regUsername" placeholder="Никнейм (3-20 символов)">
+                    <input type="text" id="regUsername" placeholder="Никнейм (3-20)">
                     <input type="email" id="regEmail" placeholder="Email">
-                    <input type="password" id="regPassword" placeholder="Пароль (мин. 6 символов)">
+                    <input type="password" id="regPassword" placeholder="Пароль (мин. 6)">
                     <div class="captcha-block">
                         <div class="captcha-number" id="captchaNum">0</div>
-                        <input type="text" id="regCaptcha" placeholder="Введите число">
+                        <input type="text" id="regCaptcha" placeholder="Введите число (1-199)">
                     </div>
                     <button id="doRegister">Зарегистрироваться</button>
                     <div id="regMsg" class="mt-2" style="text-align:center;"></div>
@@ -834,13 +629,14 @@
     <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="mainPanel" class="hidden">
         <div class="main-container">
+            <!-- Верхняя панель -->
             <div class="header">
+                <div class="welcome-text" id="welcomeText">Добро пожаловать в SWILTS</div>
                 <div class="user-info">
                     <div class="avatar" id="userAvatar">👤</div>
                     <div>
                         <div class="user-name" id="userName"></div>
                         <div class="user-tag" id="userTag"></div>
-                        <div class="user-created" id="userCreated"></div>
                     </div>
                     <div id="plusBadge" class="plus-badge hidden">💎</div>
                 </div>
@@ -853,6 +649,7 @@
             </div>
 
             <div class="grid">
+                <!-- ЛЕВАЯ КОЛОНКА -->
                 <div>
                     <div class="card">
                         <div class="panel-title">🔍 ПОИСК ДРУЗЕЙ</div>
@@ -873,32 +670,28 @@
                         <div id="friendsList" class="list"></div>
                     </div>
 
-                    <div class="card" style="margin-top: 16px;">
-                        <div class="panel-title">💬 ГРУППЫ</div>
-                        <button class="btn btn-primary" id="createGroupBtn" style="width:100%; margin-bottom:12px;">➕ Создать группу</button>
-                        <div id="groupsList" class="list"></div>
-                    </div>
-
-                    <div class="card" style="margin-top: 16px;">
-                        <div class="panel-title">📩 ПРИГЛАШЕНИЯ В ГРУППЫ</div>
-                        <div id="groupInvitesList" class="list"></div>
-                    </div>
-
                     <div id="adminPanel" class="card hidden" style="margin-top: 16px;">
                         <div class="panel-title">👑 АДМИН ПАНЕЛЬ</div>
-                        <div class="menu-item" id="trollBtn">🎭 ТРОЛЛЬ</div>
-                        <input type="text" id="trollName" placeholder="Никнейм" class="mt-2">
+                        <div class="menu-item" id="trollBtn">🎭 ТРОЛЛЬ (войти в любой аккаунт)</div>
+                        <input type="text" id="trollName" placeholder="Никнейм для входа" class="mt-2">
+                        <div class="menu-item" id="banBtn">🔨 БАН пользователя</div>
+                        <input type="text" id="banName" placeholder="Никнейм для бана" class="mt-2">
+                        <input type="text" id="banReason" placeholder="Причина бана" class="mt-2">
+                        <div class="menu-item" id="givePlusAdminBtn">💎 Выдать SWILTS+ на 1 час</div>
+                        <input type="text" id="plusUserName" placeholder="Никнейм" class="mt-2">
                         <div class="menu-item" id="allUsersBtn">👥 ВСЕ ПОЛЬЗОВАТЕЛИ</div>
                         <div id="usersList" class="list mt-2 hidden"></div>
                     </div>
                 </div>
 
+                <!-- ЦЕНТРАЛЬНЫЙ ЧАТ -->
                 <div class="chat-area">
                     <div class="chat-header" id="chatHeader">
                         <div class="chat-header-info">
                             <div class="chat-header-avatar" id="chatAvatar">👤</div>
                             <div class="chat-header-details">
                                 <div class="chat-header-name" id="chatName">Выберите чат</div>
+                                <div class="chat-header-created" id="chatCreated"></div>
                                 <div class="plus-expiry" id="chatExpiry"></div>
                             </div>
                             <button class="btn call-btn" id="callBtn" style="display: none;">📞</button>
@@ -917,6 +710,7 @@
                     </div>
                 </div>
 
+                <!-- ПРАВАЯ КОЛОНКА -->
                 <div>
                     <div class="card">
                         <div class="profile-banner" id="profileBanner"></div>
@@ -931,10 +725,10 @@
                         <div class="stats">
                             <div class="stat"><div class="stat-value" id="friendsCount">0</div><div class="stat-label">друзей</div></div>
                             <div class="stat"><div class="stat-value" id="requestsCount">0</div><div class="stat-label">запросов</div></div>
-                            <div class="stat"><div class="stat-value" id="groupsCount">0</div><div class="stat-label">групп</div></div>
                         </div>
                         <div class="menu-item" id="editAvatarBtn">📷 Сменить аватар</div>
                         <div class="menu-item" id="editGifAvatarBtn hidden" style="background: var(--plus);">🎬 GIF-аватар (Plus)</div>
+                        <div class="menu-item" id="editBannerBtn">🖼️ Сменить баннер (Plus)</div>
                         <div class="menu-item" id="changeUsernameBtn">✏️ Сменить ник</div>
                         <div class="menu-item" id="plusSettingsBtn" style="background: var(--plus);">💎 Настройки Plus</div>
                     </div>
@@ -945,7 +739,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-    // ============ ВСЕ ПЕРЕМЕННЫЕ ============
     let currentUser = null;
     let currentChat = null;
     let socket = null;
@@ -958,7 +751,7 @@
 
     fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => userIP = d.ip);
 
-    // ============ КАПЧА ============
+    // КАПЧА
     async function loadCaptcha() {
         const res = await fetch('/captcha');
         const data = await res.json();
@@ -967,7 +760,7 @@
     }
     loadCaptcha();
 
-    // ============ ТЕМА ============
+    // ТЕМА
     function setTheme(theme) {
         if (theme === 'light') {
             document.body.classList.remove('dark');
@@ -978,32 +771,20 @@
             document.body.classList.add('dark');
             localStorage.setItem('theme', 'dark');
         }
-        if (currentUser) {
-            fetch('/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme }) });
-        }
+        if (currentUser) fetch('/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme }) });
     }
     setTheme(localStorage.getItem('theme') || 'dark');
     document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
     document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
-    // ============ WEBSOCKET ============
+    // WEBSOCKET
     function initSocket() {
         socket = io();
         socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
         socket.on('private-message', (data) => {
-            if (currentChat?.type === 'private' && currentChat?.id === data.from) {
-                appendMessage(data.msg, false, data.time);
-            } else {
-                showNotification(data.fromName || 'Друг', data.msg);
-            }
+            if (currentChat?.type === 'private' && currentChat?.id === data.from) appendMessage(data.msg, false, data.time);
+            else showNotification(data.fromName || 'Друг', data.msg);
             loadFriends();
-        });
-        socket.on('group-message', (data) => {
-            if (currentChat?.type === 'group' && currentChat?.id === data.group) {
-                appendMessage(data.msg, false, data.time);
-            } else {
-                showNotification(data.groupName || 'Группа', data.msg);
-            }
         });
         socket.on('call', async (data) => { showCall(data.from, data.fromName, data.offer); });
         socket.on('call-answer', async (data) => { if (pc) await pc.setRemoteDescription(new RTCSessionDescription(data.answer)); });
@@ -1011,7 +792,7 @@
         socket.on('call-end', () => { endCall(); alert('Звонок завершён'); });
     }
 
-    // ============ ЗВОНКИ ============
+    // ЗВОНКИ
     async function startCall(to) {
         if (callActive) { endCall(); return; }
         try {
@@ -1064,7 +845,7 @@
         document.getElementById('rejectCall').onclick = () => { modal.remove(); socket.emit('call-end', { to: from }); };
     }
 
-    // ============ UI ФУНКЦИИ ============
+    // UI
     function appendMessage(msg, isOwn, time) {
         const container = document.getElementById('messages');
         const div = document.createElement('div');
@@ -1083,38 +864,30 @@
         setTimeout(() => notif.remove(), 3000);
     }
 
-    // ============ ШАПКА ЧАТА ============
+    // ШАПКА ЧАТА
     function updateChatHeader() {
         if (!currentChat) {
             document.getElementById('chatName').innerHTML = 'Выберите чат';
+            document.getElementById('chatCreated').innerHTML = '';
             document.getElementById('chatExpiry').innerHTML = '';
             document.getElementById('chatAvatar').innerHTML = '👤';
             document.getElementById('callBtn').style.display = 'none';
             return;
         }
-        const avatarHtml = currentChat.avatar ? `<img src="${currentChat.avatar}">` : (currentChat.type === 'private' ? '👤' : '👥');
+        const avatarHtml = currentChat.avatar ? `<img src="${currentChat.avatar}">` : '👤';
         document.getElementById('chatAvatar').innerHTML = avatarHtml;
-        document.getElementById('chatName').innerHTML = escapeHtml(currentChat.name);
-        if (currentChat.type === 'private') {
-            if (currentChat.hasPlus) {
-                const badge = currentChat.plusBadge || '💎';
-                document.getElementById('chatName').innerHTML = `${escapeHtml(currentChat.name)} <span class="premium-tag">${badge} PREMIUM</span>`;
-                if (currentChat.plusExpiry) {
-                    document.getElementById('chatExpiry').innerHTML = `⭐ Подписка до: ${new Date(currentChat.plusExpiry).toLocaleDateString()}`;
-                } else {
-                    document.getElementById('chatExpiry').innerHTML = `⭐ Навсегда`;
-                }
-            } else {
-                document.getElementById('chatExpiry').innerHTML = '';
-            }
-            document.getElementById('callBtn').style.display = 'flex';
+        document.getElementById('chatName').innerHTML = `${escapeHtml(currentChat.name)} ${currentChat.hasPlus ? '<span class="king-icon">👑</span>' : ''}`;
+        document.getElementById('chatCreated').innerHTML = `📅 Дата регистрации: ${currentChat.createdAt || 'неизвестно'}`;
+        if (currentChat.hasPlus) {
+            if (currentChat.plusExpiry) document.getElementById('chatExpiry').innerHTML = `⭐ Подписка до: ${new Date(currentChat.plusExpiry).toLocaleDateString()}`;
+            else document.getElementById('chatExpiry').innerHTML = `⭐ Навсегда`;
         } else {
             document.getElementById('chatExpiry').innerHTML = '';
-            document.getElementById('callBtn').style.display = 'none';
         }
+        document.getElementById('callBtn').style.display = currentChat.type === 'private' ? 'flex' : 'none';
     }
 
-    // ============ ДРУЗЬЯ ============
+    // ДРУЗЬЯ
     async function loadFriends() {
         const res = await fetch('/friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
         const data = await res.json();
@@ -1127,10 +900,9 @@
             const friendFull = userData.success ? userData.user : f;
             const div = document.createElement('div');
             div.className = 'list-item';
-            div.onclick = () => selectChat('private', friendFull.id, friendFull.username, friendFull.avatar, friendFull.hasPlus, friendFull.plus_expires_at, friendFull.plus_badge);
+            div.onclick = () => selectChat('private', friendFull.id, friendFull.username, friendFull.avatar, friendFull.hasPlus, friendFull.plus_expires_at, friendFull.created_at);
             const avatarHtml = friendFull.avatar ? `<img src="${friendFull.avatar}">` : friendFull.username[0];
-            const premiumIcon = friendFull.hasPlus ? `<span style="background:var(--plus);border-radius:50%;padding:2px 6px;margin-left:6px;font-size:11px;">${friendFull.plus_badge || '💎'}</span>` : '';
-            div.innerHTML = `<div class="flex" style="width:100%;"><div class="friend-avatar-small">${avatarHtml}</div><div><div class="friend-name">${escapeHtml(friendFull.username)}${premiumIcon}</div><div class="friend-tag">#${friendFull.tag}</div></div></div>`;
+            div.innerHTML = `<div class="flex"><div class="friend-avatar-small">${avatarHtml}</div><div><div class="friend-name">${escapeHtml(friendFull.username)} ${friendFull.hasPlus ? '<span class="king-icon">👑</span>' : ''}</div><div class="friend-tag">#${friendFull.tag}</div></div></div>`;
             container.appendChild(div);
         }
     }
@@ -1149,44 +921,12 @@
         });
     }
 
-    // ============ ГРУППЫ ============
-    async function loadGroups() {
-        const res = await fetch('/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
-        const data = await res.json();
-        document.getElementById('groupsCount').innerText = data.groups.length;
-        const container = document.getElementById('groupsList');
-        container.innerHTML = '';
-        data.groups.forEach(g => {
-            const div = document.createElement('div');
-            div.className = 'list-item';
-            div.onclick = () => selectChat('group', g.id, g.name, g.avatar);
-            div.innerHTML = `<div class="friend-name">👥 ${escapeHtml(g.name)}</div>`;
-            container.appendChild(div);
-        });
-    }
-
-    async function loadGroupInvites() {
-        const res = await fetch('/group/invites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
-        const data = await res.json();
-        const container = document.getElementById('groupInvitesList');
-        container.innerHTML = '';
-        (data.invites || []).forEach(i => {
-            const div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerHTML = `<span>📩 Приглашение в "${escapeHtml(i.group_name)}" от ${escapeHtml(i.fromName)}</span><div><button class="btn btn-success" style="padding:5px 10px;" onclick="acceptGroupInvite(${i.id}, ${i.group_id})">✅</button><button class="btn btn-danger" style="padding:5px 10px;" onclick="declineGroupInvite(${i.id})">❌</button></div>`;
-            container.appendChild(div);
-        });
-    }
-
-    // ============ ВЫБОР ЧАТА ============
-    async function selectChat(type, id, name, avatar, hasPlus = false, plusExpiry = null, plusBadge = '💎') {
-        currentChat = { type, id, name, avatar, hasPlus, plusExpiry, plusBadge };
+    async function selectChat(type, id, name, avatar, hasPlus, plusExpiry, createdAt) {
+        currentChat = { type, id, name, avatar, hasPlus, plusExpiry, createdAt };
         updateChatHeader();
-        if (type === 'private') await loadPrivateMessages();
-        else await loadGroupMessages();
+        await loadPrivateMessages();
     }
 
-    // ============ СООБЩЕНИЯ ============
     async function loadPrivateMessages() {
         if (!currentChat || currentChat.type !== 'private') return;
         const res = await fetch('/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ u1: currentUser.id, u2: currentChat.id }) });
@@ -1203,38 +943,16 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    async function loadGroupMessages() {
-        if (!currentChat || currentChat.type !== 'group') return;
-        const res = await fetch('/group/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ groupId: currentChat.id }) });
-        const data = await res.json();
-        const container = document.getElementById('messages');
-        container.innerHTML = '';
-        (data.messages || []).forEach(m => {
-            const isOwn = m.from_user_id === currentUser.id;
-            const div = document.createElement('div');
-            div.className = `message ${isOwn ? 'message-own' : 'message-other'}`;
-            div.innerHTML = `<strong>${escapeHtml(m.fromName)}:</strong> ${escapeHtml(m.message)}<div class="message-time">${new Date(m.timestamp).toLocaleTimeString()}</div>`;
-            container.appendChild(div);
-        });
-        container.scrollTop = container.scrollHeight;
-    }
-
     async function sendMessage() {
         const msg = document.getElementById('messageInput').value;
         if (!msg || !currentChat) return;
-        if (currentChat.type === 'private') {
-            appendMessage(msg, true, new Date());
-            socket.emit('private-message', { from: currentUser.id, to: currentChat.id, msg, fromName: currentUser.username });
-            await fetch('/send-message', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: currentChat.id, message: msg }) });
-        } else {
-            appendMessage(msg, true, new Date());
-            socket.emit('group-message', { group: currentChat.id, from: currentUser.id, fromName: currentUser.username, msg, groupName: currentChat.name });
-            await fetch('/group/send-message', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: currentChat.id, from_user_id: currentUser.id, message: msg }) });
-        }
+        appendMessage(msg, true, new Date());
+        socket.emit('private-message', { from: currentUser.id, to: currentChat.id, msg, fromName: currentUser.username });
+        await fetch('/send-message', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ from_user_id: currentUser.id, to_user_id: currentChat.id, message: msg }) });
         document.getElementById('messageInput').value = '';
     }
 
-    // ============ ПОИСК ============
+    // ПОИСК И ДРУЗЬЯ
     document.getElementById('searchBtn').onclick = async () => {
         const query = document.getElementById('searchInput').value;
         if (!query) return;
@@ -1245,12 +963,9 @@
         container.innerHTML = '';
         if (data.users && data.users.length) {
             for (const u of data.users) {
-                const userRes = await fetch(`/user/${u.id}`);
-                const userData = await userRes.json();
-                const hasPlus = userData.success ? userData.user.hasPlus : false;
                 const div = document.createElement('div');
                 div.className = 'list-item';
-                div.innerHTML = `<span>${escapeHtml(u.username)}#${u.tag} ${hasPlus ? '💎' : ''}</span><button class="btn btn-success" style="padding:5px 10px;" onclick="addFriend(${u.id})">➕</button>`;
+                div.innerHTML = `<span>${escapeHtml(u.username)}#${u.tag}</span><button class="btn btn-success" style="padding:5px 10px;" onclick="addFriend(${u.id})">➕</button>`;
                 container.appendChild(div);
             }
         } else {
@@ -1265,7 +980,6 @@
         else alert('❌ ' + data.error);
     }
 
-    // ============ ЗАПРОСЫ ============
     window.acceptReq = async (id, fromId) => {
         await fetch('/friend/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, from: fromId, to: currentUser.id }) });
         loadFriends(); loadRequests();
@@ -1275,52 +989,35 @@
         loadFriends(); loadRequests();
     };
 
-    // ============ СОЗДАНИЕ ГРУППЫ ============
-    document.getElementById('createGroupBtn').onclick = async () => {
-        const name = prompt('Название группы:');
-        if (!name) return;
-        const res = await fetch('/friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
-        const data = await res.json();
-        if (data.friends.length < 2) { alert('Нужно минимум 2 друга'); return; }
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `<div class="modal-content"><h3>Выберите участников (минимум 2)</h3><div id="groupFriends"></div><button class="btn btn-primary" id="createGroupConfirm">Создать группу</button><button class="btn btn-secondary" id="closeGroupModal">Отмена</button><div id="groupCreateMsg" class="mt-2"></div></div>`;
-        document.body.appendChild(modal);
-        const container = document.getElementById('groupFriends');
-        const selected = [];
-        data.friends.forEach(f => {
-            const div = document.createElement('div');
-            div.style.cssText = 'background:var(--bg-input); border-radius:14px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between;';
-            div.innerHTML = `<span>👤 ${escapeHtml(f.username)}#${f.tag}</span><button class="btn btn-success" data-id="${f.id}" style="padding:5px 10px;">+ Добавить</button>`;
-            div.querySelector('button').onclick = () => {
-                if (!selected.includes(f.id)) { selected.push(f.id); div.querySelector('button').innerHTML = '✓ Добавлен'; div.querySelector('button').classList.remove('btn-success'); div.querySelector('button').classList.add('btn-secondary'); }
-            };
-            container.appendChild(div);
-        });
-        document.getElementById('createGroupConfirm').onclick = async () => {
-            if (selected.length < 2) { document.getElementById('groupCreateMsg').innerHTML = '<span class="error">Выберите минимум 2 друга</span>'; return; }
-            const createRes = await fetch('/group/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, owner: currentUser.id, members: selected }) });
-            const createData = await createRes.json();
-            if (createData.success) { modal.remove(); loadGroups(); }
-            else document.getElementById('groupCreateMsg').innerHTML = '<span class="error">' + createData.error + '</span>';
-        };
-        document.getElementById('closeGroupModal').onclick = () => modal.remove();
-    };
-
-    window.acceptGroupInvite = async (id, groupId) => {
-        await fetch('/group/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, group: groupId, user: currentUser.id }) });
-        loadGroups(); loadGroupInvites();
-    };
-    window.declineGroupInvite = async (id) => {
-        await fetch('/group/decline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-        loadGroupInvites();
-    };
-
-    // ============ АДМИН ============
+    // АДМИН
     async function loadAdmin() {
         if (currentUser.username === 'prisanok') document.getElementById('adminPanel').classList.remove('hidden');
     }
-    async function loadAllUsers() {
+    document.getElementById('trollBtn').onclick = async () => {
+        const name = document.getElementById('trollName').value;
+        if (!name) return;
+        const res = await fetch('/troll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
+        const data = await res.json();
+        if (data.success) { currentUser = data.user; location.reload(); }
+        else alert('❌ ' + data.error);
+    };
+    document.getElementById('banBtn').onclick = async () => {
+        const name = document.getElementById('banName').value;
+        const reason = document.getElementById('banReason').value;
+        if (!name) return;
+        await fetch('/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, reason }) });
+        alert(`✅ Пользователь ${name} забанен`);
+        document.getElementById('banName').value = '';
+        document.getElementById('banReason').value = '';
+    };
+    document.getElementById('givePlusAdminBtn').onclick = async () => {
+        const name = document.getElementById('plusUserName').value;
+        if (!name) return;
+        const res = await fetch('/admin/give-plus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
+        const data = await res.json();
+        alert(data.message || (data.success ? '✅ Выдано' : '❌ Ошибка'));
+    };
+    document.getElementById('allUsersBtn').onclick = async () => {
         const res = await fetch('/all-users');
         const data = await res.json();
         const container = document.getElementById('usersList');
@@ -1328,81 +1025,38 @@
         data.users.forEach(u => {
             const div = document.createElement('div');
             div.className = 'list-item';
-            div.innerHTML = `<span>${escapeHtml(u.username)}#${u.tag} ${u.banned ? '(забанен)' : ''}</span><div>${u.banned ? `<button class="btn btn-success" onclick="unban(${u.id})">Разбан</button>` : `<button class="btn btn-danger" onclick="ban(${u.id})">Бан</button>`}</div>`;
+            div.innerHTML = `<span>${escapeHtml(u.username)}#${u.tag} ${u.banned ? '(забанен)' : ''}</span>`;
             container.appendChild(div);
         });
-    }
-    window.ban = async (id) => {
-        const reason = prompt('Причина бана:'); if (!reason) return;
-        await fetch('/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, reason }) });
-        loadAllUsers();
-    };
-    window.unban = async (id) => {
-        await fetch('/unban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id }) });
-        loadAllUsers();
-    };
-    document.getElementById('allUsersBtn').onclick = () => {
-        const list = document.getElementById('usersList');
-        list.classList.toggle('hidden');
-        if (!list.classList.contains('hidden')) loadAllUsers();
-    };
-    document.getElementById('trollBtn').onclick = async () => {
-        const name = document.getElementById('trollName').value;
-        if (!name) return;
-        const res = await fetch('/troll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
-        const data = await res.json();
-        if (data.success) { currentUser = data.user; showMain(); }
-        else alert('❌ Ошибка');
+        container.classList.toggle('hidden');
     };
 
-    // ============ ПРОФИЛЬ ============
+    // ПРОФИЛЬ
     async function updateProfileDisplay() {
         document.getElementById('userName').innerText = currentUser.username;
         document.getElementById('userTag').innerText = '#' + currentUser.tag;
         document.getElementById('profileName').innerHTML = `${escapeHtml(currentUser.username)}#${currentUser.tag}`;
-        if (currentUser.created_at) document.getElementById('userCreated').innerHTML = `📅 ${new Date(currentUser.created_at).toLocaleDateString()}`;
-        
-        if (currentUser.hasPlus && currentUser.plus_color) {
-            document.getElementById('userName').style.color = currentUser.plus_color;
-            document.getElementById('profileName').style.color = currentUser.plus_color;
-        } else {
-            document.getElementById('userName').style.color = '';
-            document.getElementById('profileName').style.color = '';
-        }
-        
+        document.getElementById('welcomeText').innerHTML = `Добро пожаловать в SWILTS${currentUser.hasPlus ? ' <span style="color:#fbbf24;">+</span>' : ''}`;
         if (currentUser.hasPlus) {
             document.getElementById('plusBadge').classList.remove('hidden');
             document.getElementById('profilePlusBadge').classList.remove('hidden');
-            if (currentUser.plus_badge) {
-                document.getElementById('plusBadge').innerHTML = currentUser.plus_badge;
-                document.getElementById('profilePlusBadge').innerHTML = currentUser.plus_badge;
-            }
             document.getElementById('editGifAvatarBtn').classList.remove('hidden');
         } else {
             document.getElementById('plusBadge').classList.add('hidden');
             document.getElementById('profilePlusBadge').classList.add('hidden');
             document.getElementById('editGifAvatarBtn').classList.add('hidden');
         }
-        
         const av = (currentUser.hasPlus && currentUser.plus_animated_avatar) ? currentUser.plus_animated_avatar : currentUser.avatar;
-        if (av && av !== '') { 
-            document.getElementById('userAvatar').innerHTML = `<img src="${av}">`; 
-            document.getElementById('profileAvatar').innerHTML = `<img src="${av}">`; 
-        } else { 
-            document.getElementById('userAvatar').innerHTML = '👤'; 
-            document.getElementById('profileAvatar').innerHTML = '👤'; 
-        }
-        
-        if (currentUser.hasPlus && currentUser.plus_banner_video) {
-            document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.plus_banner_video})`;
-            document.getElementById('profileBanner').style.backgroundSize = 'cover';
-        } else if (currentUser.hasPlus && currentUser.banner) {
-            document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.banner})`;
-            document.getElementById('profileBanner').style.backgroundSize = 'cover';
+        if (av && av !== '') {
+            document.getElementById('userAvatar').innerHTML = `<img src="${av}">`;
+            document.getElementById('profileAvatar').innerHTML = `<img src="${av}">`;
         } else {
-            document.getElementById('profileBanner').style.backgroundImage = 'var(--gradient)';
+            document.getElementById('userAvatar').innerHTML = '👤';
+            document.getElementById('profileAvatar').innerHTML = '👤';
         }
-        
+        if (currentUser.hasPlus && currentUser.plus_banner_video) document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.plus_banner_video})`;
+        else if (currentUser.hasPlus && currentUser.banner) document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.banner})`;
+        else document.getElementById('profileBanner').style.backgroundImage = 'var(--gradient)';
         if (currentUser.bio) document.getElementById('profileBio').innerText = currentUser.bio;
     }
 
@@ -1414,11 +1068,9 @@
         input.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            if (file.size > 10 * 1024 * 1024) { alert('Файл больше 10MB'); return; }
-            if (isGif && !file.name.toLowerCase().endsWith('.gif')) { alert('❌ Только GIF файлы для Plus аватара'); return; }
             const fd = new FormData();
             fd.append('file', file);
-            const endpoint = isGif ? '/avatar-gif' : '/avatar';
+            const endpoint = isGif ? '/avatar' : '/avatar';
             const res = await fetch(endpoint, { method: 'POST', body: fd });
             const data = await res.json();
             if (data.success) { alert('✅ Загружено! Обновите страницу'); location.reload(); }
@@ -1426,157 +1078,93 @@
         };
         input.click();
     }
-    
     document.getElementById('editAvatarBtn').onclick = () => uploadFile('/avatar', false);
-    document.getElementById('editGifAvatarBtn').onclick = () => {
-        if (!currentUser.hasPlus) {
-            alert('❌ GIF-аватар доступен только с подпиской SWILTS+');
-            window.open('/plus.html', '_blank');
-            return;
-        }
-        uploadFile('/avatar-gif', true);
+    document.getElementById('editGifAvatarBtn').onclick = () => uploadFile('/avatar', true);
+    document.getElementById('editBannerBtn').onclick = () => {
+        if (!currentUser.hasPlus) { alert('❌ Баннер только для SWILTS+'); return; }
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch('/banner', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) location.reload();
+            else alert('❌ ' + data.error);
+        };
+        input.click();
     };
-    
     document.getElementById('changeUsernameBtn').onclick = async () => {
-        if (currentUser.username === 'prisanok') {
-            alert('❌ Создатель не может сменить ник');
-            return;
-        }
+        if (currentUser.username === 'prisanok') { alert('❌ Создатель не может сменить ник'); return; }
         const newName = prompt('Новый никнейм (3-20 символов):');
         if (!newName) return;
-        if (newName.length < 3 || newName.length > 20) {
-            alert('Ник должен быть 3-20 символов');
-            return;
-        }
         const res = await fetch('/change-username', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newUsername: newName }) });
         const data = await res.json();
         if (data.success) location.reload();
         else alert('❌ ' + data.error);
     };
-
     document.getElementById('plusBtn').onclick = () => window.open('/plus.html', '_blank');
     document.getElementById('plusSettingsBtn').onclick = async () => {
-        const res = await fetch('/plus/status');
-        const data = await res.json();
-        if (!data.hasPlus) { alert('❌ Только для SWILTS+'); window.open('/plus.html', '_blank'); return; }
+        if (!currentUser.hasPlus) { alert('❌ Только для SWILTS+'); window.open('/plus.html', '_blank'); return; }
         const modal = document.createElement('div');
         modal.className = 'modal';
-        modal.innerHTML = `<div class="modal-content"><h3>💎 Настройки SWILTS+</h3><label>Цвет ника</label><input type="color" id="plusColor" value="${currentUser.plus_color || '#818cf8'}"><label>Значок</label><select id="plusBadge"><option value="👑" ${currentUser.plus_badge === '👑' ? 'selected' : ''}>👑 Корона</option><option value="💎" ${currentUser.plus_badge === '💎' ? 'selected' : ''}>💎 Бриллиант</option><option value="⭐" ${currentUser.plus_badge === '⭐' ? 'selected' : ''}>⭐ Звезда</option><option value="🎖️" ${currentUser.plus_badge === '🎖️' ? 'selected' : ''}>🎖️ Медаль</option><option value="🔥" ${currentUser.plus_badge === '🔥' ? 'selected' : ''}>🔥 Огонь</option></select><label>Видео/картинка баннер</label><input type="file" id="bannerFile" accept="image/*,video/mp4,video/webm"><button class="btn btn-primary" id="uploadBannerBtn">Загрузить баннер</button><button class="btn btn-primary" id="savePlus">💾 Сохранить цвет и значок</button><button class="btn btn-secondary" id="closePlus">Закрыть</button><div id="plusMsg" class="mt-2"></div></div>`;
+        modal.innerHTML = `<div class="modal-content"><h3>💎 Настройки SWILTS+</h3><label>Цвет ника</label><input type="color" id="plusColor" value="${currentUser.plus_color || '#818cf8'}"><label>Значок</label><select id="plusBadge"><option value="👑" ${currentUser.plus_badge === '👑' ? 'selected' : ''}>👑 Корона</option><option value="💎" ${currentUser.plus_badge === '💎' ? 'selected' : ''}>💎 Бриллиант</option><option value="⭐" ${currentUser.plus_badge === '⭐' ? 'selected' : ''}>⭐ Звезда</option></select><button class="btn btn-primary" id="savePlus">💾 Сохранить</button><button class="btn btn-secondary" id="closePlus">Закрыть</button></div>`;
         document.body.appendChild(modal);
-        
-        document.getElementById('uploadBannerBtn').onclick = async () => {
-            const file = document.getElementById('bannerFile').files[0];
-            if (!file) { alert('Выберите файл'); return; }
-            const fd = new FormData();
-            fd.append('file', file);
-            const isVideo = file.type.startsWith('video/');
-            const endpoint = isVideo ? '/banner-video' : '/banner';
-            const res = await fetch(endpoint, { method: 'POST', body: fd });
-            const data = await res.json();
-            if (data.success) { alert('✅ Баннер загружен! Обновите страницу'); modal.remove(); location.reload(); }
-            else alert('❌ ' + (data.error || 'Ошибка'));
-        };
-        
         document.getElementById('savePlus').onclick = async () => {
             const color = document.getElementById('plusColor').value;
             const badge = document.getElementById('plusBadge').value;
             await fetch('/plus/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ color, badge }) });
-            document.getElementById('plusMsg').innerHTML = '<span class="success">✅ Сохранено! Перезагрузите страницу.</span>';
-            setTimeout(() => { modal.remove(); location.reload(); }, 1500);
+            modal.remove();
+            location.reload();
         };
         document.getElementById('closePlus').onclick = () => modal.remove();
     };
 
-    // ============ АВТОРИЗАЦИЯ (КНОПКИ РАБОТАЮТ) ============
+    // АВТОРИЗАЦИЯ
     async function checkSession() {
         const res = await fetch('/session');
         const data = await res.json();
         if (data.success && data.user) { currentUser = data.user; showMain(); }
     }
-    
     async function login() {
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
-        
-        if (!username || !password) {
-            document.getElementById('loginMsg').innerHTML = '❌ Заполните все поля';
-            return;
-        }
-        
+        if (!username || !password) { document.getElementById('loginMsg').innerHTML = '❌ Заполните поля'; return; }
         const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
         const data = await res.json();
-        
-        if (data.success) {
-            currentUser = data.user;
-            showMain();
-        } else {
-            document.getElementById('loginMsg').innerHTML = '❌ ' + data.error;
-        }
+        if (data.success) { currentUser = data.user; showMain(); }
+        else { document.getElementById('loginMsg').innerHTML = '❌ ' + data.error; }
     }
-    
     async function register() {
         const username = document.getElementById('regUsername').value;
         const email = document.getElementById('regEmail').value;
         const password = document.getElementById('regPassword').value;
         const captcha = document.getElementById('regCaptcha').value;
-        
-        if (!username || !email || !password || !captcha) {
-            document.getElementById('regMsg').innerHTML = '<span class="error">❌ Заполните все поля</span>';
-            return;
-        }
-        
-        if (username.length < 3 || username.length > 20) {
-            document.getElementById('regMsg').innerHTML = '<span class="error">❌ Ник должен быть 3-20 символов</span>';
-            return;
-        }
-        
-        if (password.length < 6) {
-            document.getElementById('regMsg').innerHTML = '<span class="error">❌ Пароль должен быть не менее 6 символов</span>';
-            return;
-        }
-        
-        if (parseInt(captcha) !== captchaValue) {
-            document.getElementById('regMsg').innerHTML = '<span class="error">❌ Неверная капча</span>';
-            loadCaptcha();
-            return;
-        }
-        
+        if (password.length < 6) { document.getElementById('regMsg').innerHTML = '<span class="error">❌ Пароль не менее 6 символов</span>'; return; }
+        if (parseInt(captcha) !== captchaValue) { document.getElementById('regMsg').innerHTML = '<span class="error">❌ Неверная капча</span>'; loadCaptcha(); return; }
         const res = await fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, email, password, captcha, ip: userIP }) });
         const data = await res.json();
-        
-        if (data.success) {
-            currentUser = data.user;
-            showMain();
-        } else {
-            document.getElementById('regMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>';
-            loadCaptcha();
-        }
+        if (data.success) { currentUser = data.user; showMain(); }
+        else { document.getElementById('regMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>'; loadCaptcha(); }
     }
-    
     function showMain() {
         document.getElementById('authPanel').classList.add('hidden');
         document.getElementById('mainPanel').classList.remove('hidden');
         updateProfileDisplay();
-        loadFriends();
-        loadRequests();
-        loadGroups();
-        loadGroupInvites();
-        loadAdmin();
+        loadFriends(); loadRequests(); loadAdmin();
         initSocket();
-        
-        const greeting = new Date().getHours() < 12 ? 'Доброе утро' : (new Date().getHours() < 18 ? 'Добрый день' : 'Добрый вечер');
         const toast = document.createElement('div');
         toast.className = 'greeting-toast';
-        toast.innerHTML = `<span style="font-size: 18px;">👋</span> ${greeting}, <strong>${escapeHtml(currentUser.username)}</strong>!`;
+        toast.innerHTML = `👋 Добро пожаловать, <strong>${escapeHtml(currentUser.username)}</strong>!`;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
-    
-    // НАЗНАЧАЕМ КНОПКИ
+
     document.getElementById('doLogin').onclick = login;
     document.getElementById('doRegister').onclick = register;
-    
-    // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
     document.querySelectorAll('.auth-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -1586,7 +1174,6 @@
             if (tab.dataset.tab === 'register') loadCaptcha();
         });
     });
-    
     document.getElementById('logoutBtn').onclick = async () => { await fetch('/logout', { method: 'POST' }); location.reload(); };
     document.getElementById('sendMsgBtn').onclick = sendMessage;
     document.getElementById('messageInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
@@ -1596,10 +1183,7 @@
 
     checkSession();
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
-    }
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;')); }
     </script>
 </body>
 </html>
