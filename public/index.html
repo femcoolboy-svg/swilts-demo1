@@ -11,78 +11,80 @@
             box-sizing: border-box;
         }
 
+        /* МЯГКИЕ ПРИЯТНЫЕ ЦВЕТА */
         body.dark {
-            --bg-primary: #0f1117;
-            --bg-secondary: #1a1d24;
-            --bg-card: #1e2229;
-            --bg-hover: #2a2f38;
-            --bg-input: #15181e;
-            --text-primary: #e8edf5;
-            --text-secondary: #9aa4bf;
-            --text-muted: #6c7890;
-            --border: #2a2f3a;
-            --accent: #7c8aff;
-            --accent-hover: #6a78e8;
-            --accent-glow: rgba(124, 138, 255, 0.15);
-            --danger: #ff6b6b;
-            --danger-hover: #e05555;
-            --success: #6bdd8c;
-            --success-hover: #55c07a;
-            --plus: linear-gradient(135deg, #FFD700, #FFA500);
-            --gradient: linear-gradient(135deg, #7c8aff, #a07eff);
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-            --glow: 0 0 20px rgba(124, 138, 255, 0.3);
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #0f1729;
+            --bg-hover: #1e293b;
+            --bg-input: #0a0f1c;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #1e293b;
+            --accent: #818cf8;
+            --accent-hover: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --danger: #f87171;
+            --danger-hover: #ef4444;
+            --success: #34d399;
+            --success-hover: #10b981;
+            --plus: linear-gradient(135deg, #fbbf24, #f59e0b);
+            --gradient: linear-gradient(135deg, #818cf8, #a78bfa);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --glow: 0 0 20px rgba(99, 102, 241, 0.2);
         }
 
         body.light {
-            --bg-primary: #f5f7fc;
+            --bg-primary: #f8fafc;
             --bg-secondary: #ffffff;
             --bg-card: #ffffff;
-            --bg-hover: #f0f2f8;
-            --bg-input: #f0f2f8;
-            --text-primary: #2c2f36;
-            --text-secondary: #5e647a;
-            --text-muted: #8e94aa;
-            --border: #e2e6ef;
-            --accent: #7c8aff;
-            --accent-hover: #6a78e8;
-            --accent-glow: rgba(124, 138, 255, 0.12);
-            --danger: #ff6b6b;
-            --danger-hover: #e05555;
-            --success: #6bdd8c;
-            --success-hover: #55c07a;
-            --plus: linear-gradient(135deg, #FFD700, #FFA500);
-            --gradient: linear-gradient(135deg, #7c8aff, #a07eff);
+            --bg-hover: #f1f5f9;
+            --bg-input: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --accent: #818cf8;
+            --accent-hover: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.1);
+            --danger: #f87171;
+            --danger-hover: #ef4444;
+            --success: #34d399;
+            --success-hover: #10b981;
+            --plus: linear-gradient(135deg, #fbbf24, #f59e0b);
+            --gradient: linear-gradient(135deg, #818cf8, #a78bfa);
             --shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
-            --glow: 0 0 16px rgba(124, 138, 255, 0.2);
+            --glow: 0 0 16px rgba(99, 102, 241, 0.15);
         }
 
         body {
             background: var(--bg-primary);
             color: var(--text-primary);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            transition: background 0.3s, color 0.2s;
+            transition: all 0.3s ease;
             min-height: 100vh;
         }
 
+        /* АНИМАЦИИ */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-16px); }
+            from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-24px); }
+            from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
         }
         @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(24px); }
+            from { opacity: 0; transform: translateX(20px); }
             to { opacity: 1; transform: translateX(0); }
         }
         @keyframes pulse {
             0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.03); opacity: 0.9; }
+            50% { transform: scale(1.02); opacity: 0.9; }
         }
 
-        /* ============ АВТОРИЗАЦИЯ (на весь экран) ============ */
+        /* ============ АВТОРИЗАЦИЯ ============ */
         .auth-wrapper {
             position: fixed;
             top: 0;
@@ -92,7 +94,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0f0c29, #1a1a3e, #0f0c29);
+            background: linear-gradient(145deg, #0a0e1a, #0f1729, #0a0e1a);
             padding: 20px;
             z-index: 1000;
         }
@@ -100,15 +102,15 @@
             display: flex;
             max-width: 1000px;
             width: 100%;
-            background: rgba(30,30,40,0.95);
+            background: rgba(15, 23, 41, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 48px;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(129, 140, 248, 0.2);
         }
         .auth-brand {
             flex: 1;
-            background: linear-gradient(135deg, rgba(124,138,255,0.2), rgba(160,126,255,0.2));
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.15), rgba(167, 139, 250, 0.1));
             padding: 48px;
             display: flex;
             flex-direction: column;
@@ -122,14 +124,14 @@
         .auth-brand h1 {
             font-size: 36px;
             font-weight: 800;
-            background: linear-gradient(135deg, #fff, #a0a0ff);
+            background: linear-gradient(135deg, #fff, #a78bfa);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin-bottom: 16px;
         }
         .auth-brand p {
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.6);
             margin-bottom: 30px;
         }
         .auth-features {
@@ -141,7 +143,7 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 16px;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.7);
         }
         .auth-forms {
             width: 420px;
@@ -162,13 +164,13 @@
             border-radius: 60px;
             cursor: pointer;
             font-weight: 600;
-            color: rgba(255,255,255,0.6);
+            color: rgba(255,255,255,0.5);
             transition: all 0.3s;
         }
         .auth-tab.active {
             background: var(--gradient);
             color: white;
-            box-shadow: 0 4px 12px rgba(124,138,255,0.3);
+            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
         }
         .auth-form {
             display: none;
@@ -180,28 +182,28 @@
         .auth-form h2 {
             font-size: 28px;
             margin-bottom: 8px;
-            background: linear-gradient(135deg, #fff, #a0a0ff);
+            background: linear-gradient(135deg, #fff, #a78bfa);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
         }
         .auth-form p {
-            color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.4);
             margin-bottom: 24px;
         }
         .auth-form input {
             width: 100%;
             padding: 14px;
             margin-bottom: 16px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
             color: white;
             font-size: 15px;
         }
         .auth-form input:focus {
             outline: none;
-            border-color: #7c8aff;
+            border-color: #818cf8;
         }
         .auth-form button {
             width: 100%;
@@ -300,10 +302,6 @@
             background: var(--plus);
             color: #1a1a2e;
             font-weight: bold;
-        }
-        .btn-plus:hover {
-            transform: scale(1.02);
-            filter: brightness(1.05);
         }
 
         input, select, textarea {
@@ -727,6 +725,20 @@
             margin-bottom: 16px;
         }
 
+        /* Убираем приветствие на весь экран */
+        .greeting-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 16px 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            border-left: 4px solid var(--accent);
+            animation: slideInRight 0.3s ease-out;
+        }
+
         .hidden {
             display: none;
         }
@@ -779,7 +791,7 @@
     </style>
 </head>
 <body class="dark">
-    <!-- АВТОРИЗАЦИЯ (на весь экран) -->
+    <!-- АВТОРИЗАЦИЯ -->
     <div id="authPanel" class="auth-wrapper">
         <div class="auth-container">
             <div class="auth-brand">
@@ -809,9 +821,9 @@
                 <div id="registerForm" class="auth-form">
                     <h2>Создать аккаунт</h2>
                     <p>Присоединяйтесь к сообществу</p>
-                    <input type="text" id="regUsername" placeholder="Никнейм">
+                    <input type="text" id="regUsername" placeholder="Никнейм (3-20 символов)">
                     <input type="email" id="regEmail" placeholder="Email">
-                    <input type="password" id="regPassword" placeholder="Пароль">
+                    <input type="password" id="regPassword" placeholder="Пароль (мин. 6 символов)">
                     <div class="captcha-block">
                         <div class="captcha-number" id="captchaNum">0</div>
                         <input type="text" id="regCaptcha" placeholder="Введите число">
@@ -926,12 +938,8 @@
                             <div class="stat"><div class="stat-value" id="groupsCount">0</div><div class="stat-label">групп</div></div>
                         </div>
                         <div class="menu-item" id="editAvatarBtn">📷 Сменить аватар</div>
-                        <div class="menu-item" id="editGifAvatarBtn" style="background: var(--plus);">🎬 GIF-аватар (Plus)</div>
-                        <div class="menu-item" id="editBannerBtn">🖼️ Сменить баннер</div>
-                        <div class="menu-item" id="editVideoBannerBtn" style="background: var(--plus);">🎥 Видео-баннер (Plus)</div>
+                        <div class="menu-item" id="editGifAvatarBtn hidden" style="background: var(--plus);">🎬 GIF-аватар (Plus)</div>
                         <div class="menu-item" id="changeUsernameBtn">✏️ Сменить ник</div>
-                        <div class="menu-item" id="editStatusBtn">🟢 Сменить статус</div>
-                        <div class="menu-item" id="groupSettingBtn">🔒 Настройки групп</div>
                         <div class="menu-item" id="plusSettingsBtn" style="background: var(--plus);">💎 Настройки Plus</div>
                     </div>
                 </div>
@@ -1339,61 +1347,103 @@
         document.getElementById('userTag').innerText = '#' + currentUser.tag;
         document.getElementById('profileName').innerHTML = `${escapeHtml(currentUser.username)}#${currentUser.tag}`;
         if (currentUser.created_at) document.getElementById('userCreated').innerHTML = `📅 ${new Date(currentUser.created_at).toLocaleDateString()}`;
-        if (currentUser.plus_color) { document.getElementById('userName').style.color = currentUser.plus_color; document.getElementById('profileName').style.color = currentUser.plus_color; }
+        
+        // Цвет ника только для Plus
+        if (currentUser.hasPlus && currentUser.plus_color) {
+            document.getElementById('userName').style.color = currentUser.plus_color;
+            document.getElementById('profileName').style.color = currentUser.plus_color;
+        } else {
+            document.getElementById('userName').style.color = '';
+            document.getElementById('profileName').style.color = '';
+        }
+        
+        // Показываем Plus бейдж
         if (currentUser.hasPlus) {
             document.getElementById('plusBadge').classList.remove('hidden');
             document.getElementById('profilePlusBadge').classList.remove('hidden');
-            if (currentUser.plus_badge) { document.getElementById('plusBadge').innerHTML = currentUser.plus_badge; document.getElementById('profilePlusBadge').innerHTML = currentUser.plus_badge; }
+            if (currentUser.plus_badge) {
+                document.getElementById('plusBadge').innerHTML = currentUser.plus_badge;
+                document.getElementById('profilePlusBadge').innerHTML = currentUser.plus_badge;
+            }
+            // Показываем GIF аватар кнопку только для Plus
+            document.getElementById('editGifAvatarBtn').classList.remove('hidden');
+        } else {
+            document.getElementById('plusBadge').classList.add('hidden');
+            document.getElementById('profilePlusBadge').classList.add('hidden');
+            document.getElementById('editGifAvatarBtn').classList.add('hidden');
         }
-        const av = currentUser.plus_animated_avatar || currentUser.avatar;
-        if (av && av !== '') { document.getElementById('userAvatar').innerHTML = `<img src="${av}">`; document.getElementById('profileAvatar').innerHTML = `<img src="${av}">`; }
-        else { document.getElementById('userAvatar').innerHTML = '👤'; document.getElementById('profileAvatar').innerHTML = '👤'; }
-        if (currentUser.plus_banner_video) document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.plus_banner_video})`;
-        else if (currentUser.banner) document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.banner})`;
-        else document.getElementById('profileBanner').style.backgroundImage = 'var(--gradient)';
+        
+        // Аватар (приоритет у GIF для Plus)
+        const av = (currentUser.hasPlus && currentUser.plus_animated_avatar) ? currentUser.plus_animated_avatar : currentUser.avatar;
+        if (av && av !== '') { 
+            document.getElementById('userAvatar').innerHTML = `<img src="${av}">`; 
+            document.getElementById('profileAvatar').innerHTML = `<img src="${av}">`; 
+        } else { 
+            document.getElementById('userAvatar').innerHTML = '👤'; 
+            document.getElementById('profileAvatar').innerHTML = '👤'; 
+        }
+        
+        // Баннер (только для Plus)
+        if (currentUser.hasPlus && currentUser.plus_banner_video) {
+            document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.plus_banner_video})`;
+            document.getElementById('profileBanner').style.backgroundSize = 'cover';
+        } else if (currentUser.hasPlus && currentUser.banner) {
+            document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.banner})`;
+            document.getElementById('profileBanner').style.backgroundSize = 'cover';
+        } else {
+            document.getElementById('profileBanner').style.backgroundImage = 'var(--gradient)';
+        }
+        
         if (currentUser.bio) document.getElementById('profileBio').innerText = currentUser.bio;
     }
 
-    function uploadFile(url) {
+    function uploadFile(url, isGif = false) {
         const input = document.createElement('input');
         input.type = 'file';
+        if (isGif) input.accept = 'image/gif';
+        else input.accept = 'image/jpeg,image/png,image/webp';
         input.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             if (file.size > 10 * 1024 * 1024) { alert('Файл больше 10MB'); return; }
+            if (isGif && !file.name.toLowerCase().endsWith('.gif')) { alert('❌ Только GIF файлы для Plus аватара'); return; }
             const fd = new FormData();
             fd.append('file', file);
-            const res = await fetch(url, { method: 'POST', body: fd });
+            const endpoint = isGif ? '/avatar-gif' : '/avatar';
+            const res = await fetch(endpoint, { method: 'POST', body: fd });
             const data = await res.json();
             if (data.success) { alert('✅ Загружено! Обновите страницу'); location.reload(); }
             else alert('❌ ' + (data.error || 'Ошибка загрузки'));
         };
         input.click();
     }
-    document.getElementById('editAvatarBtn').onclick = () => uploadFile('/avatar');
-    document.getElementById('editGifAvatarBtn').onclick = () => uploadFile('/avatar-gif');
-    document.getElementById('editBannerBtn').onclick = () => uploadFile('/banner');
-    document.getElementById('editVideoBannerBtn').onclick = () => uploadFile('/banner-video');
+    
+    document.getElementById('editAvatarBtn').onclick = () => uploadFile('/avatar', false);
+    document.getElementById('editGifAvatarBtn').onclick = () => {
+        if (!currentUser.hasPlus) {
+            alert('❌ GIF-аватар доступен только с подпиской SWILTS+');
+            window.open('/plus.html', '_blank');
+            return;
+        }
+        uploadFile('/avatar-gif', true);
+    };
+    
+    // Смена ника - запрещаем для prisanok
     document.getElementById('changeUsernameBtn').onclick = async () => {
+        if (currentUser.username === 'prisanok') {
+            alert('❌ Создатель не может сменить ник');
+            return;
+        }
         const newName = prompt('Новый никнейм (3-20 символов):');
         if (!newName) return;
+        if (newName.length < 3 || newName.length > 20) {
+            alert('Ник должен быть 3-20 символов');
+            return;
+        }
         const res = await fetch('/change-username', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newUsername: newName }) });
         const data = await res.json();
         if (data.success) location.reload();
         else alert('❌ ' + data.error);
-    };
-    document.getElementById('editStatusBtn').onclick = async () => {
-        const status = prompt('Статус:\n1 - В сети\n2 - Не активен\n3 - Не беспокоить', '1');
-        let statusText = 'online';
-        if (status === '2') statusText = 'idle';
-        if (status === '3') statusText = 'dnd';
-        await fetch('/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: statusText, bio: currentUser.bio }) });
-        location.reload();
-    };
-    document.getElementById('groupSettingBtn').onclick = async () => {
-        const allow = confirm('Разрешить добавлять себя в группы без приглашения?');
-        await fetch('/group-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ allow: allow }) });
-        alert('Сохранено');
     };
 
     document.getElementById('plusBtn').onclick = () => window.open('/plus.html', '_blank');
@@ -1403,8 +1453,22 @@
         if (!data.hasPlus) { alert('❌ Только для SWILTS+'); window.open('/plus.html', '_blank'); return; }
         const modal = document.createElement('div');
         modal.className = 'modal';
-        modal.innerHTML = `<div class="modal-content"><h3>💎 Настройки SWILTS+</h3><label>Цвет ника</label><input type="color" id="plusColor" value="${currentUser.plus_color || '#7c8aff'}"><label>Значок</label><select id="plusBadge"><option value="👑" ${currentUser.plus_badge === '👑' ? 'selected' : ''}>👑 Корона</option><option value="💎" ${currentUser.plus_badge === '💎' ? 'selected' : ''}>💎 Бриллиант</option><option value="⭐" ${currentUser.plus_badge === '⭐' ? 'selected' : ''}>⭐ Звезда</option><option value="🎖️" ${currentUser.plus_badge === '🎖️' ? 'selected' : ''}>🎖️ Медаль</option><option value="🔥" ${currentUser.plus_badge === '🔥' ? 'selected' : ''}>🔥 Огонь</option></select><button class="btn btn-primary" id="savePlus">💾 Сохранить</button><button class="btn btn-secondary" id="closePlus">Закрыть</button><div id="plusMsg" class="mt-2"></div></div>`;
+        modal.innerHTML = `<div class="modal-content"><h3>💎 Настройки SWILTS+</h3><label>Цвет ника</label><input type="color" id="plusColor" value="${currentUser.plus_color || '#818cf8'}"><label>Значок</label><select id="plusBadge"><option value="👑" ${currentUser.plus_badge === '👑' ? 'selected' : ''}>👑 Корона</option><option value="💎" ${currentUser.plus_badge === '💎' ? 'selected' : ''}>💎 Бриллиант</option><option value="⭐" ${currentUser.plus_badge === '⭐' ? 'selected' : ''}>⭐ Звезда</option><option value="🎖️" ${currentUser.plus_badge === '🎖️' ? 'selected' : ''}>🎖️ Медаль</option><option value="🔥" ${currentUser.plus_badge === '🔥' ? 'selected' : ''}>🔥 Огонь</option></select><label>Видео/картинка баннер</label><input type="file" id="bannerFile" accept="image/*,video/mp4,video/webm"><button class="btn btn-primary" id="uploadBannerBtn">Загрузить баннер</button><button class="btn btn-primary" id="savePlus">💾 Сохранить цвет и значок</button><button class="btn btn-secondary" id="closePlus">Закрыть</button><div id="plusMsg" class="mt-2"></div></div>`;
         document.body.appendChild(modal);
+        
+        document.getElementById('uploadBannerBtn').onclick = async () => {
+            const file = document.getElementById('bannerFile').files[0];
+            if (!file) { alert('Выберите файл'); return; }
+            const fd = new FormData();
+            fd.append('file', file);
+            const isVideo = file.type.startsWith('video/');
+            const endpoint = isVideo ? '/banner-video' : '/banner';
+            const res = await fetch(endpoint, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) { alert('✅ Баннер загружен! Обновите страницу'); modal.remove(); location.reload(); }
+            else alert('❌ ' + (data.error || 'Ошибка'));
+        };
+        
         document.getElementById('savePlus').onclick = async () => {
             const color = document.getElementById('plusColor').value;
             const badge = document.getElementById('plusBadge').value;
@@ -1433,25 +1497,35 @@
         const email = document.getElementById('regEmail').value;
         const password = document.getElementById('regPassword').value;
         const captcha = document.getElementById('regCaptcha').value;
+        
+        // Проверка длины пароля
+        if (password.length < 6) {
+            document.getElementById('regMsg').innerHTML = '<span class="error">❌ Пароль должен быть не менее 6 символов</span>';
+            return;
+        }
+        
         const res = await fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, email, password, captcha, ip: userIP }) });
         const data = await res.json();
         if (data.success) { currentUser = data.user; showMain(); }
         else { document.getElementById('regMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>'; loadCaptcha(); }
     }
+    
     function showMain() {
         document.getElementById('authPanel').classList.add('hidden');
         document.getElementById('mainPanel').classList.remove('hidden');
         updateProfileDisplay();
         loadFriends(); loadRequests(); loadGroups(); loadGroupInvites(); loadAdmin();
         initSocket();
+        
+        // Уведомление в углу, а не на весь экран
         const greeting = new Date().getHours() < 12 ? 'Доброе утро' : (new Date().getHours() < 18 ? 'Добрый день' : 'Добрый вечер');
-        const modal = document.createElement('div');
-        modal.className = 'incoming-call';
-        modal.style.top = '50%'; modal.style.left = '50%'; modal.style.transform = 'translate(-50%, -50%)'; modal.style.background = 'var(--bg-card)'; modal.style.padding = '30px 50px';
-        modal.innerHTML = `<h2 style="color: var(--accent);">${greeting}</h2><p style="font-size: 24px;">${escapeHtml(currentUser.username)}#${currentUser.tag}</p>`;
-        document.body.appendChild(modal);
-        setTimeout(() => modal.remove(), 3000);
+        const toast = document.createElement('div');
+        toast.className = 'greeting-toast';
+        toast.innerHTML = `<span style="font-size: 18px;">👋</span> ${greeting}, <strong>${escapeHtml(currentUser.username)}</strong>!`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     }
+    
     document.getElementById('doLogin').onclick = login;
     document.getElementById('doRegister').onclick = register;
     document.querySelectorAll('.auth-tab').forEach(tab => {
