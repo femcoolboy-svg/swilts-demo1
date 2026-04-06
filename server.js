@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 2 * 1024 * 1024 }, // Максимум 2MB для Plus
     fileFilter: (req, file, cb) => {
         const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
         cb(null, allowed.includes(file.mimetype));
@@ -217,9 +217,9 @@ io.on('connection', (socket) => {
     });
 });
 
-// ============ КАПЧА ============
+// ============ КАПЧА (1-199) ============
 app.get('/captcha', (req, res) => {
-    const num = Math.floor(Math.random() * 100) + 1;
+    const num = Math.floor(Math.random() * 199) + 1;
     req.session.captcha = num;
     res.json({ captcha: num });
 });
@@ -238,6 +238,9 @@ app.post('/register', (req, res) => {
     }
     if (username.length < 3 || username.length > 20) {
         return res.json({ success: false, error: 'Ник должен быть 3-20 символов' });
+    }
+    if (password.length < 6) {
+        return res.json({ success: false, error: 'Пароль должен быть не менее 6 символов' });
     }
     
     db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, existing) => {
@@ -339,32 +342,40 @@ app.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ============ ЗАГРУЗКИ (АВАТАРКИ, БАННЕРЫ, GIF, ВИДЕО) ============
+// ============ ЗАГРУЗКИ (АВАТАРКИ, БАННЕРЫ, GIF) ============
 app.post('/avatar', upload.single('file'), (req, res) => {
-    if (!req.file) return res.json({ success: false });
-    const avatarUrl = `/uploads/${req.file.filename}`;
-    db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [avatarUrl, req.session.user.id]);
-    req.session.user.avatar = avatarUrl;
-    res.json({ success: true, url: avatarUrl });
-});
-
-app.post('/avatar-gif', upload.single('file'), (req, res) => {
-    if (!req.file) return res.json({ success: false });
-    const ext = path.extname(req.file.originalname).toLowerCase();
-    if (ext !== '.gif') {
-        fs.unlink(req.file.path, () => {});
-        return res.json({ success: false, error: '❌ Только GIF файлы' });
-    }
-    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
+    if (!req.file) return res.json({ success: false, error: 'Нет файла' });
+    const fileSize = req.file.size;
+    const isGif = req.file.mimetype === 'image/gif';
+    const userId = req.session.user.id;
+    
+    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [userId], (err, sub) => {
         const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-        if (!hasPlus) {
-            fs.unlink(req.file.path, () => {});
-            return res.json({ success: false, error: '❌ Только для SWILTS+' });
+        
+        if (isGif) {
+            if (!hasPlus) {
+                fs.unlink(req.file.path, () => {});
+                return res.json({ success: false, error: '❌ GIF-аватары только для SWILTS+' });
+            }
+            if (fileSize > 1 * 1024 * 1024) {
+                fs.unlink(req.file.path, () => {});
+                return res.json({ success: false, error: '❌ GIF-аватар не более 1 МБ' });
+            }
+            const url = `/uploads/${req.file.filename}`;
+            db.run(`UPDATE users SET plus_animated_avatar = ? WHERE id = ?`, [url, userId]);
+            req.session.user.plus_animated_avatar = url;
+            return res.json({ success: true, url });
+        } else {
+            const maxSize = hasPlus ? 2 * 1024 * 1024 : 1 * 1024 * 1024;
+            if (fileSize > maxSize) {
+                fs.unlink(req.file.path, () => {});
+                return res.json({ success: false, error: `❌ Размер аватарки не более ${hasPlus ? '2' : '1'} МБ` });
+            }
+            const url = `/uploads/${req.file.filename}`;
+            db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [url, userId]);
+            req.session.user.avatar = url;
+            res.json({ success: true, url });
         }
-        const url = `/uploads/${req.file.filename}`;
-        db.run(`UPDATE users SET plus_animated_avatar = ? WHERE id = ?`, [url, req.session.user.id]);
-        req.session.user.plus_animated_avatar = url;
-        res.json({ success: true, url });
     });
 });
 
@@ -403,13 +414,10 @@ app.post('/banner-video', upload.single('file'), (req, res) => {
     });
 });
 
-// ============ ОБНОВЛЕНИЕ ПРОФИЛЯ ============
-app.post('/profile', (req, res) => {
-    const { status, bio } = req.body;
+app.post('/update-profile', (req, res) => {
+    const { bio } = req.body;
     if (!req.session.user) return res.json({ success: false });
-    if (status) db.run(`UPDATE users SET status = ? WHERE id = ?`, [status, req.session.user.id]);
     if (bio !== undefined) db.run(`UPDATE users SET bio = ? WHERE id = ?`, [bio, req.session.user.id]);
-    if (status) req.session.user.status = status;
     if (bio !== undefined) req.session.user.bio = bio;
     res.json({ success: true });
 });
@@ -452,14 +460,7 @@ app.post('/theme', (req, res) => {
     res.json({ success: true });
 });
 
-app.post('/group-settings', (req, res) => {
-    const { allow } = req.body;
-    if (!req.session.user) return res.json({ success: false });
-    db.run(`UPDATE users SET allow_group_invite = ? WHERE id = ?`, [allow ? 1 : 0, req.session.user.id]);
-    res.json({ success: true });
-});
-
-// ============ ПОЛУЧИТЬ ПРОФИЛЬ ============
+// ============ ПОЛУЧИТЬ ПРОФИЛЬ ДРУГА ============
 app.get('/user/:userId', (req, res) => {
     const userId = req.params.userId;
     db.get(`SELECT id, username, tag, avatar, banner, bio, status, created_at FROM users WHERE id = ? AND banned = 0`, [userId], (err, user) => {
@@ -510,70 +511,6 @@ app.post('/friend/accept', (req, res) => {
 
 app.post('/friend/decline', (req, res) => {
     db.run(`DELETE FROM friend_requests WHERE id = ?`, [req.body.id]);
-    res.json({ success: true });
-});
-
-// ============ ГРУППЫ ============
-app.post('/groups', (req, res) => {
-    const { userId } = req.body;
-    db.all(`SELECT g.id, g.name, g.avatar FROM group_chats g JOIN group_members gm ON g.id = gm.group_id WHERE gm.user_id = ?`, [userId], (err, rows) => {
-        res.json({ groups: rows || [] });
-    });
-});
-
-app.post('/group/create', (req, res) => {
-    const { name, owner, members } = req.body;
-    if (!name) return res.json({ success: false, error: 'Введите название' });
-    const allMembers = [...new Set([owner, ...members])];
-    if (allMembers.length < 2) return res.json({ success: false, error: 'Нужен хотя бы 1 участник' });
-    db.run(`INSERT INTO group_chats (name, owner_id) VALUES (?, ?)`, [name, owner], function(err) {
-        if (err) return res.json({ success: false });
-        const groupId = this.lastID;
-        allMembers.forEach(m => {
-            db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [groupId, m]);
-        });
-        res.json({ success: true, groupId });
-    });
-});
-
-app.post('/group/invite', (req, res) => {
-    const { groupId, from, to } = req.body;
-    db.get(`SELECT * FROM group_members WHERE group_id = ? AND user_id = ?`, [groupId, to], (err, existing) => {
-        if (existing) return res.json({ success: false, error: 'Уже в группе' });
-        db.run(`INSERT INTO group_invites (group_id, from_user_id, to_user_id) VALUES (?, ?, ?)`, [groupId, from, to]);
-        res.json({ success: true });
-    });
-});
-
-app.post('/group/invites', (req, res) => {
-    const { userId } = req.body;
-    db.all(`SELECT gi.id, gi.group_id, gc.name as group_name, u.username as fromName FROM group_invites gi JOIN group_chats gc ON gi.group_id = gc.id JOIN users u ON gi.from_user_id = u.id WHERE gi.to_user_id = ?`, [userId], (err, rows) => {
-        res.json({ invites: rows || [] });
-    });
-});
-
-app.post('/group/accept', (req, res) => {
-    const { id, group, user } = req.body;
-    db.run(`DELETE FROM group_invites WHERE id = ?`, [id]);
-    db.run(`INSERT INTO group_members (group_id, user_id) VALUES (?, ?)`, [group, user]);
-    res.json({ success: true });
-});
-
-app.post('/group/decline', (req, res) => {
-    db.run(`DELETE FROM group_invites WHERE id = ?`, [req.body.id]);
-    res.json({ success: true });
-});
-
-app.post('/group/messages', (req, res) => {
-    const { groupId } = req.body;
-    db.all(`SELECT gm.*, u.username as fromName, u.avatar as fromAvatar FROM group_messages gm JOIN users u ON gm.from_user_id = u.id WHERE gm.group_id = ? ORDER BY timestamp ASC`, [groupId], (err, rows) => {
-        res.json({ messages: rows || [] });
-    });
-});
-
-app.post('/group/send-message', (req, res) => {
-    const { group_id, from_user_id, message } = req.body;
-    db.run(`INSERT INTO group_messages (group_id, from_user_id, message) VALUES (?, ?, ?)`, [group_id, from_user_id, message]);
     res.json({ success: true });
 });
 
@@ -629,16 +566,16 @@ app.get('/all-users', (req, res) => {
 });
 
 app.post('/ban', (req, res) => {
-    const { userId, reason } = req.body;
+    const { username, reason } = req.body;
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
-    db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE id = ?`, [reason || 'Нарушение', userId]);
+    db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE username = ?`, [reason || 'Нарушение', username]);
     res.json({ success: true });
 });
 
 app.post('/unban', (req, res) => {
-    const { userId } = req.body;
+    const { username } = req.body;
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
-    db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE id = ?`, [userId]);
+    db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE username = ?`, [username]);
     res.json({ success: true });
 });
 
@@ -646,9 +583,24 @@ app.post('/troll', (req, res) => {
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
     const { username } = req.body;
     db.get(`SELECT id, username, tag, role, avatar, banner, bio, created_at, plus_color, plus_badge, plus_animated_avatar, plus_banner_video FROM users WHERE username = ?`, [username], (err, user) => {
-        if (!user) return res.json({ success: false });
+        if (!user) return res.json({ success: false, error: 'Пользователь не найден' });
         req.session.user = user;
         res.json({ success: true, user });
+    });
+});
+
+app.post('/admin/give-plus', (req, res) => {
+    if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
+    const { username } = req.body;
+    db.get(`SELECT id FROM users WHERE username = ?`, [username], (err, user) => {
+        if (!user) return res.json({ success: false, error: 'Пользователь не найден' });
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // +1 час
+        db.run(`INSERT OR REPLACE INTO subscriptions (user_id, plan, expires_at) VALUES (?, 'demo', ?)`, [user.id, expiresAt]);
+        
+        // Удаляем обычную аватарку при выдаче Plus
+        db.run(`UPDATE users SET avatar = '' WHERE id = ?`, [user.id]);
+        
+        res.json({ success: true, message: `SWILTS+ выдан пользователю ${username} на 1 час` });
     });
 });
 
@@ -657,5 +609,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`\n🚀 SWILTS запущен на http://localhost:${PORT}`);
     console.log(`👑 Создатель: prisanok / qazzaq32qaz`);
-    console.log(`💎 Все функции работают: аватарки, GIF, баннеры, видео, звонки, тролли`);
 });
