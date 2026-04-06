@@ -15,7 +15,6 @@ const io = require('socket.io')(server);
 const db = new sqlite3.Database('./swilts.db');
 
 db.serialize(() => {
-    // Таблица пользователей
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -38,7 +37,6 @@ db.serialize(() => {
         ip TEXT
     )`);
 
-    // Таблица друзей
     db.run(`CREATE TABLE IF NOT EXISTS friends (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
@@ -47,7 +45,6 @@ db.serialize(() => {
         created_at TEXT
     )`);
 
-    // Таблица групп
     db.run(`CREATE TABLE IF NOT EXISTS groups (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -55,14 +52,12 @@ db.serialize(() => {
         created_at TEXT
     )`);
 
-    // Участники групп
     db.run(`CREATE TABLE IF NOT EXISTS group_members (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_id INTEGER,
         user_id INTEGER
     )`);
 
-    // Приглашения в группы
     db.run(`CREATE TABLE IF NOT EXISTS group_invites (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_id INTEGER,
@@ -71,7 +66,6 @@ db.serialize(() => {
         status TEXT DEFAULT 'pending'
     )`);
 
-    // Личные сообщения
     db.run(`CREATE TABLE IF NOT EXISTS private_messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         from_user_id INTEGER,
@@ -80,7 +74,6 @@ db.serialize(() => {
         timestamp TEXT
     )`);
 
-    // Групповые сообщения
     db.run(`CREATE TABLE IF NOT EXISTS group_messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_id INTEGER,
@@ -89,7 +82,6 @@ db.serialize(() => {
         timestamp TEXT
     )`);
 
-    // Сессии (для express-session)
     db.run(`CREATE TABLE IF NOT EXISTS sessions (
         sid TEXT PRIMARY KEY,
         sess TEXT,
@@ -99,7 +91,7 @@ db.serialize(() => {
 
 // ============ НАСТРОЙКИ ============
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.urlencoded({ extended: true }));
 app.use(session({
     store: new SQLiteStore({ db: 'sessions.db', dir: './' }),
     secret: 'swilts_secret_key_2025',
@@ -133,6 +125,19 @@ function getCurrentUser(req, callback) {
     });
 }
 
+// ============ ГЛАВНАЯ СТРАНИЦА ============
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/plus.html', (req, res) => {
+    res.sendFile(__dirname + '/plus.html');
+});
+
+// Раздача статики
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(__dirname));
+
 // ============ API ============
 
 // Регистрация
@@ -147,7 +152,7 @@ app.post('/register', async (req, res) => {
     if (password.length < 4) {
         return res.json({ success: false, error: 'Пароль минимум 4 символа' });
     }
-    if (captcha !== '42') { // простая капча
+    if (captcha !== '42') {
         return res.json({ success: false, error: 'Неверная капча' });
     }
 
@@ -450,7 +455,7 @@ app.post('/unban', (req, res) => {
     });
 });
 
-// Админ: тролль (войти в любой аккаунт)
+// Админ: тролль
 app.post('/troll', (req, res) => {
     const { username, adminUsername } = req.body;
     if (adminUsername !== 'prisanok') {
@@ -464,10 +469,7 @@ app.post('/troll', (req, res) => {
     });
 });
 
-// Статика для загрузок
-app.use('/uploads', express.static(uploadDir));
-
-// Socket.IO
+// ============ SOCKET.IO ============
 io.on('connection', (socket) => {
     let userId = null;
     socket.on('register', (id) => {
@@ -483,9 +485,8 @@ io.on('connection', (socket) => {
         });
     });
     socket.on('group-message', (data) => {
-        socket.to(`group_${data.group}`).emit('group-message', {
+        io.to(`group_${data.group}`).emit('group-message', {
             group: data.group,
-            groupName: data.groupName,
             from: data.from,
             fromName: data.fromName,
             msg: data.msg,
@@ -513,8 +514,9 @@ io.on('connection', (socket) => {
     });
 });
 
-// Запуск
-const PORT = 3000;
+// ============ ЗАПУСК ============
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`✅ SWILTS сервер запущен на http://localhost:${PORT}`);
+    console.log(`✅ SWILTS сервер запущен на порту ${PORT}`);
+    console.log(`🌐 Открой http://localhost:${PORT}`);
 });
