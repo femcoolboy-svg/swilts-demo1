@@ -4,56 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWILTS+ — Премиум подписка</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background: linear-gradient(145deg, #0a0e1a, #0f1729);
             min-height: 100vh;
             padding: 40px 20px;
         }
-        .container { max-width: 1300px; margin: 0 auto; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(251,191,36,0.3); }
+            50% { box-shadow: 0 0 25px rgba(251,191,36,0.7); }
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 60px; animation: fadeInUp 0.6s ease-out; }
-        .header h1 { font-size: 72px; font-weight: 800; background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 20px; animation: float 3s infinite; }
-        .header p { color: rgba(255,255,255,0.6); font-size: 18px; }
-        .plans { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-bottom: 70px; }
-        @media (max-width: 1100px) { .plans { grid-template-columns: repeat(2, 1fr); } }
+        .header h1 {
+            font-size: 64px; font-weight: 800;
+            background: linear-gradient(135deg, #FBBF24, #F59E0B, #F97316);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            margin-bottom: 16px; animation: float 3s infinite;
+        }
+        .header p { color: #8B949E; font-size: 18px; }
+        .plans {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 24px; margin-bottom: 60px;
+        }
+        @media (max-width: 1000px) { .plans { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .plans { grid-template-columns: 1fr; } }
         .plan {
-            background: rgba(15, 23, 41, 0.9);
+            background: rgba(22, 27, 34, 0.9);
             backdrop-filter: blur(20px);
-            border-radius: 36px;
-            padding: 36px 28px;
-            text-align: center;
-            transition: all 0.3s;
-            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 28px; padding: 32px 24px;
+            text-align: center; transition: all 0.3s;
+            border: 1px solid rgba(251,191,36,0.2);
+            animation: fadeInUp 0.6s ease-out both;
         }
-        .plan:hover { transform: translateY(-8px); border-color: rgba(251,191,36,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        .plan.popular { border: 2px solid #fbbf24; transform: scale(1.02); position: relative; overflow: hidden; }
-        .plan.popular::after { content: '⭐ ПОПУЛЯРНО'; position: absolute; top: 18px; right: -35px; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a2e; font-size: 11px; font-weight: 800; padding: 5px 45px; transform: rotate(45deg); white-space: nowrap; }
+        .plan:nth-child(1) { animation-delay: 0.05s; }
+        .plan:nth-child(2) { animation-delay: 0.15s; }
+        .plan:nth-child(3) { animation-delay: 0.25s; }
+        .plan:nth-child(4) { animation-delay: 0.35s; }
+        .plan:hover { transform: translateY(-8px); border-color: #FBBF24; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .plan.popular { border: 2px solid #FBBF24; transform: scale(1.02); position: relative; overflow: hidden; }
+        .plan.popular::after {
+            content: '⭐ ПОПУЛЯРНО'; position: absolute; top: 18px; right: -35px;
+            background: linear-gradient(135deg, #FBBF24, #F59E0B);
+            color: #1a1a2e; font-size: 11px; font-weight: 800;
+            padding: 5px 45px; transform: rotate(45deg); white-space: nowrap;
+        }
         .plan-icon { font-size: 56px; margin-bottom: 20px; }
-        .plan h3 { font-size: 26px; color: white; }
-        .plan .price { font-size: 52px; font-weight: 800; color: #fbbf24; margin: 20px 0; }
-        .plan .price small { font-size: 16px; font-weight: 400; color: rgba(255,255,255,0.5); }
+        .plan h3 { font-size: 26px; margin-bottom: 8px; color: white; }
+        .plan .price { font-size: 48px; font-weight: 800; color: #FBBF24; margin: 20px 0; }
+        .plan .price small { font-size: 16px; font-weight: 400; color: #8B949E; }
+        .plan .old-price { font-size: 14px; color: #6E7681; text-decoration: line-through; margin-bottom: 6px; }
+        .plan .saving { font-size: 12px; color: #3FB950; margin-bottom: 20px; }
         .plan ul { list-style: none; margin: 25px 0; text-align: left; }
-        .plan li { padding: 10px 0; color: rgba(255,255,255,0.7); font-size: 14px; display: flex; align-items: center; gap: 10px; }
-        .plan li::before { content: '✓'; color: #34d399; font-weight: bold; }
-        .plan li.disabled { color: rgba(255,255,255,0.3); }
-        .plan li.disabled::before { content: '✗'; color: #f87171; }
+        .plan li { padding: 10px 0; color: #E6EDF3; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .plan li::before { content: '✓'; color: #3FB950; font-weight: bold; }
+        .plan li.disabled { color: #6E7681; }
+        .plan li.disabled::before { content: '✗'; color: #F85149; }
         .plan button {
-            width: 100%; padding: 16px; background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            border: none; border-radius: 60px; font-size: 16px; font-weight: 700; cursor: pointer;
-            color: #1a1a2e; margin-top: 15px; transition: all 0.3s;
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #FBBF24, #F59E0B);
+            border: none; border-radius: 60px; font-size: 16px;
+            font-weight: 700; cursor: pointer; transition: all 0.3s;
+            color: #1a1a2e; margin-top: 15px;
+            animation: glowPulse 2s infinite;
         }
         .plan button:hover { transform: scale(1.02); filter: brightness(1.05); }
-        .plan.free button { background: rgba(255,255,255,0.1); color: white; cursor: not-allowed; }
+        .plan.free button { background: rgba(255,255,255,0.1); color: white; animation: none; cursor: not-allowed; }
         .back-btn {
-            display: inline-flex; align-items: center; gap: 12px; padding: 14px 32px;
-            background: rgba(255,255,255,0.05); border-radius: 60px; color: white;
-            text-decoration: none; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.1);
+            display: inline-flex; align-items: center; gap: 12px;
+            padding: 14px 32px; background: rgba(255,255,255,0.05);
+            border-radius: 60px; color: white; text-decoration: none;
+            transition: all 0.3s; border: 1px solid rgba(255,255,255,0.1);
         }
         .back-btn:hover { background: rgba(255,255,255,0.12); transform: translateX(-6px); }
         .footer { text-align: center; margin-top: 40px; }
@@ -65,7 +96,6 @@
         <h1>💎 SWILTS+</h1>
         <p>Раскройте полный потенциал мессенджера с премиум-подпиской</p>
     </div>
-
     <div class="plans">
         <div class="plan free">
             <div class="plan-icon">🌙</div>
@@ -85,6 +115,8 @@
             <div class="plan-icon">💎</div>
             <h3>SWILTS+</h3>
             <div class="price">149 ₽<small>/мес</small></div>
+            <div class="old-price">299 ₽</div>
+            <div class="saving">💡 Экономия 50%</div>
             <ul>
                 <li>✅ Все функции бесплатного</li>
                 <li>✅ Кастомный цвет ника</li>
@@ -99,6 +131,8 @@
             <div class="plan-icon">⭐</div>
             <h3>SWILTS+</h3>
             <div class="price">1 290 ₽<small>/год</small></div>
+            <div class="old-price">1 788 ₽</div>
+            <div class="saving">💡 Экономия 498 ₽</div>
             <ul>
                 <li>✅ Все преимущества Plus</li>
                 <li>✅ Экономия 2 месяца</li>
@@ -110,20 +144,20 @@
             <div class="plan-icon">👑</div>
             <h3>SWILTS+</h3>
             <div class="price">4 990 ₽<small>/навсегда</small></div>
+            <div class="old-price">17 880 ₽</div>
+            <div class="saving">💡 Экономия 13 000 ₽</div>
             <ul>
                 <li>✅ Все преимущества Plus</li>
                 <li>✅ Пожизненная подписка</li>
-                <li>✅ VIP-статус</li>
+                <li>✅ VIP-статус в сообществе</li>
             </ul>
             <button onclick="subscribe(4990)">Купить навсегда</button>
         </div>
     </div>
-
     <div class="footer">
         <a href="/" class="back-btn">← Вернуться в SWILTS</a>
     </div>
 </div>
-
 <script>
 const WALLET = '4100118589497198';
 function subscribe(amount) {
@@ -134,7 +168,7 @@ function subscribe(amount) {
     const inputs = {
         'receiver': WALLET,
         'quickpay-form': 'small',
-        'targets': 'Подписка SWILTS+',
+        'targets': `Подписка SWILTS+`,
         'sum': amount,
         'comment': `Покупка подписки SWILTS+`,
         'need-fio': 'false',
@@ -153,7 +187,7 @@ function subscribe(amount) {
     document.body.appendChild(form);
     form.submit();
     document.body.removeChild(form);
-    alert(`🔷 Оплата через ЮMoney.\nСумма: ${amount} ₽\nПосле оплаты напишите создателю для активации подписки.`);
+    alert(`🔷 Оплата ${amount} ₽ через ЮMoney\nПосле оплаты подписка активируется автоматически.`);
 }
 </script>
 </body>
