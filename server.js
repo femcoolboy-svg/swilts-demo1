@@ -13,7 +13,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-// НАСТРОЙКА ЗАГРУЗКИ ФАЙЛОВ
+// ============ НАСТРОЙКА ЗАГРУЗКИ ============
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = './uploads';
@@ -48,7 +48,7 @@ app.use(session({
 
 const db = new sqlite3.Database('swilts.db');
 
-// СОЗДАНИЕ ТАБЛИЦ
+// ============ СОЗДАНИЕ ТАБЛИЦ ============
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,8 +66,6 @@ db.serialize(() => {
         ip TEXT,
         plus_color TEXT DEFAULT '',
         plus_badge TEXT DEFAULT '',
-        plus_animated_avatar TEXT DEFAULT '',
-        plus_banner_video TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
@@ -109,7 +107,7 @@ db.serialize(() => {
     });
 });
 
-// WEBSOCKET
+// ============ WEBSOCKET ============
 const onlineUsers = new Map();
 let messageIdCounter = Date.now();
 
@@ -122,11 +120,9 @@ io.on('connection', (socket) => {
     socket.on('private-message', (data) => {
         const messageId = ++messageIdCounter;
         
-        // Сохраняем в БД
         db.run(`INSERT INTO private_messages (id, from_user_id, to_user_id, message, timestamp) VALUES (?, ?, ?, ?, ?)`,
             [messageId, data.from, data.to, data.msg, new Date().toISOString()]);
         
-        // Отправляем получателю
         const target = onlineUsers.get(data.to);
         if (target) {
             io.to(target).emit('private-message', {
@@ -137,25 +133,21 @@ io.on('connection', (socket) => {
                 time: new Date()
             });
         }
-        
-        // Подтверждение отправителю
         io.to(socket.id).emit('message-sent', { id: messageId });
     });
 
-    // Индикатор печатает (с дебаунсом)
-    let typingTimers = new Map();
-    
+    // Индикатор печатает
+    let typingTimer = null;
     socket.on('typing', (data) => {
         const target = onlineUsers.get(data.to);
         if (!target) return;
         
-        if (typingTimers.has(target)) clearTimeout(typingTimers.get(target));
+        if (typingTimer) clearTimeout(typingTimer);
         io.to(target).emit('typing', { from: socket.userId });
         
-        const timer = setTimeout(() => {
+        typingTimer = setTimeout(() => {
             io.to(target).emit('typing-stop', { from: socket.userId });
         }, 2000);
-        typingTimers.set(target, timer);
     });
 
     socket.on('disconnect', () => {
@@ -163,14 +155,14 @@ io.on('connection', (socket) => {
     });
 });
 
-// КАПЧА
+// ============ КАПЧА ============
 app.get('/captcha', (req, res) => {
     const num = Math.floor(Math.random() * 199) + 1;
     req.session.captcha = num;
     res.json({ captcha: num });
 });
 
-// РЕГИСТРАЦИЯ
+// ============ РЕГИСТРАЦИЯ ============
 app.post('/register', (req, res) => {
     const { username, email, password, captcha, ip } = req.body;
     if (!username || !email || !password || !captcha) {
@@ -211,7 +203,7 @@ app.post('/register', (req, res) => {
     });
 });
 
-// ЛОГИН
+// ============ ЛОГИН ============
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.json({ success: false, error: 'Заполните поля' });
@@ -261,28 +253,13 @@ app.post('/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ЗАГРУЗКА АВАТАРА
+// ============ ЗАГРУЗКА АВАТАРА ============
 app.post('/avatar', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false, error: 'Нет файла' });
     const url = `/uploads/${req.file.filename}`;
     db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [url, req.session.user.id]);
     req.session.user.avatar = url;
     res.json({ success: true, url });
-});
-
-app.post('/banner', upload.single('file'), (req, res) => {
-    if (!req.file) return res.json({ success: false });
-    const url = `/uploads/${req.file.filename}`;
-    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
-        const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-        if (!hasPlus) {
-            fs.unlink(req.file.path, () => {});
-            return res.json({ success: false, error: '❌ Баннер только для SWILTS+' });
-        }
-        db.run(`UPDATE users SET banner = ? WHERE id = ?`, [url, req.session.user.id]);
-        req.session.user.banner = url;
-        res.json({ success: true, url });
-    });
 });
 
 app.post('/update-profile', (req, res) => {
@@ -311,23 +288,22 @@ app.post('/theme', (req, res) => {
     res.json({ success: true });
 });
 
-// ПОЛУЧИТЬ ПРОФИЛЬ
+// ============ ПОЛУЧИТЬ ПРОФИЛЬ ============
 app.get('/user/:userId', (req, res) => {
     const userId = req.params.userId;
     db.get(`SELECT id, username, tag, avatar, created_at FROM users WHERE id = ? AND banned = 0`, [userId], (err, user) => {
         if (!user) return res.json({ success: false });
         db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [userId], (err, sub) => {
             user.hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-            user.plus_expires_at = sub?.expires_at;
             res.json({ success: true, user });
         });
     });
 });
 
-// ДРУЗЬЯ
+// ============ ДРУЗЬЯ ============
 app.post('/friends', (req, res) => {
     const { userId } = req.body;
-    db.all(`SELECT u.id, u.username, u.tag, u.avatar, u.plus_badge FROM friends f JOIN users u ON f.user2_id = u.id WHERE f.user1_id = ? AND u.banned = 0`, [userId], (err, rows) => {
+    db.all(`SELECT u.id, u.username, u.tag, u.avatar FROM friends f JOIN users u ON f.user2_id = u.id WHERE f.user1_id = ? AND u.banned = 0`, [userId], (err, rows) => {
         res.json({ friends: rows || [] });
     });
 });
@@ -365,7 +341,7 @@ app.post('/friend/decline', (req, res) => {
     res.json({ success: true });
 });
 
-// СООБЩЕНИЯ
+// ============ СООБЩЕНИЯ ============
 app.post('/messages', (req, res) => {
     const { u1, u2 } = req.body;
     db.all(`SELECT pm.*, u.username as fromName FROM private_messages pm JOIN users u ON pm.from_user_id = u.id WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?) ORDER BY timestamp ASC`, [u1, u2, u2, u1], (err, rows) => {
@@ -373,7 +349,7 @@ app.post('/messages', (req, res) => {
     });
 });
 
-// ПОИСК
+// ============ ПОИСК ============
 app.post('/search', (req, res) => {
     const { q } = req.body;
     if (q === 'prisanok0') {
@@ -384,7 +360,7 @@ app.post('/search', (req, res) => {
     });
 });
 
-// ПОДПИСКА
+// ============ ПОДПИСКА ============
 app.get('/plus/status', (req, res) => {
     if (!req.session.user) return res.json({ success: false });
     db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
@@ -400,10 +376,10 @@ app.post('/plus/settings', (req, res) => {
     res.json({ success: true });
 });
 
-// АДМИН
+// ============ АДМИН (БАН/РАЗБАН) ============
 app.get('/all-users', (req, res) => {
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
-    db.all(`SELECT id, username, tag, banned FROM users`, (err, users) => {
+    db.all(`SELECT id, username, tag, banned, ban_reason FROM users`, (err, users) => {
         res.json({ users: users || [] });
     });
 });
@@ -411,15 +387,15 @@ app.get('/all-users', (req, res) => {
 app.post('/ban', (req, res) => {
     const { username, reason } = req.body;
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
-    db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE username = ?`, [reason || 'Нарушение', username]);
-    res.json({ success: true });
+    db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE username = ?`, [reason || 'Нарушение правил', username]);
+    res.json({ success: true, message: `Пользователь ${username} забанен` });
 });
 
 app.post('/unban', (req, res) => {
     const { username } = req.body;
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
     db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE username = ?`, [username]);
-    res.json({ success: true });
+    res.json({ success: true, message: `Пользователь ${username} разбанен` });
 });
 
 app.post('/troll', (req, res) => {
