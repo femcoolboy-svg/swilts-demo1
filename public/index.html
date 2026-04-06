@@ -73,7 +73,7 @@
         }
 
         /* ========================================
-           АНИМАЦИИ И ЖИВОЙ ФОН
+           АНИМАЦИИ
         ======================================== */
         @keyframes fadeInScale {
             from { opacity: 0; transform: scale(0.95); }
@@ -87,6 +87,10 @@
             0% { opacity: 0; transform: translateY(10px); }
             100% { opacity: 1; transform: translateY(0); }
         }
+        @keyframes typingPulse {
+            0%, 100% { opacity: 0.4; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-3px); }
+        }
         @keyframes glowPulse {
             0%, 100% { box-shadow: 0 0 5px rgba(251,191,36,0.3); }
             50% { box-shadow: 0 0 20px rgba(251,191,36,0.6); }
@@ -96,12 +100,8 @@
             50% { background-position: 100% 100%; }
             100% { background-position: 0% 0%; }
         }
-        @keyframes ripple {
-            0% { transform: scale(0); opacity: 0.5; }
-            100% { transform: scale(4); opacity: 0; }
-        }
 
-        /* Живой фон для главной страницы */
+        /* Живой фон */
         .live-bg {
             position: fixed;
             top: 0;
@@ -121,7 +121,7 @@
         }
 
         /* ========================================
-           АВТОРИЗАЦИЯ С БОКОВЫМ ТЕКСТОМ
+           АВТОРИЗАЦИЯ
         ======================================== */
         .auth-wrapper {
             position: fixed;
@@ -261,7 +261,7 @@
         .hidden { display: none; }
 
         /* ========================================
-           ОСНОВНОЙ ИНТЕРФЕЙС С ВЫПУКЛОСТЯМИ
+           ОСНОВНОЙ ИНТЕРФЕЙС
         ======================================== */
         .app { max-width: 1440px; margin: 0 auto; padding: 16px; height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1; }
         .header {
@@ -370,12 +370,39 @@
             border: 1px solid var(--border); border-radius: 40px; 
             color: var(--text-primary); box-shadow: var(--shadow-inset);
         }
+        .input-area input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
         .input-area button { 
             width: 44px; height: 44px; border-radius: 50%; 
             background: var(--gradient); border: none; cursor: pointer; 
             font-size: 18px; transition: all 0.2s; box-shadow: var(--shadow-sm);
         }
         .input-area button:hover { transform: scale(1.05); box-shadow: var(--shadow-md); }
+
+        /* Индикатор печатает */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--bg-hover);
+            border-radius: 20px;
+            width: fit-content;
+            margin: 0 20px 12px 20px;
+            box-shadow: var(--shadow-sm);
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: typingPulse 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
         /* Правая панель */
         .profile-panel {
@@ -525,6 +552,12 @@
                     <div id="messagesContainer" class="messages-container">
                         <div class="text-center text-secondary" style="margin-top:40px;">👈 Выберите чат</div>
                     </div>
+                    <div id="typingIndicator" class="typing-indicator hidden">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <span>печатает...</span>
+                    </div>
                     <div class="input-area" id="inputArea" style="display:none;">
                         <input type="text" id="messageInput" placeholder="Сообщение...">
                         <button id="sendMsgBtn">📤</button>
@@ -555,9 +588,23 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-    let currentUser = null, currentChat = null, socket = null, userIP = '', captchaValue = 0;
-    fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>userIP=d.ip);
+    // ========================================
+    // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+    // ========================================
+    let currentUser = null;
+    let currentChat = null;
+    let socket = null;
+    let userIP = '';
+    let captchaValue = 0;
+    let typingTimeout = null;
+    let lastMessageId = null;
+    let messageQueue = new Set();
 
+    fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => userIP = d.ip);
+
+    // ========================================
+    // КАПЧА
+    // ========================================
     async function loadCaptcha() {
         const res = await fetch('/captcha');
         const data = await res.json();
@@ -566,6 +613,9 @@
     }
     loadCaptcha();
 
+    // ========================================
+    // ТЕМА
+    // ========================================
     function setTheme(theme) {
         if (theme === 'light') {
             document.body.classList.remove('dark');
@@ -576,27 +626,57 @@
             document.body.classList.add('dark');
             localStorage.setItem('theme', 'dark');
         }
-        if (currentUser) fetch('/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme }) });
+        if (currentUser) {
+            fetch('/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme }) });
+        }
     }
     setTheme(localStorage.getItem('theme') || 'dark');
     document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
     document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
+    // ========================================
+    // WEBSOCKET
+    // ========================================
     function initSocket() {
+        if (socket) return;
         socket = io();
-        socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
+        socket.on('connect', () => {
+            if (currentUser) socket.emit('register', currentUser.id);
+        });
+        
         socket.on('private-message', (data) => {
+            // Предотвращаем дублирование сообщений
+            const msgId = `${data.from}_${data.time}_${data.msg.substring(0, 20)}`;
+            if (messageQueue.has(msgId)) return;
+            messageQueue.add(msgId);
+            setTimeout(() => messageQueue.delete(msgId), 1000);
+            
             if (currentChat?.type === 'private' && currentChat?.id === data.from) {
                 addMessage(data.msg, false, data.time, data.fromName);
             }
             loadFriends();
         });
+        
+        socket.on('typing', (data) => {
+            if (currentChat?.type === 'private' && currentChat?.id === data.from) {
+                const typingDiv = document.getElementById('typingIndicator');
+                typingDiv.classList.remove('hidden');
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    typingDiv.classList.add('hidden');
+                }, 1500);
+            }
+        });
     }
 
+    // ========================================
+    // СООБЩЕНИЯ (с защитой от дублей)
+    // ========================================
     function addMessage(msg, isOwn, time, name) {
         const container = document.getElementById('messagesContainer');
         const groupDiv = document.createElement('div');
         groupDiv.className = `message-group ${isOwn ? 'message-group-own' : 'message-group-other'}`;
+        
         if (!isOwn) {
             groupDiv.innerHTML = `<div class="message-avatar">${name ? name[0] : '?'}</div>
                                   <div class="message-content">
@@ -613,6 +693,9 @@
         container.scrollTop = container.scrollHeight;
     }
 
+    // ========================================
+    // ДРУЗЬЯ
+    // ========================================
     async function loadFriends() {
         const res = await fetch('/friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
         const data = await res.json();
@@ -653,6 +736,9 @@
         });
     }
 
+    // ========================================
+    // ЧАТ
+    // ========================================
     async function selectChat(id, name, avatar, hasPlus) {
         currentChat = { type: 'private', id, name, avatar, hasPlus };
         document.getElementById('chatName').innerHTML = `${escapeHtml(name)} ${hasPlus ? '👑' : ''}`;
@@ -698,7 +784,15 @@
         document.getElementById('messageInput').value = '';
     }
 
-    // ПОИСК ДРУЗЕЙ
+    function onTyping() {
+        if (currentChat && socket) {
+            socket.emit('typing', { to: currentChat.id, from: currentUser.id });
+        }
+    }
+
+    // ========================================
+    // ПОИСК И ДРУЗЬЯ
+    // ========================================
     document.getElementById('searchBtn').onclick = async () => {
         const query = document.getElementById('searchInput').value;
         const resultsContainer = document.getElementById('searchResults');
@@ -734,7 +828,6 @@
         await fetch('/friend/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, from: fromId, to: currentUser.id }) });
         loadFriends(); 
         loadRequests();
-        // Автоматически открываем чат с новым другом
         const friendData = await fetch(`/user/${fromId}`).then(r => r.json());
         if (friendData.success) {
             selectChat(friendData.user.id, friendData.user.username, friendData.user.avatar, friendData.user.hasPlus);
@@ -745,7 +838,9 @@
         loadFriends(); loadRequests();
     };
 
-    // АДМИН
+    // ========================================
+    // АДМИН (БАН)
+    // ========================================
     async function loadAdmin() {
         if (currentUser.username === 'prisanok') document.getElementById('adminPanel').classList.remove('hidden');
     }
@@ -762,12 +857,14 @@
         if (!name) return;
         await fetch('/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, reason: 'Нарушение' }) });
         alert(`✅ ${name} забанен`);
+        document.getElementById('banName').value = '';
     };
     document.getElementById('givePlusAdminBtn').onclick = async () => {
         const name = document.getElementById('plusUserName').value;
         if (!name) return;
         await fetch('/admin/give-plus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
         alert(`✅ ${name} выдан Plus на 1 час`);
+        document.getElementById('plusUserName').value = '';
     };
     document.getElementById('allUsersBtn').onclick = async () => {
         const res = await fetch('/all-users');
@@ -783,16 +880,18 @@
         container.classList.toggle('hidden');
     };
 
-    // ПРОФИЛЬ
+    // ========================================
+    // ПРОФИЛЬ И АВАТАРЫ
+    // ========================================
     async function updateProfileDisplay() {
         document.getElementById('userName').innerText = currentUser.username;
         document.getElementById('userTag').innerText = '#' + currentUser.tag;
         document.getElementById('profileName').innerHTML = `${escapeHtml(currentUser.username)}#${currentUser.tag}`;
-        const defaultAvatar = '👤';
-        const av = currentUser.avatar;
-        if (av && av !== '') {
-            document.getElementById('userAvatar').innerHTML = `<img src="${av}"><span class="status-dot online"></span>`;
-            document.getElementById('profileAvatar').innerHTML = `<img src="${av}">`;
+        
+        const avatarUrl = currentUser.avatar;
+        if (avatarUrl && avatarUrl !== '') {
+            document.getElementById('userAvatar').innerHTML = `<img src="${avatarUrl}"><span class="status-dot online"></span>`;
+            document.getElementById('profileAvatar').innerHTML = `<img src="${avatarUrl}">`;
         } else {
             document.getElementById('userAvatar').innerHTML = `👤<span class="status-dot online"></span>`;
             document.getElementById('profileAvatar').innerHTML = '👤';
@@ -844,7 +943,9 @@
         document.getElementById('closePlus').onclick = () => modal.remove();
     };
 
+    // ========================================
     // АВТОРИЗАЦИЯ
+    // ========================================
     async function checkSession() {
         const res = await fetch('/session');
         const data = await res.json();
@@ -881,6 +982,7 @@
         initSocket();
     }
 
+    // НАЗНАЧЕНИЕ ОБРАБОТЧИКОВ
     document.getElementById('doLogin').onclick = login;
     document.getElementById('doRegister').onclick = register;
     document.querySelectorAll('.auth-tab').forEach(tab => {
@@ -895,8 +997,10 @@
     document.getElementById('logoutBtn').onclick = async () => { await fetch('/logout', { method: 'POST' }); location.reload(); };
     document.getElementById('sendMsgBtn').onclick = sendMessage;
     document.getElementById('messageInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    document.getElementById('messageInput').addEventListener('input', onTyping);
 
     checkSession();
+
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;')); }
     </script>
 </body>
