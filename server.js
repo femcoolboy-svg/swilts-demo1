@@ -117,17 +117,33 @@ io.on('connection', (socket) => {
         socket.userId = userId;
     });
 
-    socket.on('private-message', (data) => {
+    socket.on('private-message', async (data) => {
+        // Сохраняем в БД
         db.run(`INSERT INTO private_messages (from_user_id, to_user_id, message) VALUES (?, ?, ?)`,
             [data.from, data.to, data.msg]);
+        
+        // Отправляем получателю
         const target = onlineUsers.get(data.to);
         if (target) {
             io.to(target).emit('private-message', {
+                id: Date.now(),
                 from: data.from,
                 fromName: data.fromName,
                 msg: data.msg,
                 time: new Date()
             });
+        }
+        
+        // Отправляем подтверждение отправителю (чтобы он не дублировал)
+        if (socket.id) {
+            io.to(socket.id).emit('message-sent', { id: Date.now() });
+        }
+    });
+
+    socket.on('typing', (data) => {
+        const target = onlineUsers.get(data.to);
+        if (target) {
+            io.to(target).emit('typing', { from: data.from });
         }
     });
 
@@ -237,23 +253,26 @@ app.post('/logout', (req, res) => {
 // ЗАГРУЗКА АВАТАРА
 app.post('/avatar', upload.single('file'), (req, res) => {
     if (!req.file) {
-        return res.status(400).json({ success: false, error: 'Нет файла' });
+        return res.json({ success: false, error: 'Нет файла' });
     }
-    const fileSize = req.file.size;
-    const userId = req.session.user.id;
-    
-    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [userId], (err, sub) => {
+    const url = `/uploads/${req.file.filename}`;
+    db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [url, req.session.user.id]);
+    req.session.user.avatar = url;
+    res.json({ success: true, url });
+});
+
+// ЗАГРУЗКА БАННЕРА
+app.post('/banner', upload.single('file'), (req, res) => {
+    if (!req.file) return res.json({ success: false });
+    const url = `/uploads/${req.file.filename}`;
+    db.get(`SELECT plan, expires_at FROM subscriptions WHERE user_id = ?`, [req.session.user.id], (err, sub) => {
         const hasPlus = sub && sub.plan !== 'free' && new Date(sub.expires_at) > new Date();
-        const maxSize = hasPlus ? 2 * 1024 * 1024 : 1 * 1024 * 1024;
-        
-        if (fileSize > maxSize) {
+        if (!hasPlus) {
             fs.unlink(req.file.path, () => {});
-            return res.json({ success: false, error: `Размер не более ${hasPlus ? '2' : '1'} МБ` });
+            return res.json({ success: false, error: '❌ Баннер только для SWILTS+' });
         }
-        
-        const url = `/uploads/${req.file.filename}`;
-        db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [url, userId]);
-        req.session.user.avatar = url;
+        db.run(`UPDATE users SET banner = ? WHERE id = ?`, [url, req.session.user.id]);
+        req.session.user.banner = url;
         res.json({ success: true, url });
     });
 });
@@ -346,12 +365,6 @@ app.post('/messages', (req, res) => {
     });
 });
 
-app.post('/send-message', (req, res) => {
-    const { from_user_id, to_user_id, message } = req.body;
-    db.run(`INSERT INTO private_messages (from_user_id, to_user_id, message) VALUES (?, ?, ?)`, [from_user_id, to_user_id, message]);
-    res.json({ success: true });
-});
-
 // ПОИСК
 app.post('/search', (req, res) => {
     const { q } = req.body;
@@ -418,4 +431,5 @@ app.post('/admin/give-plus', (req, res) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`🚀 SWILTS запущен на http://localhost:${PORT}`);
+    console.log(`👑 Создатель: prisanok / qazzaq32qaz`);
 });
