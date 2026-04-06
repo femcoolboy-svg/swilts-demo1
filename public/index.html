@@ -31,7 +31,10 @@
             --online: #3FB950;
             --offline: #6E7681;
             --border: #30363D;
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.2);
             --plus: linear-gradient(135deg, #FBBF24, #F59E0B);
             --gradient: linear-gradient(135deg, #6C63FF, #5A52D5);
         }
@@ -53,7 +56,10 @@
             --online: #2DA44E;
             --offline: #8B949E;
             --border: #E1E4E8;
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.8), inset 0 -1px 0 rgba(0,0,0,0.05);
             --plus: linear-gradient(135deg, #FBBF24, #F59E0B);
             --gradient: linear-gradient(135deg, #6C63FF, #5A52D5);
         }
@@ -67,7 +73,7 @@
         }
 
         /* ========================================
-           АНИМАЦИИ
+           АНИМАЦИИ И ЖИВОЙ ФОН
         ======================================== */
         @keyframes fadeInScale {
             from { opacity: 0; transform: scale(0.95); }
@@ -85,9 +91,37 @@
             0%, 100% { box-shadow: 0 0 5px rgba(251,191,36,0.3); }
             50% { box-shadow: 0 0 20px rgba(251,191,36,0.6); }
         }
+        @keyframes floatBackground {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.5; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        /* Живой фон для главной страницы */
+        .live-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(125deg, 
+                rgba(108,99,255,0.05) 0%,
+                rgba(108,99,255,0.02) 25%,
+                rgba(251,191,36,0.03) 50%,
+                rgba(108,99,255,0.02) 75%,
+                rgba(108,99,255,0.05) 100%);
+            background-size: 200% 200%;
+            animation: floatBackground 15s ease infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
 
         /* ========================================
-           АВТОРИЗАЦИЯ
+           АВТОРИЗАЦИЯ С БОКОВЫМ ТЕКСТОМ
         ======================================== */
         .auth-wrapper {
             position: fixed;
@@ -102,22 +136,54 @@
             z-index: 1000;
         }
         .auth-card {
+            display: flex;
+            max-width: 1000px;
+            width: 90%;
             background: var(--bg-card);
             border-radius: 32px;
-            padding: 40px;
-            width: 420px;
-            box-shadow: var(--shadow);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
             border: 1px solid var(--border);
             animation: fadeInScale 0.4s ease-out;
         }
-        .auth-card h1 {
+        .auth-brand {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(251,191,36,0.1));
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             text-align: center;
-            margin-bottom: 28px;
-            font-size: 42px;
-            background: var(--gradient);
+        }
+        .auth-brand .logo { font-size: 64px; margin-bottom: 20px; }
+        .auth-brand h2 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #FBBF24);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            margin-bottom: 16px;
+        }
+        .auth-brand p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .auth-features {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .auth-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+        .auth-forms {
+            width: 420px;
+            padding: 48px;
         }
         .auth-tabs {
             display: flex;
@@ -157,6 +223,7 @@
             color: var(--text-primary);
             font-size: 15px;
             transition: all 0.2s;
+            box-shadow: var(--shadow-inset);
         }
         .input-group input:focus {
             outline: none;
@@ -174,8 +241,9 @@
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
         }
-        .auth-form button:hover { transform: scale(1.02); filter: brightness(1.05); }
+        .auth-form button:hover { transform: scale(1.02); filter: brightness(1.05); box-shadow: var(--shadow-md); }
         .captcha-block { display: flex; gap: 12px; margin-bottom: 16px; }
         .captcha-number {
             background: var(--bg-input);
@@ -187,32 +255,37 @@
             min-width: 100px;
             border: 1px solid var(--border);
             letter-spacing: 4px;
+            box-shadow: var(--shadow-inset);
         }
         .error-message { color: var(--danger); font-size: 12px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
         .hidden { display: none; }
 
         /* ========================================
-           ОСНОВНОЙ ИНТЕРФЕЙС
+           ОСНОВНОЙ ИНТЕРФЕЙС С ВЫПУКЛОСТЯМИ
         ======================================== */
-        .app { max-width: 1440px; margin: 0 auto; padding: 16px; height: 100vh; display: flex; flex-direction: column; }
+        .app { max-width: 1440px; margin: 0 auto; padding: 16px; height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1; }
         .header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px 20px; background: var(--bg-card); border-radius: 60px;
-            margin-bottom: 20px; border: 1px solid var(--border); box-shadow: var(--shadow);
+            margin-bottom: 20px; border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
         .user-area { display: flex; align-items: center; gap: 14px; }
         .avatar {
             width: 48px; height: 48px; border-radius: 50%;
             background: var(--gradient); display: flex; align-items: center;
             justify-content: center; font-size: 24px; overflow: hidden;
-            position: relative; cursor: pointer; transition: transform 0.2s;
+            position: relative; cursor: pointer; transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
         }
-        .avatar:hover { transform: scale(1.05); }
+        .avatar:hover { transform: scale(1.05); box-shadow: var(--shadow-md); }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .status-dot {
             position: absolute; bottom: 2px; right: 2px;
             width: 12px; height: 12px; border-radius: 50%;
             border: 2px solid var(--bg-card);
+            box-shadow: var(--shadow-sm);
         }
         .status-dot.online { background-color: var(--online); }
         .grid {
@@ -224,21 +297,24 @@
             width: 38px; height: 38px; border-radius: 50%;
             background: var(--bg-hover); border: none; cursor: pointer;
             font-size: 18px; transition: all 0.2s;
+            box-shadow: var(--shadow-inset);
         }
-        .btn-icon:hover { background: var(--accent); transform: scale(1.05); }
+        .btn-icon:hover { background: var(--accent); transform: scale(1.05); box-shadow: var(--shadow-md); }
 
         /* Боковая панель */
         .sidebar {
             background: var(--bg-card); border-radius: 24px;
             border: 1px solid var(--border); overflow: hidden;
             display: flex; flex-direction: column;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
         .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
         .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
         .search-box input {
             flex: 1; padding: 12px; background: var(--bg-input);
             border: 1px solid var(--border); border-radius: 40px;
-            color: var(--text-primary);
+            color: var(--text-primary); box-shadow: var(--shadow-inset);
         }
         .section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
         .section-title {
@@ -249,13 +325,15 @@
         .chat-item {
             display: flex; align-items: center; gap: 12px; padding: 12px;
             border-radius: 16px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px;
+            background: var(--bg-hover);
+            box-shadow: var(--shadow-sm);
         }
-        .chat-item:hover { background: var(--bg-hover); transform: translateX(4px); }
+        .chat-item:hover { background: var(--accent-glow); transform: translateX(4px); box-shadow: var(--shadow-md); }
         .chat-avatar {
             width: 48px; height: 48px; border-radius: 50%;
             background: var(--gradient); display: flex; align-items: center;
             justify-content: center; font-size: 20px; overflow: hidden;
-            position: relative;
+            position: relative; box-shadow: var(--shadow-sm);
         }
         .chat-info { flex: 1; min-width: 0; }
         .chat-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
@@ -265,6 +343,8 @@
             background: var(--bg-card); border-radius: 24px;
             border: 1px solid var(--border); display: flex;
             flex-direction: column; overflow: hidden;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
         .chat-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
         .messages-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -274,21 +354,35 @@
             width: 36px; height: 36px; border-radius: 50%;
             background: var(--accent); display: flex; align-items: center;
             justify-content: center; font-size: 16px; overflow: hidden; flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
         }
         .message-content { max-width: 70%; }
-        .message-bubble { padding: 10px 16px; border-radius: 20px; word-wrap: break-word; }
+        .message-bubble { 
+            padding: 10px 16px; border-radius: 20px; word-wrap: break-word;
+            box-shadow: var(--shadow-sm);
+        }
         .message-group-own .message-bubble { background: var(--accent); color: white; border-bottom-right-radius: 6px; }
         .message-group-other .message-bubble { background: var(--bg-hover); border-bottom-left-radius: 6px; }
         .message-time { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
         .input-area { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 12px; background: var(--bg-card); }
-        .input-area input { flex: 1; padding: 12px 18px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 40px; color: var(--text-primary); }
-        .input-area button { width: 44px; height: 44px; border-radius: 50%; background: var(--gradient); border: none; cursor: pointer; font-size: 18px; transition: all 0.2s; }
-        .input-area button:hover { transform: scale(1.05); }
+        .input-area input { 
+            flex: 1; padding: 12px 18px; background: var(--bg-input); 
+            border: 1px solid var(--border); border-radius: 40px; 
+            color: var(--text-primary); box-shadow: var(--shadow-inset);
+        }
+        .input-area button { 
+            width: 44px; height: 44px; border-radius: 50%; 
+            background: var(--gradient); border: none; cursor: pointer; 
+            font-size: 18px; transition: all 0.2s; box-shadow: var(--shadow-sm);
+        }
+        .input-area button:hover { transform: scale(1.05); box-shadow: var(--shadow-md); }
 
         /* Правая панель */
         .profile-panel {
             background: var(--bg-card); border-radius: 24px;
             border: 1px solid var(--border); overflow-y: auto;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
         .profile-banner {
             width: 100%; height: 100px;
@@ -299,11 +393,11 @@
             width: 80px; height: 80px; border-radius: 50%;
             border: 4px solid var(--bg-card); background: var(--accent);
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 36px; overflow: hidden;
+            font-size: 36px; overflow: hidden; box-shadow: var(--shadow-md);
         }
         .profile-name { text-align: center; margin-top: 12px; font-weight: 700; font-size: 18px; }
         .profile-bio { text-align: center; font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
-        .stats-grid { display: flex; justify-content: space-around; padding: 16px; margin: 16px; background: var(--bg-hover); border-radius: 20px; }
+        .stats-grid { display: flex; justify-content: space-around; padding: 16px; margin: 16px; background: var(--bg-hover); border-radius: 20px; box-shadow: var(--shadow-inset); }
         .stat-item { text-align: center; }
         .stat-value { font-size: 22px; font-weight: 700; }
         .stat-label { font-size: 11px; color: var(--text-secondary); }
@@ -311,9 +405,9 @@
         .menu-item {
             padding: 12px; margin: 6px 0; background: var(--bg-hover);
             border-radius: 14px; cursor: pointer; transition: all 0.2s;
-            text-align: center; font-weight: 500;
+            text-align: center; font-weight: 500; box-shadow: var(--shadow-sm);
         }
-        .menu-item:hover { background: var(--accent-glow); transform: translateX(4px); }
+        .menu-item:hover { background: var(--accent-glow); transform: translateX(4px); box-shadow: var(--shadow-md); }
         .modal {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px);
@@ -323,7 +417,7 @@
         .modal-content {
             background: var(--bg-card); border-radius: 28px;
             padding: 28px; width: 90%; max-width: 450px;
-            border: 1px solid var(--border);
+            border: 1px solid var(--border); box-shadow: var(--shadow-lg);
         }
         .flex { display: flex; align-items: center; gap: 12px; }
         .text-center { text-align: center; }
@@ -332,30 +426,45 @@
     </style>
 </head>
 <body class="dark">
+    <!-- ЖИВОЙ ФОН -->
+    <div class="live-bg"></div>
+
     <!-- АВТОРИЗАЦИЯ -->
     <div id="authPanel" class="auth-wrapper">
         <div class="auth-card">
-            <h1>🔷 SWILTS</h1>
-            <div class="auth-tabs">
-                <div class="auth-tab active" data-tab="login">🔑 Вход</div>
-                <div class="auth-tab" data-tab="register">📝 Регистрация</div>
-            </div>
-            <div id="loginForm" class="auth-form active">
-                <div class="input-group"><input type="text" id="loginUsername" placeholder="Никнейм"></div>
-                <div class="input-group"><input type="password" id="loginPassword" placeholder="Пароль"></div>
-                <button id="doLogin">Войти</button>
-                <div id="loginMsg" class="error-message mt-2 hidden"></div>
-            </div>
-            <div id="registerForm" class="auth-form">
-                <div class="input-group"><input type="text" id="regUsername" placeholder="Никнейм (3-20)"></div>
-                <div class="input-group"><input type="email" id="regEmail" placeholder="Email"></div>
-                <div class="input-group"><input type="password" id="regPassword" placeholder="Пароль (мин. 6)"></div>
-                <div class="captcha-block">
-                    <div class="captcha-number" id="captchaNum">0</div>
-                    <input type="text" id="regCaptcha" placeholder="Введите число">
+            <div class="auth-brand">
+                <div class="logo">🔷</div>
+                <h2>SWILTS</h2>
+                <p>Приватный и безопасный мессенджер нового поколения</p>
+                <div class="auth-features">
+                    <div class="auth-feature"><span>🔒</span> Полная конфиденциальность</div>
+                    <div class="auth-feature"><span>⚡</span> Мгновенные сообщения</div>
+                    <div class="auth-feature"><span>👑</span> Премиум возможности</div>
+                    <div class="auth-feature"><span>🎨</span> Кастомизация профиля</div>
                 </div>
-                <button id="doRegister">Зарегистрироваться</button>
-                <div id="regMsg" class="error-message mt-2 hidden"></div>
+            </div>
+            <div class="auth-forms">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" data-tab="login">🔑 Вход</div>
+                    <div class="auth-tab" data-tab="register">📝 Регистрация</div>
+                </div>
+                <div id="loginForm" class="auth-form active">
+                    <div class="input-group"><input type="text" id="loginUsername" placeholder="Никнейм"></div>
+                    <div class="input-group"><input type="password" id="loginPassword" placeholder="Пароль"></div>
+                    <button id="doLogin">Войти</button>
+                    <div id="loginMsg" class="error-message mt-2 hidden"></div>
+                </div>
+                <div id="registerForm" class="auth-form">
+                    <div class="input-group"><input type="text" id="regUsername" placeholder="Никнейм (3-20)"></div>
+                    <div class="input-group"><input type="email" id="regEmail" placeholder="Email"></div>
+                    <div class="input-group"><input type="password" id="regPassword" placeholder="Пароль (мин. 6)"></div>
+                    <div class="captcha-block">
+                        <div class="captcha-number" id="captchaNum">0</div>
+                        <input type="text" id="regCaptcha" placeholder="Введите число">
+                    </div>
+                    <button id="doRegister">Зарегистрироваться</button>
+                    <div id="regMsg" class="error-message mt-2 hidden"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -623,7 +732,13 @@
 
     window.acceptReq = async (id, fromId) => {
         await fetch('/friend/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, from: fromId, to: currentUser.id }) });
-        loadFriends(); loadRequests();
+        loadFriends(); 
+        loadRequests();
+        // Автоматически открываем чат с новым другом
+        const friendData = await fetch(`/user/${fromId}`).then(r => r.json());
+        if (friendData.success) {
+            selectChat(friendData.user.id, friendData.user.username, friendData.user.avatar, friendData.user.hasPlus);
+        }
     };
     window.declineReq = async (id) => {
         await fetch('/friend/decline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
