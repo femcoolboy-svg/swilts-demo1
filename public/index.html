@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWILTS — Современный мессенджер</title>
+    <title>SWILTS — Мессенджер</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* ТЕМЫ */
         body.dark {
             --bg: #0D1117;
             --card: #161B22;
@@ -47,7 +46,6 @@
             min-height: 100vh;
         }
 
-        /* ЖИВОЙ ФОН */
         .live-bg {
             position: fixed;
             top: 0;
@@ -112,7 +110,6 @@
             padding: 10px;
             border-radius: 60px;
             cursor: pointer;
-            transition: all 0.2s;
             font-weight: 600;
             color: var(--text-sec);
         }
@@ -386,6 +383,22 @@
             0%, 100% { opacity: 0.4; transform: translateY(0); }
             50% { opacity: 1; transform: translateY(-3px); }
         }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card);
+            border-left: 4px solid var(--accent);
+            padding: 12px 20px;
+            border-radius: 12px;
+            z-index: 3000;
+            box-shadow: var(--shadow);
+            animation: slideInRight 0.3s ease;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
         .flex { display: flex; align-items: center; gap: 10px; }
         .text-center { text-align: center; }
         .mt-2 { margin-top: 8px; }
@@ -518,7 +531,10 @@
     let userIP = '';
     let captchaValue = 0;
     let typingTimeout = null;
-    let sentMessages = new Set();
+    let lastTypingTime = 0;
+    let isSending = false;
+    let lastSentMsg = '';
+    const receivedMessages = new Set();
 
     fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>userIP=d.ip);
 
@@ -545,6 +561,15 @@
     document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
     document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.borderLeftColor = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--accent)';
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
     function initSocket() {
         if (socket) return;
         socket = io();
@@ -554,9 +579,9 @@
         });
         
         socket.on('private-message', (data) => {
-            // Проверяем, не отправили ли мы сами это сообщение
-            const msgKey = `${data.from}_${data.msg}_${data.time}`;
-            if (sentMessages.has(msgKey)) return;
+            if (receivedMessages.has(data.id)) return;
+            receivedMessages.add(data.id);
+            setTimeout(() => receivedMessages.delete(data.id), 5000);
             
             if (currentChat?.id === data.from) {
                 const container = document.getElementById('messagesContainer');
@@ -569,10 +594,7 @@
             loadFriends();
         });
         
-        socket.on('message-sent', (data) => {
-            // Сообщение подтверждено сервером, удаляем из временного хранилища
-            // (ничего не делаем, просто подтверждение)
-        });
+        socket.on('message-sent', () => {});
         
         socket.on('typing', (data) => {
             if (currentChat?.id === data.from) {
@@ -581,9 +603,24 @@
                 clearTimeout(typingTimeout);
                 typingTimeout = setTimeout(() => {
                     typingDiv.classList.add('hidden');
-                }, 1500);
+                }, 2000);
             }
         });
+        
+        socket.on('typing-stop', (data) => {
+            if (currentChat?.id === data.from) {
+                document.getElementById('typingIndicator').classList.add('hidden');
+            }
+        });
+    }
+
+    function onTyping() {
+        if (!currentChat || !socket) return;
+        const now = Date.now();
+        if (now - lastTypingTime > 2000) {
+            lastTypingTime = now;
+            socket.emit('typing', { to: currentChat.id });
+        }
     }
 
     async function loadFriends() {
@@ -599,7 +636,8 @@
             const div = document.createElement('div');
             div.className = 'chat-item';
             div.onclick = () => selectChat(friend.id, friend.username, friend.avatar, friend.hasPlus);
-            div.innerHTML = `<div class="chat-avatar">${friend.avatar ? `<img src="${friend.avatar}">` : friend.username[0]}</div>
+            const avatarHtml = (friend.avatar && friend.avatar !== '') ? `<img src="${friend.avatar}" onerror="this.onerror=null; this.parentElement.innerHTML='${friend.username[0]}'">` : friend.username[0];
+            div.innerHTML = `<div class="chat-avatar">${avatarHtml}</div>
                             <div class="chat-info">
                                 <div class="chat-name">${escapeHtml(friend.username)} ${friend.hasPlus ? '👑' : ''}</div>
                                 <div class="text-sec">#${friend.tag}</div>
@@ -629,7 +667,7 @@
     async function selectChat(id, name, avatar, hasPlus) {
         currentChat = { id, name, avatar, hasPlus };
         document.getElementById('chatName').innerHTML = `${escapeHtml(name)} ${hasPlus ? '👑' : ''}`;
-        document.getElementById('chatAvatar').innerHTML = avatar ? `<img src="${avatar}">` : '👤';
+        document.getElementById('chatAvatar').innerHTML = (avatar && avatar !== '') ? `<img src="${avatar}">` : '👤';
         document.getElementById('chatStatus').innerHTML = 'В сети';
         document.getElementById('inputArea').style.display = 'flex';
         await loadMessages();
@@ -653,9 +691,12 @@
 
     async function sendMessage() {
         const msg = document.getElementById('messageInput').value;
-        if (!msg || !currentChat) return;
+        if (!msg || !currentChat || isSending) return;
+        if (lastSentMsg === msg) return;
         
-        // Добавляем сообщение на экран сразу
+        lastSentMsg = msg;
+        isSending = true;
+        
         const container = document.getElementById('messagesContainer');
         const div = document.createElement('div');
         div.className = `message message-own`;
@@ -663,12 +704,6 @@
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
         
-        // Запоминаем, что отправили
-        const msgKey = `${currentUser.id}_${msg}_${Date.now()}`;
-        sentMessages.add(msgKey);
-        setTimeout(() => sentMessages.delete(msgKey), 2000);
-        
-        // Отправляем через сокет
         socket.emit('private-message', {
             from: currentUser.id,
             to: currentChat.id,
@@ -677,12 +712,11 @@
         });
         
         document.getElementById('messageInput').value = '';
-    }
-
-    function onTyping() {
-        if (currentChat && socket) {
-            socket.emit('typing', { to: currentChat.id, from: currentUser.id });
-        }
+        
+        setTimeout(() => {
+            isSending = false;
+            lastSentMsg = '';
+        }, 500);
     }
 
     // ПОИСК
@@ -711,10 +745,12 @@
         const res = await fetch('/friend/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ from: currentUser.id, to: id }) });
         const data = await res.json();
         if (data.success) {
-            document.getElementById('searchResults').innerHTML = '<div class="text-center" style="color:var(--success);">✅ Запрос отправлен</div>';
-            setTimeout(() => document.getElementById('searchResults').innerHTML = '', 2000);
+            showToast('✅ Запрос отправлен', 'success');
+            document.getElementById('searchResults').innerHTML = '';
             loadRequests();
-        } else alert('❌ ' + data.error);
+        } else {
+            showToast('❌ ' + data.error, 'error');
+        }
     }
 
     window.acceptReq = async (id, fromId) => {
@@ -724,6 +760,7 @@
         if (friendData.success) {
             selectChat(friendData.user.id, friendData.user.username, friendData.user.avatar, friendData.user.hasPlus);
         }
+        showToast('✅ Друг добавлен', 'success');
     };
     window.declineReq = async (id) => {
         await fetch('/friend/decline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
@@ -736,24 +773,25 @@
     }
     document.getElementById('trollBtn').onclick = async () => {
         const name = document.getElementById('trollName').value;
-        if (!name) return;
+        if (!name) { showToast('❌ Введите никнейм', 'error'); return; }
         const res = await fetch('/troll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
         const data = await res.json();
-        if (data.success) location.reload();
-        else alert('Ошибка');
+        if (data.success) { location.reload(); }
+        else { showToast('❌ ' + (data.error || 'Ошибка'), 'error'); }
     };
     document.getElementById('banBtn').onclick = async () => {
         const name = document.getElementById('banName').value;
-        if (!name) return;
+        if (!name) { showToast('❌ Введите никнейм', 'error'); return; }
+        if (!confirm(`Забанить ${name}?`)) return;
         await fetch('/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, reason: 'Нарушение' }) });
-        alert(`✅ ${name} забанен`);
+        showToast(`✅ ${name} забанен`, 'success');
         document.getElementById('banName').value = '';
     };
     document.getElementById('givePlusAdminBtn').onclick = async () => {
         const name = document.getElementById('plusUserName').value;
-        if (!name) return;
+        if (!name) { showToast('❌ Введите никнейм', 'error'); return; }
         await fetch('/admin/give-plus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
-        alert(`✅ ${name} выдан Plus на 1 час`);
+        showToast(`✅ ${name} выдан Plus на 1 час`, 'success');
         document.getElementById('plusUserName').value = '';
     };
     document.getElementById('allUsersBtn').onclick = async () => {
@@ -775,9 +813,9 @@
         document.getElementById('userName').innerText = currentUser.username;
         document.getElementById('userTag').innerText = '#' + currentUser.tag;
         document.getElementById('profileName').innerHTML = `${escapeHtml(currentUser.username)}#${currentUser.tag}`;
-        if (currentUser.avatar) {
-            document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
-            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.avatar}">`;
+        if (currentUser.avatar && currentUser.avatar !== '') {
+            document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.avatar}" onerror="this.onerror=null; this.parentElement.innerHTML='👤'">`;
+            document.getElementById('profileAvatar').innerHTML = `<img src="${currentUser.avatar}" onerror="this.onerror=null; this.parentElement.innerHTML='👤'">`;
         }
         if (currentUser.banner) document.getElementById('profileBanner').style.backgroundImage = `url(${currentUser.banner})`;
         if (currentUser.bio) document.getElementById('profileBio').innerText = currentUser.bio;
@@ -794,24 +832,24 @@
             fd.append('file', file);
             const res = await fetch('/avatar', { method: 'POST', body: fd });
             const data = await res.json();
-            if (data.success) location.reload();
-            else alert('❌ ' + (data.error || 'Ошибка'));
+            if (data.success) { location.reload(); }
+            else { showToast('❌ ' + (data.error || 'Ошибка'), 'error'); }
         };
         input.click();
     }
     document.getElementById('editAvatarBtn').onclick = uploadFile;
     document.getElementById('changeUsernameBtn').onclick = async () => {
-        if (currentUser.username === 'prisanok') { alert('❌ Создатель не может сменить ник'); return; }
+        if (currentUser.username === 'prisanok') { showToast('❌ Создатель не может сменить ник', 'error'); return; }
         const newName = prompt('Новый никнейм (3-20):');
         if (!newName) return;
         const res = await fetch('/change-username', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newUsername: newName }) });
         const data = await res.json();
-        if (data.success) location.reload();
-        else alert('❌ ' + data.error);
+        if (data.success) { location.reload(); }
+        else { showToast('❌ ' + data.error, 'error'); }
     };
     document.getElementById('plusBtn').onclick = () => window.open('/plus.html', '_blank');
     document.getElementById('plusSettingsBtn').onclick = async () => {
-        if (!currentUser.hasPlus) { alert('❌ Только для SWILTS+'); window.open('/plus.html', '_blank'); return; }
+        if (!currentUser.hasPlus) { showToast('❌ Только для SWILTS+', 'error'); window.open('/plus.html', '_blank'); return; }
         const modal = document.createElement('div');
         modal.style.position = 'fixed';
         modal.style.top = '0';
