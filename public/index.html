@@ -475,6 +475,8 @@
                         <input type="text" id="trollName" placeholder="Никнейм" class="mt-2" style="width:100%; padding:8px; background:var(--input); border:1px solid var(--border); border-radius:12px;">
                         <div class="menu-item" id="banBtn">🔨 БАН</div>
                         <input type="text" id="banName" placeholder="Никнейм" class="mt-2" style="width:100%; padding:8px; background:var(--input); border:1px solid var(--border); border-radius:12px;">
+                        <div class="menu-item" id="unbanBtn">🔓 РАЗБАН</div>
+                        <input type="text" id="unbanName" placeholder="Никнейм" class="mt-2" style="width:100%; padding:8px; background:var(--input); border:1px solid var(--border); border-radius:12px;">
                         <div class="menu-item" id="givePlusAdminBtn">💎 ВЫДАТЬ PLUS</div>
                         <input type="text" id="plusUserName" placeholder="Никнейм" class="mt-2" style="width:100%; padding:8px; background:var(--input); border:1px solid var(--border); border-radius:12px;">
                         <div class="menu-item" id="allUsersBtn">👥 ВСЕ ПОЛЬЗОВАТЕЛИ</div>
@@ -533,7 +535,6 @@
     let typingTimeout = null;
     let lastTypingTime = 0;
     let isSending = false;
-    let lastSentMsg = '';
     const receivedMessages = new Set();
 
     fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>userIP=d.ip);
@@ -581,7 +582,7 @@
         socket.on('private-message', (data) => {
             if (receivedMessages.has(data.id)) return;
             receivedMessages.add(data.id);
-            setTimeout(() => receivedMessages.delete(data.id), 5000);
+            setTimeout(() => receivedMessages.delete(data.id), 3000);
             
             if (currentChat?.id === data.from) {
                 const container = document.getElementById('messagesContainer');
@@ -593,8 +594,6 @@
             }
             loadFriends();
         });
-        
-        socket.on('message-sent', () => {});
         
         socket.on('typing', (data) => {
             if (currentChat?.id === data.from) {
@@ -617,7 +616,7 @@
     function onTyping() {
         if (!currentChat || !socket) return;
         const now = Date.now();
-        if (now - lastTypingTime > 2000) {
+        if (now - lastTypingTime > 1500) {
             lastTypingTime = now;
             socket.emit('typing', { to: currentChat.id });
         }
@@ -692,9 +691,7 @@
     async function sendMessage() {
         const msg = document.getElementById('messageInput').value;
         if (!msg || !currentChat || isSending) return;
-        if (lastSentMsg === msg) return;
         
-        lastSentMsg = msg;
         isSending = true;
         
         const container = document.getElementById('messagesContainer');
@@ -715,7 +712,6 @@
         
         setTimeout(() => {
             isSending = false;
-            lastSentMsg = '';
         }, 500);
     }
 
@@ -767,10 +763,11 @@
         loadFriends(); loadRequests();
     };
 
-    // АДМИН
+    // АДМИН (БАН/РАЗБАН)
     async function loadAdmin() {
         if (currentUser.username === 'prisanok') document.getElementById('adminPanel').classList.remove('hidden');
     }
+    
     document.getElementById('trollBtn').onclick = async () => {
         const name = document.getElementById('trollName').value;
         if (!name) { showToast('❌ Введите никнейм', 'error'); return; }
@@ -779,21 +776,48 @@
         if (data.success) { location.reload(); }
         else { showToast('❌ ' + (data.error || 'Ошибка'), 'error'); }
     };
+    
     document.getElementById('banBtn').onclick = async () => {
         const name = document.getElementById('banName').value;
         if (!name) { showToast('❌ Введите никнейм', 'error'); return; }
-        if (!confirm(`Забанить ${name}?`)) return;
-        await fetch('/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, reason: 'Нарушение' }) });
-        showToast(`✅ ${name} забанен`, 'success');
-        document.getElementById('banName').value = '';
+        if (!confirm(`Забанить пользователя ${name}?`)) return;
+        const res = await fetch('/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, reason: 'Нарушение правил' }) });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`✅ ${name} забанен`, 'success');
+            document.getElementById('banName').value = '';
+        } else {
+            showToast('❌ Ошибка при бане', 'error');
+        }
     };
+    
+    document.getElementById('unbanBtn').onclick = async () => {
+        const name = document.getElementById('unbanName').value;
+        if (!name) { showToast('❌ Введите никнейм', 'error'); return; }
+        if (!confirm(`Разбанить пользователя ${name}?`)) return;
+        const res = await fetch('/unban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name }) });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`✅ ${name} разбанен`, 'success');
+            document.getElementById('unbanName').value = '';
+        } else {
+            showToast('❌ Ошибка при разбане', 'error');
+        }
+    };
+    
     document.getElementById('givePlusAdminBtn').onclick = async () => {
         const name = document.getElementById('plusUserName').value;
         if (!name) { showToast('❌ Введите никнейм', 'error'); return; }
-        await fetch('/admin/give-plus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
-        showToast(`✅ ${name} выдан Plus на 1 час`, 'success');
-        document.getElementById('plusUserName').value = '';
+        const res = await fetch('/admin/give-plus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, adminUsername: currentUser.username }) });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`✅ ${name} выдан Plus на 1 час`, 'success');
+            document.getElementById('plusUserName').value = '';
+        } else {
+            showToast('❌ Ошибка', 'error');
+        }
     };
+    
     document.getElementById('allUsersBtn').onclick = async () => {
         const res = await fetch('/all-users');
         const data = await res.json();
@@ -802,7 +826,7 @@
         data.users.forEach(u => {
             const div = document.createElement('div');
             div.className = 'chat-item';
-            div.innerHTML = `${escapeHtml(u.username)}#${u.tag} ${u.banned ? '(забанен)' : ''}`;
+            div.innerHTML = `${escapeHtml(u.username)}#${u.tag} ${u.banned ? '🔴 ЗАБАНЕН' : '🟢 АКТИВЕН'}`;
             container.appendChild(div);
         });
         container.classList.toggle('hidden');
