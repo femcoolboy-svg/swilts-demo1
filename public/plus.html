@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWILTS+ — Премиум подписка</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,77 +14,58 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 50%, #0f0c29 100%);
+            background: linear-gradient(145deg, #07070f 0%, #12121f 50%, #0a0a14 100%);
             min-height: 100vh;
-            padding: 40px 20px;
+            padding: 0;
             position: relative;
-            overflow-x: hidden;
         }
 
-        /* Фоновые эффекты */
-        body::before {
-            content: '';
+        /* Анимированный фон с частицами */
+        .bg-animation {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 20% 40%, rgba(88, 101, 242, 0.15) 0%, transparent 50%);
-            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             z-index: 0;
         }
 
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.15) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
+        .bg-animation .particle {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(124,138,255,0.3), rgba(160,126,255,0.1));
+            border-radius: 50%;
+            animation: floatParticle 15s infinite ease-in-out;
         }
 
+        @keyframes floatParticle {
+            0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-50px) translateX(30px) rotate(180deg); opacity: 0.8; }
+        }
+
+        /* Главный контейнер */
         .container {
             max-width: 1300px;
             margin: 0 auto;
+            padding: 40px 20px;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
-        /* АНИМАЦИИ */
+        /* Анимации */
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes fadeInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        @keyframes fadeInRight {
-            from {
-                opacity: 0;
-                transform: translateX(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+            50% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.6); }
         }
 
         @keyframes float {
@@ -92,164 +73,180 @@
             50% { transform: translateY(-10px); }
         }
 
-        @keyframes glow {
-            0% { box-shadow: 0 0 5px rgba(88, 101, 242, 0.3); }
-            100% { box-shadow: 0 0 25px rgba(88, 101, 242, 0.6); }
-        }
-
         @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
-        /* ХЕДЕР */
+        /* Хедер */
         .header {
             text-align: center;
             margin-bottom: 60px;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .header h1 {
-            font-size: 64px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 16px;
-            animation: float 3s ease-in-out infinite;
+            animation: fadeInUp 0.7s ease-out;
         }
 
         .header .badge {
             display: inline-block;
-            background: rgba(255, 215, 0, 0.15);
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.1));
             backdrop-filter: blur(10px);
             padding: 8px 24px;
-            border-radius: 50px;
-            font-size: 14px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
             color: #FFD700;
             border: 1px solid rgba(255, 215, 0, 0.3);
+            margin-bottom: 24px;
+            letter-spacing: 2px;
+        }
+
+        .header h1 {
+            font-size: 72px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00, #FFD700);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite, shimmer 6s ease infinite;
         }
 
         .header p {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.6);
             font-size: 18px;
-            max-width: 600px;
+            max-width: 550px;
             margin: 0 auto;
+            line-height: 1.5;
         }
 
-        /* СТАТУС ПОДПИСКИ */
+        /* Статус подписки */
         .status-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
             backdrop-filter: blur(20px);
             border-radius: 32px;
-            padding: 24px 32px;
-            margin-bottom: 50px;
+            padding: 28px 36px;
+            margin-bottom: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 20px;
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            animation: fadeInUp 0.6s ease-out 0.1s both;
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            animation: fadeInUp 0.7s ease-out 0.1s both;
         }
 
         .status-info h3 {
             color: #FFD700;
-            font-size: 20px;
+            font-size: 22px;
             margin-bottom: 8px;
         }
 
         .status-info p {
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 14px;
         }
 
         .status-badge {
             background: linear-gradient(135deg, #FFD700, #FFA500);
-            padding: 12px 24px;
-            border-radius: 40px;
+            padding: 12px 28px;
+            border-radius: 60px;
             font-weight: 700;
             color: #1a1a2e;
+            font-size: 16px;
+            box-shadow: 0 4px 20px rgba(255,215,0,0.3);
         }
 
-        /* ТАРИФЫ */
+        /* Сетка тарифов */
         .plans {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-            margin-bottom: 60px;
+            gap: 28px;
+            margin-bottom: 70px;
         }
 
         @media (max-width: 1100px) {
-            .plans {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .plans { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 600px) {
-            .plans {
-                grid-template-columns: 1fr;
-            }
+            .plans { grid-template-columns: 1fr; }
         }
 
+        /* Карточка тарифа */
         .plan {
-            background: rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, rgba(20,20,40,0.9), rgba(15,15,30,0.95));
             backdrop-filter: blur(20px);
-            border-radius: 32px;
-            padding: 32px 24px;
+            border-radius: 36px;
+            padding: 36px 28px;
             text-align: center;
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             position: relative;
             overflow: hidden;
-            animation: fadeInUp 0.6s ease-out both;
+            animation: fadeInScale 0.6s ease-out both;
         }
 
-        .plan:nth-child(1) { animation-delay: 0.05s; }
-        .plan:nth-child(2) { animation-delay: 0.15s; }
-        .plan:nth-child(3) { animation-delay: 0.25s; }
-        .plan:nth-child(4) { animation-delay: 0.35s; }
+        .plan::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #FFD700, transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .plan:hover::before {
+            opacity: 1;
+        }
 
         .plan:hover {
-            transform: translateY(-8px);
-            border-color: rgba(255, 215, 0, 0.4);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(-12px);
+            border-color: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255,215,0,0.15);
         }
 
         .plan.popular {
             border: 2px solid #FFD700;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+            transform: scale(1.02);
         }
 
-        .plan.popular::before {
-            content: '🔥 ПОПУЛЯРНЫЙ';
+        .plan.popular:hover {
+            transform: translateY(-12px) scale(1.02);
+        }
+
+        .plan.popular::after {
+            content: '⭐ ПОПУЛЯРНО';
             position: absolute;
-            top: 16px;
-            right: -30px;
+            top: 18px;
+            right: -35px;
             background: linear-gradient(135deg, #FFD700, #FFA500);
             color: #1a1a2e;
             font-size: 11px;
-            font-weight: 700;
-            padding: 6px 40px;
+            font-weight: 800;
+            padding: 5px 45px;
             transform: rotate(45deg);
             white-space: nowrap;
+            letter-spacing: 1px;
         }
 
         .plan-icon {
-            font-size: 48px;
+            font-size: 56px;
             margin-bottom: 20px;
         }
 
         .plan h3 {
-            font-size: 24px;
+            font-size: 26px;
             margin-bottom: 8px;
             color: white;
+            font-weight: 700;
         }
 
         .plan .price {
-            font-size: 48px;
+            font-size: 52px;
             font-weight: 800;
             color: #FFD700;
             margin: 20px 0;
@@ -257,21 +254,22 @@
 
         .plan .price small {
             font-size: 16px;
-            font-weight: 400;
+            font-weight: 500;
             color: rgba(255, 255, 255, 0.5);
         }
 
         .plan .old-price {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.35);
             text-decoration: line-through;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
         }
 
         .plan .saving {
             font-size: 12px;
             color: #23a55a;
             margin-bottom: 20px;
+            font-weight: 600;
         }
 
         .plan ul {
@@ -294,10 +292,11 @@
             color: #23a55a;
             font-weight: bold;
             font-size: 16px;
+            width: 20px;
         }
 
         .plan li.disabled {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.25);
         }
 
         .plan li.disabled::before {
@@ -307,21 +306,38 @@
 
         .plan button {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background: linear-gradient(135deg, #FFD700, #FFA500);
             border: none;
-            border-radius: 40px;
+            border-radius: 60px;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
             color: #1a1a2e;
-            margin-top: 10px;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .plan button:hover::before {
+            left: 100%;
         }
 
         .plan button:hover {
             transform: scale(1.02);
-            animation: glow 0.5s;
+            filter: brightness(1.05);
         }
 
         .plan button:disabled {
@@ -335,55 +351,57 @@
             color: white;
         }
 
-        /* ПРЕИМУЩЕСТВА */
+        /* Преимущества */
         .features {
-            background: rgba(255, 255, 255, 0.03);
+            background: linear-gradient(135deg, rgba(30,30,50,0.5), rgba(20,20,40,0.5));
             backdrop-filter: blur(20px);
             border-radius: 48px;
-            padding: 50px 40px;
-            margin-bottom: 50px;
+            padding: 60px 50px;
+            margin-bottom: 60px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .features h2 {
             text-align: center;
-            font-size: 36px;
-            margin-bottom: 40px;
+            font-size: 42px;
+            margin-bottom: 50px;
             background: linear-gradient(135deg, #fff, #aaa);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            font-weight: 700;
         }
 
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+            gap: 35px;
         }
 
         .feature {
             text-align: center;
-            padding: 20px;
+            padding: 25px;
             transition: all 0.3s;
-            border-radius: 24px;
+            border-radius: 28px;
+            background: rgba(255,255,255,0.02);
         }
 
         .feature:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-6px);
         }
 
         .feature .icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+            font-size: 52px;
+            margin-bottom: 18px;
             display: inline-block;
-            animation: float 3s ease-in-out infinite;
         }
 
         .feature h4 {
-            font-size: 18px;
+            font-size: 20px;
             color: #FFD700;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            font-weight: 600;
         }
 
         .feature p {
@@ -394,38 +412,43 @@
 
         /* FAQ */
         .faq {
-            background: rgba(255, 255, 255, 0.03);
+            background: linear-gradient(135deg, rgba(30,30,50,0.5), rgba(20,20,40,0.5));
             backdrop-filter: blur(20px);
             border-radius: 48px;
-            padding: 50px 40px;
-            margin-bottom: 40px;
+            padding: 60px 50px;
+            margin-bottom: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .faq h2 {
             text-align: center;
-            font-size: 36px;
-            margin-bottom: 40px;
+            font-size: 42px;
+            margin-bottom: 50px;
             background: linear-gradient(135deg, #fff, #aaa);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            font-weight: 700;
         }
 
         .faq-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 25px;
         }
 
         .faq-item {
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 24px;
-            padding: 20px;
+            border-radius: 28px;
+            padding: 24px;
             transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .faq-item:hover {
             background: rgba(255, 255, 255, 0.06);
+            transform: translateX(4px);
+            border-color: rgba(255,215,0,0.2);
         }
 
         .faq-item h4 {
@@ -440,14 +463,19 @@
             line-height: 1.5;
         }
 
-        /* КНОПКА НАЗАД */
+        /* Кнопка назад */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+        }
+
         .back-btn {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            padding: 14px 28px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 50px;
+            gap: 12px;
+            padding: 14px 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 60px;
             color: white;
             text-decoration: none;
             transition: all 0.3s;
@@ -456,76 +484,64 @@
         }
 
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateX(-5px);
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(-6px);
+            border-color: rgba(255,215,0,0.3);
         }
 
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-        }
-
-        /* АДМИН ПАНЕЛЬ */
+        /* Админ панель */
         .admin-panel {
-            background: rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, rgba(30,30,50,0.7), rgba(20,20,40,0.7));
             backdrop-filter: blur(20px);
-            border-radius: 32px;
-            padding: 30px;
-            margin-top: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 36px;
+            padding: 32px;
+            margin-top: 50px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
         }
 
         .admin-panel h3 {
             color: #FFD700;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             text-align: center;
+            font-size: 24px;
         }
 
         .admin-controls {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 18px;
             flex-wrap: wrap;
         }
 
         .admin-controls select, .admin-controls button {
-            padding: 12px 20px;
-            border-radius: 40px;
+            padding: 12px 24px;
+            border-radius: 50px;
             border: none;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             color: white;
             cursor: pointer;
+            font-size: 14px;
         }
 
         .admin-controls button {
             background: linear-gradient(135deg, #FFD700, #FFA500);
             color: #1a1a2e;
-            font-weight: 600;
-        }
-
-        /* АНИМАЦИИ ДЛЯ ЭЛЕМЕНТОВ */
-        .animate-left {
-            animation: fadeInLeft 0.6s ease-out both;
-        }
-
-        .animate-right {
-            animation: fadeInRight 0.6s ease-out both;
+            font-weight: 700;
         }
     </style>
 </head>
 <body>
+<div class="bg-animation" id="bgAnimation"></div>
+
 <div class="container">
-    <!-- ХЕДЕР -->
     <div class="header">
         <div class="badge">✨ ЭКСКЛЮЗИВНЫЕ ВОЗМОЖНОСТИ</div>
         <h1>💎 SWILTS+</h1>
         <p>Раскройте полный потенциал мессенджера с премиум-подпиской</p>
     </div>
 
-    <!-- СТАТУС ПОДПИСКИ -->
     <div id="statusContainer"></div>
 
-    <!-- ТАРИФЫ -->
     <div class="plans">
         <div class="plan free">
             <div class="plan-icon">🌙</div>
@@ -560,7 +576,7 @@
                 <li>✅ Видео-баннер профиля</li>
                 <li>✅ Приоритетная поддержка</li>
             </ul>
-            <button onclick="subscribe('month')">Купить за 149 ₽</button>
+            <button onclick="subscribe('month', 149)">Купить за 149 ₽</button>
         </div>
 
         <div class="plan">
@@ -575,7 +591,7 @@
                 <li>✅ Автопродление можно отключить</li>
                 <li>✅ Ранний доступ к новым функциям</li>
             </ul>
-            <button onclick="subscribe('year')">Купить за 1 290 ₽</button>
+            <button onclick="subscribe('year', 1290)">Купить за 1 290 ₽</button>
         </div>
 
         <div class="plan">
@@ -591,39 +607,36 @@
                 <li>✅ Доступ к бета-функциям</li>
                 <li>✅ VIP-статус в сообществе</li>
             </ul>
-            <button onclick="subscribe('lifetime')">Купить навсегда</button>
+            <button onclick="subscribe('lifetime', 4990)">Купить навсегда</button>
         </div>
     </div>
 
-    <!-- ПРЕИМУЩЕСТВА -->
     <div class="features">
         <h2>✨ Всё, что вы получаете</h2>
         <div class="features-grid">
-            <div class="feature"><div class="icon">🎨</div><h4>Кастомный цвет ника</h4><p>Выберите уникальный цвет для вашего имени — выделяйтесь среди друзей</p></div>
-            <div class="feature"><div class="icon">👑</div><h4>Эксклюзивный значок</h4><p>Получите премиум-значок рядом с ником — знак статуса</p></div>
-            <div class="feature"><div class="icon">🎬</div><h4>Анимированный аватар</h4><p>Загружайте GIF-аватарки и оживите свой профиль</p></div>
-            <div class="feature"><div class="icon">🎥</div><h4>Видео-баннер</h4><p>Красивое видео вместо статичного баннера в профиле</p></div>
-            <div class="feature"><div class="icon">👥</div><h4>Группы до 50 человек</h4><p>Создавайте большие сообщества с расширенными возможностями</p></div>
-            <div class="feature"><div class="icon">💬</div><h4>Безлимит друзей</h4><p>Добавляйте неограниченное количество друзей</p></div>
+            <div class="feature"><div class="icon">🎨</div><h4>Кастомный цвет ника</h4><p>Выберите уникальный цвет для вашего имени</p></div>
+            <div class="feature"><div class="icon">👑</div><h4>Эксклюзивный значок</h4><p>Премиум-значок рядом с ником</p></div>
+            <div class="feature"><div class="icon">🎬</div><h4>Анимированный аватар</h4><p>GIF-аватарки для профиля</p></div>
+            <div class="feature"><div class="icon">🎥</div><h4>Видео-баннер</h4><p>Видео вместо статичного баннера</p></div>
+            <div class="feature"><div class="icon">👥</div><h4>Группы до 50 человек</h4><p>Большие сообщества</p></div>
+            <div class="feature"><div class="icon">💬</div><h4>Безлимит друзей</h4><p>Неограниченное количество друзей</p></div>
             <div class="feature"><div class="icon">⚡</div><h4>Приоритетная поддержка</h4><p>Ваши вопросы решаются в первую очередь</p></div>
-            <div class="feature"><div class="icon">🎁</div><h4>Ранний доступ</h4><p>Первыми получайте новые функции и обновления</p></div>
+            <div class="feature"><div class="icon">🎁</div><h4>Ранний доступ</h4><p>Первыми получайте новые функции</p></div>
         </div>
     </div>
 
-    <!-- FAQ -->
     <div class="faq">
         <h2>❓ Часто задаваемые вопросы</h2>
         <div class="faq-grid">
-            <div class="faq-item"><h4>Как оплатить подписку?</h4><p>Оплата происходит через ЮMoney. После нажатия кнопки "Купить" вы будете перенаправлены на защищённую страницу оплаты.</p></div>
-            <div class="faq-item"><h4>Когда активируется подписка?</h4><p>Подписка активируется автоматически сразу после успешной оплаты. Обычно это занимает 1-2 минуты.</p></div>
-            <div class="faq-item"><h4>Можно ли отменить автопродление?</h4><p>Да, вы можете отключить автопродление в любой момент в настройках профиля.</p></div>
-            <div class="faq-item"><h4>Что будет с моими данными после отмены?</h4><p>Ваши данные (аватарки, настройки) сохранятся, но премиум-функции станут недоступны.</p></div>
-            <div class="faq-item"><h4>Есть ли пробный период?</h4><p>Создатель может выдать демо-доступ на 1 час для тестирования функций.</p></div>
-            <div class="faq-item"><h4>Что делать, если оплата не прошла?</h4><p>Свяжитесь с поддержкой через форму обратной связи или напишите создателю.</p></div>
+            <div class="faq-item"><h4>Как оплатить подписку?</h4><p>Оплата через ЮMoney. После нажатия кнопки "Купить" откроется форма оплаты.</p></div>
+            <div class="faq-item"><h4>Когда активируется подписка?</h4><p>После успешной оплаты. Обычно 1-2 минуты.</p></div>
+            <div class="faq-item"><h4>Можно ли отменить автопродление?</h4><p>Да, в любой момент в настройках профиля.</p></div>
+            <div class="faq-item"><h4>Что будет после отмены?</h4><p>Данные сохранятся, но премиум-функции станут недоступны.</p></div>
+            <div class="faq-item"><h4>Есть ли пробный период?</h4><p>Создатель может выдать демо-доступ на 1 час.</p></div>
+            <div class="faq-item"><h4>Проблемы с оплатой?</h4><p>Свяжитесь с создателем через поддержку.</p></div>
         </div>
     </div>
 
-    <!-- АДМИН ПАНЕЛЬ (только для создателя) -->
     <div id="adminPanel" class="admin-panel" style="display: none;">
         <h3>👑 Админ-панель SWILTS+</h3>
         <div class="admin-controls">
@@ -631,17 +644,34 @@
             <button onclick="givePlus()">🎁 Выдать SWILTS+ на 1 час</button>
             <button onclick="giveAdmin()">👔 Выдать админку</button>
         </div>
-        <div id="adminMsg" style="text-align: center; margin-top: 15px;"></div>
+        <div id="adminMsg" style="text-align: center; margin-top: 18px;"></div>
     </div>
 
-    <!-- КНОПКА НАЗАД -->
     <div class="footer">
         <a href="/" class="back-btn">← Вернуться в SWILTS</a>
     </div>
 </div>
 
 <script>
-// Проверка статуса подписки
+const WALLET = '4100118589497198';
+
+function createParticles() {
+    const container = document.getElementById('bgAnimation');
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        const size = Math.random() * 80 + 20;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = 15 + Math.random() * 15 + 's';
+        container.appendChild(particle);
+    }
+}
+createParticles();
+
 async function checkStatus() {
     try {
         const res = await fetch('/plus/status');
@@ -659,8 +689,6 @@ async function checkStatus() {
                 </div>
             `;
         }
-        
-        // Проверяем, является ли пользователь создателем
         const sessionRes = await fetch('/session');
         const sessionData = await sessionRes.json();
         if (sessionData.success && sessionData.user.username === 'prisanok') {
@@ -670,7 +698,6 @@ async function checkStatus() {
     } catch(e) {}
 }
 
-// Загрузка пользователей для админ-панели
 async function loadUsers() {
     const res = await fetch('/all-users');
     const data = await res.json();
@@ -684,7 +711,6 @@ async function loadUsers() {
     });
 }
 
-// Выдача SWILTS+
 async function givePlus() {
     const userId = document.getElementById('userSelect').value;
     if (!userId) return;
@@ -698,7 +724,6 @@ async function givePlus() {
     setTimeout(() => document.getElementById('adminMsg').innerHTML = '', 3000);
 }
 
-// Выдача админки
 async function giveAdmin() {
     const userId = document.getElementById('userSelect').value;
     if (!userId) return;
@@ -712,24 +737,38 @@ async function giveAdmin() {
     setTimeout(() => document.getElementById('adminMsg').innerHTML = '', 3000);
 }
 
-// Оформление подписки
-async function subscribe(plan) {
-    try {
-        const res = await fetch('/plus/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan })
-        });
-        const data = await res.json();
-        if (data.success) {
-            window.open(data.url, '_blank');
-            alert('Вы будете перенаправлены на оплату через ЮMoney.\nПосле оплаты подписка активируется автоматически.');
-        } else {
-            alert('Ошибка: ' + data.error);
-        }
-    } catch(e) {
-        alert('Ошибка соединения. Попробуйте позже.');
+function subscribe(plan, amount) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'https://yoomoney.ru/quickpay/confirm.xml';
+    form.target = '_blank';
+    
+    const inputs = {
+        'receiver': WALLET,
+        'quickpay-form': 'small',
+        'targets': `Подписка SWILTS+ ${plan === 'month' ? '1 месяц' : plan === 'year' ? '1 год' : 'Навсегда'}`,
+        'sum': amount,
+        'comment': `Покупка подписки SWILTS+`,
+        'need-fio': 'false',
+        'need-email': 'false',
+        'need-phone': 'false',
+        'need-address': 'false',
+        'paymentType': 'PC'
+    };
+    
+    for (const [key, value] of Object.entries(inputs)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
     }
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    
+    alert(`🔷 Вы будете перенаправлены на оплату через ЮMoney.\nСумма: ${amount} ₽\nПосле оплаты напишите создателю для активации подписки.`);
 }
 
 checkStatus();
