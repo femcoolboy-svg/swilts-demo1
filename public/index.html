@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>SWILTS — Современный мессенджер</title>
     <style>
+        /* ВСЕ ТВОИ СТИЛИ - БЕЗ ИЗМЕНЕНИЙ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* МЯГКИЕ ПРИЯТНЫЕ ЦВЕТА */
         body.dark {
             --bg-primary: #0a0e1a;
             --bg-secondary: #111827;
@@ -66,7 +66,6 @@
             min-height: 100vh;
         }
 
-        /* АНИМАЦИИ */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -84,7 +83,6 @@
             50% { transform: scale(1.02); opacity: 0.9; }
         }
 
-        /* ============ АВТОРИЗАЦИЯ ============ */
         .auth-wrapper {
             position: fixed;
             top: 0;
@@ -238,7 +236,6 @@
             border-radius: 12px;
         }
 
-        /* ============ ОСНОВНОЙ ИНТЕРФЕЙС ============ */
         .main-container {
             max-width: 1440px;
             margin: 0 auto;
@@ -834,7 +831,7 @@
         </div>
     </div>
 
-    <!-- ОСНОВНОЙ ИНТЕРФЕЙС (ГЛАВНОЕ МЕНЮ ИЗ ТВОЕГО КОДА) -->
+    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="mainPanel" class="hidden">
         <div class="main-container">
             <div class="header">
@@ -948,6 +945,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+    // ============ ВСЕ ПЕРЕМЕННЫЕ ============
     let currentUser = null;
     let currentChat = null;
     let socket = null;
@@ -960,6 +958,7 @@
 
     fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => userIP = d.ip);
 
+    // ============ КАПЧА ============
     async function loadCaptcha() {
         const res = await fetch('/captcha');
         const data = await res.json();
@@ -968,6 +967,7 @@
     }
     loadCaptcha();
 
+    // ============ ТЕМА ============
     function setTheme(theme) {
         if (theme === 'light') {
             document.body.classList.remove('dark');
@@ -986,6 +986,7 @@
     document.getElementById('themeDarkBtn').onclick = () => setTheme('dark');
     document.getElementById('themeLightBtn').onclick = () => setTheme('light');
 
+    // ============ WEBSOCKET ============
     function initSocket() {
         socket = io();
         socket.on('connect', () => { if (currentUser) socket.emit('register', currentUser.id); });
@@ -1010,6 +1011,7 @@
         socket.on('call-end', () => { endCall(); alert('Звонок завершён'); });
     }
 
+    // ============ ЗВОНКИ ============
     async function startCall(to) {
         if (callActive) { endCall(); return; }
         try {
@@ -1062,6 +1064,7 @@
         document.getElementById('rejectCall').onclick = () => { modal.remove(); socket.emit('call-end', { to: from }); };
     }
 
+    // ============ UI ФУНКЦИИ ============
     function appendMessage(msg, isOwn, time) {
         const container = document.getElementById('messages');
         const div = document.createElement('div');
@@ -1080,6 +1083,7 @@
         setTimeout(() => notif.remove(), 3000);
     }
 
+    // ============ ШАПКА ЧАТА ============
     function updateChatHeader() {
         if (!currentChat) {
             document.getElementById('chatName').innerHTML = 'Выберите чат';
@@ -1110,6 +1114,7 @@
         }
     }
 
+    // ============ ДРУЗЬЯ ============
     async function loadFriends() {
         const res = await fetch('/friends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
         const data = await res.json();
@@ -1144,6 +1149,7 @@
         });
     }
 
+    // ============ ГРУППЫ ============
     async function loadGroups() {
         const res = await fetch('/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
         const data = await res.json();
@@ -1172,6 +1178,7 @@
         });
     }
 
+    // ============ ВЫБОР ЧАТА ============
     async function selectChat(type, id, name, avatar, hasPlus = false, plusExpiry = null, plusBadge = '💎') {
         currentChat = { type, id, name, avatar, hasPlus, plusExpiry, plusBadge };
         updateChatHeader();
@@ -1179,6 +1186,7 @@
         else await loadGroupMessages();
     }
 
+    // ============ СООБЩЕНИЯ ============
     async function loadPrivateMessages() {
         if (!currentChat || currentChat.type !== 'private') return;
         const res = await fetch('/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ u1: currentUser.id, u2: currentChat.id }) });
@@ -1226,6 +1234,7 @@
         document.getElementById('messageInput').value = '';
     }
 
+    // ============ ПОИСК ============
     document.getElementById('searchBtn').onclick = async () => {
         const query = document.getElementById('searchInput').value;
         if (!query) return;
@@ -1256,6 +1265,7 @@
         else alert('❌ ' + data.error);
     }
 
+    // ============ ЗАПРОСЫ ============
     window.acceptReq = async (id, fromId) => {
         await fetch('/friend/accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, from: fromId, to: currentUser.id }) });
         loadFriends(); loadRequests();
@@ -1265,6 +1275,7 @@
         loadFriends(); loadRequests();
     };
 
+    // ============ СОЗДАНИЕ ГРУППЫ ============
     document.getElementById('createGroupBtn').onclick = async () => {
         const name = prompt('Название группы:');
         if (!name) return;
@@ -1305,6 +1316,7 @@
         loadGroupInvites();
     };
 
+    // ============ АДМИН ============
     async function loadAdmin() {
         if (currentUser.username === 'prisanok') document.getElementById('adminPanel').classList.remove('hidden');
     }
@@ -1343,6 +1355,7 @@
         else alert('❌ Ошибка');
     };
 
+    // ============ ПРОФИЛЬ ============
     async function updateProfileDisplay() {
         document.getElementById('userName').innerText = currentUser.username;
         document.getElementById('userTag').innerText = '#' + currentUser.tag;
@@ -1474,24 +1487,48 @@
         document.getElementById('closePlus').onclick = () => modal.remove();
     };
 
+    // ============ АВТОРИЗАЦИЯ (ГЛАВНОЕ - КНОПКИ РАБОТАЮТ) ============
     async function checkSession() {
         const res = await fetch('/session');
         const data = await res.json();
         if (data.success && data.user) { currentUser = data.user; showMain(); }
     }
+    
     async function login() {
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
+        
+        if (!username || !password) {
+            document.getElementById('loginMsg').innerHTML = '❌ Заполните все поля';
+            return;
+        }
+        
         const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
         const data = await res.json();
-        if (data.success) { currentUser = data.user; showMain(); }
-        else { document.getElementById('loginMsg').innerText = '❌ ' + data.error; }
+        
+        if (data.success) {
+            currentUser = data.user;
+            showMain();
+        } else {
+            document.getElementById('loginMsg').innerHTML = '❌ ' + data.error;
+        }
     }
+    
     async function register() {
         const username = document.getElementById('regUsername').value;
         const email = document.getElementById('regEmail').value;
         const password = document.getElementById('regPassword').value;
         const captcha = document.getElementById('regCaptcha').value;
+        
+        if (!username || !email || !password || !captcha) {
+            document.getElementById('regMsg').innerHTML = '<span class="error">❌ Заполните все поля</span>';
+            return;
+        }
+        
+        if (username.length < 3 || username.length > 20) {
+            document.getElementById('regMsg').innerHTML = '<span class="error">❌ Ник должен быть 3-20 символов</span>';
+            return;
+        }
         
         if (password.length < 6) {
             document.getElementById('regMsg').innerHTML = '<span class="error">❌ Пароль должен быть не менее 6 символов</span>';
@@ -1506,15 +1543,25 @@
         
         const res = await fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, email, password, captcha, ip: userIP }) });
         const data = await res.json();
-        if (data.success) { currentUser = data.user; showMain(); }
-        else { document.getElementById('regMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>'; loadCaptcha(); }
+        
+        if (data.success) {
+            currentUser = data.user;
+            showMain();
+        } else {
+            document.getElementById('regMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>';
+            loadCaptcha();
+        }
     }
     
     function showMain() {
         document.getElementById('authPanel').classList.add('hidden');
         document.getElementById('mainPanel').classList.remove('hidden');
         updateProfileDisplay();
-        loadFriends(); loadRequests(); loadGroups(); loadGroupInvites(); loadAdmin();
+        loadFriends();
+        loadRequests();
+        loadGroups();
+        loadGroupInvites();
+        loadAdmin();
         initSocket();
         
         const greeting = new Date().getHours() < 12 ? 'Доброе утро' : (new Date().getHours() < 18 ? 'Добрый день' : 'Добрый вечер');
@@ -1525,8 +1572,11 @@
         setTimeout(() => toast.remove(), 3000);
     }
     
+    // НАЗНАЧАЕМ КНОПКИ
     document.getElementById('doLogin').onclick = login;
     document.getElementById('doRegister').onclick = register;
+    
+    // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
     document.querySelectorAll('.auth-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -1536,6 +1586,7 @@
             if (tab.dataset.tab === 'register') loadCaptcha();
         });
     });
+    
     document.getElementById('logoutBtn').onclick = async () => { await fetch('/logout', { method: 'POST' }); location.reload(); };
     document.getElementById('sendMsgBtn').onclick = sendMessage;
     document.getElementById('messageInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
