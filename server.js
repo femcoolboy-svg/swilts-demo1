@@ -111,22 +111,26 @@ db.serialize(() => {
 
 // WEBSOCKET
 const onlineUsers = new Map();
+let messageIdCounter = Date.now();
+
 io.on('connection', (socket) => {
     socket.on('register', (userId) => {
         onlineUsers.set(userId, socket.id);
         socket.userId = userId;
     });
 
-    socket.on('private-message', async (data) => {
+    socket.on('private-message', (data) => {
+        const messageId = ++messageIdCounter;
+        
         // Сохраняем в БД
-        db.run(`INSERT INTO private_messages (from_user_id, to_user_id, message) VALUES (?, ?, ?)`,
-            [data.from, data.to, data.msg]);
+        db.run(`INSERT INTO private_messages (id, from_user_id, to_user_id, message, timestamp) VALUES (?, ?, ?, ?, ?)`,
+            [messageId, data.from, data.to, data.msg, new Date().toISOString()]);
         
         // Отправляем получателю
         const target = onlineUsers.get(data.to);
         if (target) {
             io.to(target).emit('private-message', {
-                id: Date.now(),
+                id: messageId,
                 from: data.from,
                 fromName: data.fromName,
                 msg: data.msg,
@@ -134,17 +138,24 @@ io.on('connection', (socket) => {
             });
         }
         
-        // Отправляем подтверждение отправителю (чтобы он не дублировал)
-        if (socket.id) {
-            io.to(socket.id).emit('message-sent', { id: Date.now() });
-        }
+        // Подтверждение отправителю
+        io.to(socket.id).emit('message-sent', { id: messageId });
     });
 
+    // Индикатор печатает (с дебаунсом)
+    let typingTimers = new Map();
+    
     socket.on('typing', (data) => {
         const target = onlineUsers.get(data.to);
-        if (target) {
-            io.to(target).emit('typing', { from: data.from });
-        }
+        if (!target) return;
+        
+        if (typingTimers.has(target)) clearTimeout(typingTimers.get(target));
+        io.to(target).emit('typing', { from: socket.userId });
+        
+        const timer = setTimeout(() => {
+            io.to(target).emit('typing-stop', { from: socket.userId });
+        }, 2000);
+        typingTimers.set(target, timer);
     });
 
     socket.on('disconnect', () => {
@@ -252,16 +263,13 @@ app.post('/logout', (req, res) => {
 
 // ЗАГРУЗКА АВАТАРА
 app.post('/avatar', upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.json({ success: false, error: 'Нет файла' });
-    }
+    if (!req.file) return res.json({ success: false, error: 'Нет файла' });
     const url = `/uploads/${req.file.filename}`;
     db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [url, req.session.user.id]);
     req.session.user.avatar = url;
     res.json({ success: true, url });
 });
 
-// ЗАГРУЗКА БАННЕРА
 app.post('/banner', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false });
     const url = `/uploads/${req.file.filename}`;
@@ -303,7 +311,7 @@ app.post('/theme', (req, res) => {
     res.json({ success: true });
 });
 
-// ПОЛУЧИТЬ ПРОФИЛЬ ДРУГА
+// ПОЛУЧИТЬ ПРОФИЛЬ
 app.get('/user/:userId', (req, res) => {
     const userId = req.params.userId;
     db.get(`SELECT id, username, tag, avatar, created_at FROM users WHERE id = ? AND banned = 0`, [userId], (err, user) => {
@@ -404,6 +412,13 @@ app.post('/ban', (req, res) => {
     const { username, reason } = req.body;
     if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
     db.run(`UPDATE users SET banned = 1, ban_reason = ? WHERE username = ?`, [reason || 'Нарушение', username]);
+    res.json({ success: true });
+});
+
+app.post('/unban', (req, res) => {
+    const { username } = req.body;
+    if (req.session.user?.username !== 'prisanok') return res.json({ success: false });
+    db.run(`UPDATE users SET banned = 0, ban_reason = '' WHERE username = ?`, [username]);
     res.json({ success: true });
 });
 
