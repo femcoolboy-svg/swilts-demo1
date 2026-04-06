@@ -1550,6 +1550,63 @@
         if (!str) return '';
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
     }
-    </script>
+    </script><script>
+// ПЕРЕОПРЕДЕЛЯЮ КНОПКИ (костыль, но работает)
+document.addEventListener('DOMContentLoaded', function() {
+    // Перехватываем кнопки после полной загрузки
+    setTimeout(function() {
+        const loginBtn = document.getElementById('doLogin');
+        const registerBtn = document.getElementById('doRegister');
+        
+        if (loginBtn) {
+            loginBtn.onclick = function() {
+                const username = document.getElementById('loginUsername').value;
+                const password = document.getElementById('loginPassword').value;
+                fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        document.getElementById('loginMsg').innerText = '❌ ' + data.error;
+                    }
+                });
+            };
+        }
+        
+        if (registerBtn) {
+            registerBtn.onclick = function() {
+                const username = document.getElementById('regUsername').value;
+                const email = document.getElementById('regEmail').value;
+                const password = document.getElementById('regPassword').value;
+                const captcha = document.getElementById('regCaptcha').value;
+                
+                if (password.length < 6) {
+                    document.getElementById('regMsg').innerHTML = '<span class="error">❌ Пароль должен быть не менее 6 символов</span>';
+                    return;
+                }
+                
+                fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, captcha, ip: 'auto' })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        document.getElementById('regMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>';
+                    }
+                });
+            };
+        }
+    }, 100);
+});
+</script>
 </body>
 </html>
